@@ -1,0 +1,123 @@
+                Illumina Analysis Workflow
+
+This document describes the procedure for starting GERALD analysis.
+
+Steps in Analysis:
+
+1) GERALD analysis requires a configuration file (config.txt) that describes
+   various analysis parameters. Generating this file is the first step in the
+   analysis.
+
+2) GERALD directory should be created for the specified lane(s) within the 
+   bustard directory of the corresponding flowcell. 
+
+3) To start the analysis, from the GERALD directory created in step 2), make
+   command must be executed, that drives the analysis.
+
+4) GERALD step creates sequence files, alignment files and generates summary of
+   alignment percentage, error percentage etc. The alignment statistics are 
+   captured in Summary.htm. Once GERALD completes, an email with Summary.htm
+   is sent to the desired recepients. 
+
+5) Summary.htm should be uploaded to LIMS. In addition, analysis results should
+   also be uploaded to LIMS.
+
+6) Finally, mini-analysis is initiated for this GERALD directory which copies 
+   the sequence, export files, png plots and summary files for the analysis.
+
+7) After GERALD is completed for the whole flowcell, it should be archived.
+
+Automation in the Pipeline:
+
+1) GERALD_Driver.rb is the main entry point of the pipeline software. It
+   creates the config.txt file under the directory
+   /stornext/snfs5/next-gen/Illumina/goats/YYYY/MM/DD/FC-Lane, where 
+     YYYY    - 4 digit year
+     MM      - 2 digit month
+     DD      - 2 digit date
+     FC-Lane - Flowcell name with lane
+   It also creates generate_makefiles.sh that contains the command to create
+   GERALD directory within the Bustard directory in the flowcell. 
+
+2) GERALD_Driver.rb executes the generate_makefiles.sh and verifies that the
+   corresponding GERALD directory is properly created. It creates a symbolic
+   link from the goats directory to the GERALD directory. (This is just used 
+   for tracking the GERALD directories that belong to different flowcells).
+
+3) GERALD_Driver.rb prints the path of the GERALD directory. The user should 
+   navigate to this directory and start the analysis by submitting make jobs
+   to LSF.
+
+4) config.txt file created in step 1) contains a POST_RUN_COMMAND that points
+   to a script that emails Summary.htm file, uploads Sumamry.htm to LIMS, 
+   uploads alignment stats to LIMS and starts mini-analysis.
+
+Executing the Pipeline:
+
+1) Verify that all the data for the flowcell is available under 
+   /stornext/snfs5/next-gen/Illumina/Instruments/SequencerName/Flowcell.
+
+2) Navigate to /stornext/snfs5/next-gen/Illumina/ipipe/bin and execute 
+   GERALD_Driver.rb. There are two modes of operations. In the first mode, it
+   automatically retrieves flowcell information (such as number of reads,
+   paired / fragment, reference path) from LIMS.
+   However, in the second mode of operation, the user must specify all this
+   information on the command line.
+
+   Sample Usage:
+
+   Usage:
+
+   Scenario 1, Obtaining information from LIMS
+   ruby GERALD_Driver.rb FlowCell LaneNumbers
+
+   Scenario 2, Providing flowcell info on command line
+   ruby GERALD_Driver.rb FlowCell LaneNumbers NumCycles FCType ReferencePath
+   FCType    - Specify paired if FC is paired, otherwise fragment
+
+   Examples :
+
+   a) ruby GERALD_Driver.rb 100319_P21_0431_AFC2003B 4 
+
+   This starts analysis of lane 4 of flowcell 100319_P21_0431_AFC2003B.
+   Reference paths, number of cycles is automatically obtained from LIMS.
+
+   b) ruby GERALD_Driver.rb 100319_P21_0431_AFC2003B 5 100 paired
+      /stornext/snfs5/next-gen/Illumina/genomes/p/phix/squash 
+
+   This starts the analysis of lane 5 of the flowcell, whily specifying the
+   number of cycles (100), type of run (paired) and reference path.
+
+  c) ruby GERALD_Driver.rb 100319_P21_0431_AFC2003B 46
+
+  This starts the analysis for lanes 4 and 6, as long as both these lanes have
+  the same reference path listed in LIMS.
+
+  d) ruby GERALD_Driver.rb 100319_P21_0431_AFC2003B 567 100 paired
+     /stornext/snfs5/next-gen/Illumina/genomes/p/phix/squash 
+
+  This starts the analysis for the lanes 5, 6 and 7 with the phix reference.
+
+3) Navigate to the GERALD directory (shown by GERALD_Driver) and then run
+   the make on it. This will start the GERALD analysis.
+
+Post Run Steps :
+
+After GERALD analysis completes, following steps need to be followed :
+
+1) An email with Summary.htm as an attachment is sent.
+2) Analysis results are uploaded to LIMS.
+3) Summary.htm is uploaded to LIMS.
+4) Uniqueness calculations are performed for those lane(s). Basically, 
+   this step helps to determine the percentage of unique reads. An email 
+   is sent out with the results.
+5) Mini analysis is started, where sequence, export, config, plots, summary
+   and uniqueness results are copied to mini_analysis directory.
+
+All these steps are automated through GERALD configuration option called 
+POST_RUN_COMMAND. It provides a hook for applications to be executed after
+GERALD completes. post_run_cmd.rb script contains commands to relevant
+scripts to complete the tasks listed above.
+
+The archiving step is still manual. This must be started after analysis for
+the entire flowcell finishes.

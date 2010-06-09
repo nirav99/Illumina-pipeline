@@ -1,0 +1,11 @@
+
+== Coding style ==
+
+Please follow this if you are going to work in these code:
+
+  vim:
+    set expandtab
+    set smarttab
+    set sw=2
+
+Try to keep lanes not longer that 80 characters if possible.

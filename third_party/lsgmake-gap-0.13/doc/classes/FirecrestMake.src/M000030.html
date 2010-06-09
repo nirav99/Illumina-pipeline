@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>make_all (FirecrestMake)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lsgmake-gap.rb, line 448</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">make_all</span>
+    <span class="ruby-comment cmt"># offsets</span>
+    <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;#{self.class}: submitting offsets job&quot;</span>
+    <span class="ruby-identifier">offsets</span> = <span class="ruby-constant">BsubMake</span>.<span class="ruby-identifier">new</span>(<span class="ruby-node">&quot;#{@job_name_base}.default_offsets&quot;</span>,
+                           <span class="ruby-value str">'default_offsets.txt'</span>)
+    <span class="ruby-identifier">offsets</span>.<span class="ruby-identifier">dependency</span>(<span class="ruby-ivar">@dependency</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@dependency</span>
+    <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">offsets</span>.<span class="ruby-identifier">submit</span>
+
+    <span class="ruby-comment cmt"># make s_N (image analysis) and all targets</span>
+    <span class="ruby-ivar">@dependency</span> = <span class="ruby-identifier">offsets</span>.<span class="ruby-identifier">job_name</span>
+    <span class="ruby-keyword kw">super</span> <span class="ruby-keyword kw">or</span> <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span>
+
+    <span class="ruby-comment cmt"># see if we should run Bustard</span>
+    <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">true</span> <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:target</span>] <span class="ruby-operator">!=</span> <span class="ruby-value str">'recursive'</span>
+    <span class="ruby-identifier">make_subdir</span>(<span class="ruby-constant">BustardMake</span>, <span class="ruby-ivar">@all_job_name</span>)
+ <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

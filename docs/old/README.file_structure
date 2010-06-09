@@ -1,0 +1,39 @@
+SLX File Structure
+
+== In Cluster ==
+/data/slx/goats
+  Goats is where the analyses are ran.
+  Its directory structure is further sorted by year (YYYY), month (MM), day
+  (DD), and lastly the flowcells.
+
+/data/slx/references
+  This is where all of the references for slx are stored.
+  GERALD takes in the squash file of the reference, so in goat_generator.sh you
+  will have to supply the path all the way to the squash dir.
+
+  ie. for human: /data/slx/references/h/homosapiens_hg18_build_36.1/squash
+
+/data/slx/slxarchive_# 
+  This is where the raw data are stored in cluster.
+  Currently, slxarchive_7 is for USI-EAS034
+             slxarchive_8 is for USI-EAS376
+  In each individual flow cell there will be a sym link called Data pointing to
+  the Data in the corresponding flow cell in slxarchivework_#
+               
+  There is a .incoming.queue in each of the slxarchive_# which stores the log
+  files from sdump_clus_#.rb
+
+/data/slx/slxarchivework_#
+  This is where the analyzed data and the mini_anlaysis are stored.
+
+/data/slx/USI-EAS#/Runs
+  This is where the software searches during the beginning of the anlaysis.
+
+  a symlink of the flow cell name is pointing to the corresponding flow cell in
+  slxarchive_#
+
+== In slxdump == 
+/slxdump2/incoming
+  This is where all of the raw data coming off the instruments are dumped. 
+  A temporary storage to accomodate the large amount of raw data which the slx
+  machines cannot handle.

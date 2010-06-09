@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>submit (BsubMake)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File ../lsgmake-gap.rb, line 304</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">submit</span>
+    <span class="ruby-comment cmt"># do not submit twice</span>
+    <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@submitted</span>
+
+    <span class="ruby-comment cmt"># initialize resource request</span>
+    <span class="ruby-identifier">resource</span> = <span class="ruby-ivar">@@resource</span>
+
+    <span class="ruby-comment cmt"># create bsub command</span>
+    <span class="ruby-identifier">bsub</span> = <span class="ruby-constant">Array</span>.<span class="ruby-identifier">new</span>([<span class="ruby-value str">'bsub'</span>])
+    <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@jobs</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">1</span>
+      <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-value str">'-n'</span>, <span class="ruby-ivar">@jobs</span>.<span class="ruby-identifier">to_s</span>)
+      <span class="ruby-identifier">resource</span> <span class="ruby-operator">+=</span> <span class="ruby-value str">' span[hosts=1]'</span>
+    <span class="ruby-keyword kw">end</span>
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-value str">'-q'</span>, <span class="ruby-ivar">@@queue</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@@queue</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-value str">'-R'</span>, <span class="ruby-identifier">resource</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">resource</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-value str">'-o'</span>, <span class="ruby-node">&quot;make-#{@target}-%J.out&quot;</span>.<span class="ruby-identifier">gsub</span>(<span class="ruby-regexp re">%r{/+}</span>, <span class="ruby-value str">'-'</span>))
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-value str">'-J'</span>, <span class="ruby-ivar">@job_name</span> <span class="ruby-operator">+</span> <span class="ruby-ivar">@job_name_array</span>)
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-value str">'-w'</span>, <span class="ruby-ivar">@dependency</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@dependency</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-ivar">@@bsub_options</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@@bsub_options</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>
+
+    <span class="ruby-comment cmt"># append the actual make command</span>
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-value str">'make'</span>)
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-value str">'-j'</span>, <span class="ruby-ivar">@jobs</span>.<span class="ruby-identifier">to_s</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@jobs</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">1</span>
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">push</span>(<span class="ruby-ivar">@target</span>.<span class="ruby-identifier">gsub</span>(<span class="ruby-regexp re">/%I/</span>, <span class="ruby-value str">'${LSB_JOBINDEX}'</span>))
+
+    <span class="ruby-comment cmt"># just echo if testing</span>
+    <span class="ruby-identifier">bsub</span>.<span class="ruby-identifier">unshift</span>(<span class="ruby-value str">'echo'</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@@test</span>
+
+    <span class="ruby-comment cmt"># run the command</span>
+    <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">system</span>(<span class="ruby-operator">*</span><span class="ruby-identifier">bsub</span>)
+      <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span>
+    <span class="ruby-keyword kw">end</span>
+    <span class="ruby-identifier">rv</span> = <span class="ruby-identifier">$?</span>.<span class="ruby-identifier">exitstatus</span>
+    <span class="ruby-ivar">@submitted</span> = <span class="ruby-keyword kw">true</span>
+    <span class="ruby-comment cmt"># wait a bit</span>
+    <span class="ruby-identifier">sleep</span> <span class="ruby-value">1</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@@test</span>
+    <span class="ruby-identifier">rv</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

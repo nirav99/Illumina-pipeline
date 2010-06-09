@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>new (SolexaMake)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lsgmake-gap.rb, line 405</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">options</span>)
+    <span class="ruby-comment cmt"># save options</span>
+    <span class="ruby-ivar">@options</span> = <span class="ruby-identifier">options</span>
+    <span class="ruby-comment cmt"># check path</span>
+    <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:path</span>]
+      <span class="ruby-ivar">@path</span> = <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:path</span>]
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;no path provided&quot;</span>, <span class="ruby-identifier">caller</span>
+    <span class="ruby-keyword kw">end</span>
+    <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-constant">File</span>.<span class="ruby-identifier">directory?</span>(<span class="ruby-ivar">@path</span>)
+      <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-node">&quot;path is not a directory: #{@path}&quot;</span>, <span class="ruby-identifier">caller</span>
+    <span class="ruby-keyword kw">end</span>
+
+    <span class="ruby-comment cmt"># check run name</span>
+    <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:run</span>]
+      <span class="ruby-ivar">@run</span> = <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:run</span>]
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>, <span class="ruby-value str">&quot;no run name provided&quot;</span>, <span class="ruby-identifier">caller</span>
+    <span class="ruby-keyword kw">end</span>
+
+    <span class="ruby-comment cmt"># set target</span>
+    <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:target</span>]
+      <span class="ruby-ivar">@target</span> = <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:target</span>]
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-ivar">@target</span> = <span class="ruby-value str">'all'</span>
+    <span class="ruby-keyword kw">end</span>
+
+    <span class="ruby-comment cmt"># check for bsub dependency</span>
+    <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:dependency</span>]
+      <span class="ruby-ivar">@dependency</span> = <span class="ruby-ivar">@options</span>[<span class="ruby-identifier">:dependency</span>]
+    <span class="ruby-keyword kw">else</span>
+      <span class="ruby-ivar">@dependency</span> = <span class="ruby-keyword kw">false</span>
+    <span class="ruby-keyword kw">end</span>
+
+    <span class="ruby-comment cmt"># set basename for job</span>
+    <span class="ruby-ivar">@job_name_base</span> = <span class="ruby-ivar">@run</span> <span class="ruby-operator">+</span> <span class="ruby-value str">'.'</span> <span class="ruby-operator">+</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">basename</span>(<span class="ruby-ivar">@path</span>)
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

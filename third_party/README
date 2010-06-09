@@ -1,0 +1,91 @@
+Usage:
+
+perl getAnalysisPreData.pl 30C68AAXX-1
+
+output:
+
+http://10.10.53.190:8080/ngenlims/getAnalysisPreData.jsp?lane_barcode=30C68AAXX-1
+
+FLOWCELL_TYPE=p BUILD_PATH=/data/slx/references/d/dmel/squash
+
+NUMBER_OF_CYCLES_READ1=45 NUMBER_OF_CYCLES_READ2=45
+
+----------------------------------------------------------------------------------
+
+> USAGE of script:
+
+> setIlluminaLaneStatus.pl <lane_barcode> <status>  <name/value pairs>
+
+> EXAMPLE:
+
+> "perl ./setIlluminaLaneStatus.pl FC3034FAAXX-2 REFERENCE_GENOME_SET_PATH
+
+> /data/illumina/datadirectory"
+
+> or
+
+> "perl ./setIlluminaLaneStatus.pl FC3034FAAXX-2 ANALYSIS_FINISHED
+
+> LANE_YIELD_KBASES 172160 CLUSTERS_RAW 47434 SD_CLUSTERS_RAW 5582" etc and
+
+> so forth....
+
+> INPUT:
+>
+> lane_barcode
+> -     barcode of the lane, which is the flowcell barcode plus the addition of
+> the lane number (ie, if the flowcell is FC3034FAAXX and the lane is "lane
+> 2", then the lane barcode is FC3034FAAXX-2).
+> status
+> -     REFERENCE_GENOME_SET
+>       -  PATH with a value.
+> -     ANALYSIS FINISHED
+>       The Following are name that you should accompany with values:
+>       -       READ
+>       -       LANE_YIELD_KBASES
+>       -       CLUSTERS_RAW
+>       -       SD_CLUSTERS_RAW
+>       -       CLUSTERS_PF
+>       -       FIRST_CYCLE_INT_PF
+>       -       SD_FIRST_CYCLE_INT_PF
+>       -       PERCENT_INTENSITY_AFTER_20_CYCLES_PF
+>       -       SD_PERCENT_INTENSITY_AFTER_20_CYCLES_PF
+>       -       PERCENT_PF_CLUSTERS
+>       -       SD_PERCENT_PF_CLUSTERS
+>       -       PERCENT_ALIGN_PF
+>       -       SD_PERCENT_ALIGN_PF
+>       -       ALIGNMENT_SCORE_PF
+>       -       SD_ALIGNMENT_SCORE_PF
+>       -       PERCENT_ERROR_RATE_PF
+>       -       SD_PERCENT_ERROR_RATE_PF
+>       -       PERCENT_PHASING
+
+>       -       PERCENT_PREPHASING
+
+>
+
+>
+
+>
+
+> OUTPUT:
+
+>
+
+> For now, will only returns lane_barcode.   So if you pass in
+
+> FC3034FAAXX-2, it will return FC3034FAAXX-2.
+
+
+SCRIPT to upload the HTML Summary file
+
+# EXAMPLE to Run: "perl ./uploadHtmlSummary.pl FC3034FAAXX-2 Summary.html"
+
+#INPUT:
+# Flowcell/Lane Barcode
+# - Barcode of the FlowCell(Ex: FC3034FAAXX)/Lane(which is the flowcell barcode
+# plus the addition of the l
+    ane number EX: FC3034FAAXX-1,FC3034FAAXX-2...)
+# - Full path needs to specified for Summary html file(EX:
+# /Users/jakkamse/Desktop/Summary.html)
+

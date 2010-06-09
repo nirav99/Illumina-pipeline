@@ -1,0 +1,45 @@
+SLX PIPELINE
+
+1. Create the goat structures
+   run goat_generator.sh
+
+   This is a script that generates the wrapper to run the analysis in
+   /data/slx/goats/YYYY/MM/DD/FC_name-lane#.  The content of the wrapper
+   depends on the parameter passed in while calling the script.
+
+   This script can only handle lane by lane, if running the whole FC in one
+   directory is desired, further modifications will be required.
+  
+   $ goat_generator.sh -l lane_number -f flowcellDirName -s squashDIR -p
+     sampleName [..]
+
+   Optional Parameters:
+     -s : squashDIR
+     -i : images (if not analyzing from IPAR data)
+     -c : config_template
+     -b : number of bases (default at 35)
+     -m : make_template
+     -r : remove goat dir
+     -u : Use the name of the sample for the config and generate_make files
+     -t : Generate files in the current dir
+     -q <file>: Use this <file> for the squash
+
+   View the help file from the script for any additional examples. 
+
+2. Go to the goat directory created from step one.
+   
+3. Run generate_makefiles.sh
+   This will create the firecrest, bustard, and gerald directories in the
+   designated slxarchivework_# with a symlink pointing to it called data_dir.
+
+   i) check the log for any errors in generate_makefiles.sh.log
+
+4. Submit the job to the lsf queue from data_dir
+   $ cd data_dir
+   $ bsub -q queue -J fc_lane# -o run.o -e run.e "make -j2 recursive"
+
+5. An email will be sent when the analysis is completed.
+
+6. In case the run does not complete, run.e and run.o are the standard error and
+   standard output from the lsf.  Look in there to search for any output that
+   may have cause the analysis to fail. 

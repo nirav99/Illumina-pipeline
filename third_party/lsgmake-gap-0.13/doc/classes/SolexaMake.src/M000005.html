@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<head>
+  <title>make_all (SolexaMake)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <link rel="stylesheet" href="../.././rdoc-style.css" type="text/css" media="screen" />
+</head>
+<body class="standalone-code">
+  <pre><span class="ruby-comment cmt"># File lsgmake-gap.rb, line 465</span>
+  <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">make_all</span>
+    <span class="ruby-comment cmt"># s_N jobs</span>
+    <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;#{self.class}: submitting s_N job&quot;</span>
+    <span class="ruby-identifier">lanes</span> = <span class="ruby-constant">MakeLanes</span>.<span class="ruby-identifier">new</span>(<span class="ruby-ivar">@job_name_base</span>, <span class="ruby-value str">'s_%I'</span>)
+    <span class="ruby-identifier">lanes</span>.<span class="ruby-identifier">dependency</span>(<span class="ruby-ivar">@dependency</span>) <span class="ruby-keyword kw">if</span> <span class="ruby-ivar">@dependency</span>
+    <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">if</span> <span class="ruby-operator">!</span><span class="ruby-identifier">lanes</span>.<span class="ruby-identifier">submit</span>
+
+    <span class="ruby-comment cmt"># final make</span>
+    <span class="ruby-identifier">puts</span> <span class="ruby-node">&quot;#{self.class}: submitting all job&quot;</span>
+    <span class="ruby-identifier">all</span> = <span class="ruby-constant">BsubMake</span>.<span class="ruby-identifier">new</span>(<span class="ruby-node">&quot;#{@job_name_base}.all&quot;</span>, <span class="ruby-value str">'all'</span>)
+    <span class="ruby-ivar">@all_job_name</span> = <span class="ruby-identifier">all</span>.<span class="ruby-identifier">job_name</span>
+    <span class="ruby-identifier">all</span>.<span class="ruby-identifier">dependency</span>(<span class="ruby-identifier">lanes</span>.<span class="ruby-identifier">job_name</span>)
+    <span class="ruby-comment cmt"># avoid make parallelization bug</span>
+    <span class="ruby-identifier">all</span>.<span class="ruby-identifier">jobs</span> = <span class="ruby-value">1</span>
+    <span class="ruby-identifier">all</span>.<span class="ruby-identifier">submit</span>
+  <span class="ruby-keyword kw">end</span></pre>
+</body>
+</html>

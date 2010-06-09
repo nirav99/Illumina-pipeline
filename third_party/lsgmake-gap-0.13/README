@@ -1,0 +1,20 @@
+lsgmake-gap is a utility to aid in the parallelization of the Illumina
+Genome Analyzer Pipeline on Platform LSF clusters.
+
+lsgmake-gap is distributed under the GNU General Public License
+version 3.  See the file COPYING for details.
+
+See the NEWS files for changes from the previous version.
+
+INSTALLATION
+
+To install it, just put it in your path.  For example,
+
+  # install lsgmake-gap.rb /usr/local/bin/lsgmake-gap
+
+DOCUMENTATION
+
+You can find the documentation in the doc directory.  You can regenerate
+the documentation with the following command.
+
+  $ rdoc --op doc lsgmake-gap.rb
