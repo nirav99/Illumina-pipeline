@@ -9,9 +9,10 @@
 #		./original/ <- Original references in here
 #		
 DEBUG=0
-dataSolexa="/data/slx/USI-EAS09/GAPipeline"
+#dataSolexa="/data/slx/USI-EAS09/GAPipeline"
+dataSolexa="/stornext/snfs5/next-gen/Illumina/GAPipeline/current"
 solPipeDir="$dataSolexa"
-externalScripts="/data/slx/goats/hgsc_slx/bin"
+externalScripts="/stornext/snfs5/next-gen/Illumina/ipipe/helpers"
 plit="$externalScripts/splitFAxN.pl"
 
 error() 
