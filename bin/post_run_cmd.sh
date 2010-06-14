@@ -18,7 +18,7 @@ ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_results.rb
 ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_summary.rb
 
 # Run uniqueness analysis
-ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/FindUniqReads.rb
+bsub -J "Uniqueness_analysis" -o u.o -e u.e -q "normal" -n 1 -R "rusage[mem=4000]span[hosts=1]" ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/FindUniqReads.rb
 
 # Start mini-analysis
 bsub -J "mini_analysis" -o m.o -e m.e -q "normal" -n 1 -R "rusage[mem=1000]span[hosts=1]" ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/miniAnalysis.rb
