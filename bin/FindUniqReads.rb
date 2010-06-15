@@ -75,7 +75,7 @@ class FindUniqueReads
     @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
     puts "Finished Computing Uniqueness Results for lane : " + lane
     FileUtils.remove_dir(tmpDir, true)
-    copyFileMiniAnalysis(resultFile)
+    copyFileMiniAnalysis(resultFileName)
   end
 
   # Helper method to find sequence files for a given lane
