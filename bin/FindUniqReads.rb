@@ -75,11 +75,22 @@ class FindUniqueReads
     @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
     puts "Finished Computing Uniqueness Results for lane : " + lane
     FileUtils.remove_dir(tmpDir, true)
+    copyFileMiniAnalysis(resultFile)
   end
 
   # Helper method to find sequence files for a given lane
   def findSequenceFileNames(laneNum)
     return Dir["s_" + laneNum + "*sequence.txt"]
+  end
+
+  # Helper method to copy resultFile to mini analysis
+  def copyFileMiniAnalysis(fileName)
+    currentDir = Dir.pwd
+    miniDir    = currentDir.gsub(/Data.*$/, 'mini_analysis')
+    puts "Creating mini_analysis directory"
+    system("mkdir -p #{miniDir}")
+    puts "Copying " + fileName + " to mini_analysis directory"
+    system("cp #{fileName} #{miniDir}") 
   end
 end
 
