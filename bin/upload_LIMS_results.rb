@@ -165,7 +165,8 @@ class UploadSummaryResults
       puts "Error Message From LIMS : " + output
 
       # Currently the default behavior is to exit on detecting upload
-      # error to LIMS. Could be suitable modified
+      # error to LIMS. Could be suitably modified
+      handleLIMSUploadError(cmd)
       exit -1
     else
       # If data was successfully uploaded, then a text "analysisFinishedState
@@ -184,6 +185,17 @@ class UploadSummaryResults
          @pairedEnd = true
        end
     end
+  end
+
+  # Method to send email if error was encountered while uploading
+  # analysis results to LIMS
+  def handleLIMSUploadError(cmd)
+    from = "p-illumina@bcm.edu"
+    to   = [ "niravs@bcm.edu", "dc12@bcm.edu" ]
+    sub  = "Error in uploading analysis results to LIMS"
+    body = "Results could not be uploaded to LIMS. Cmd used was : " + 
+           cmd
+    @helper.sendEmail(from, to, sub, body)
   end
 end
 

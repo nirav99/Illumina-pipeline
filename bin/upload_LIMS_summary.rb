@@ -61,7 +61,7 @@ class UploadHTMLSummary
       if output.match(/error/)  #|| exitStatus == 0  
 #         ( output <=> "htmlsummary file has been saved" ) != 0
         @errorFound = true
-        handleLIMSUploadError()
+        handleLIMSUploadError(cmd)
       end
     end
 
@@ -77,8 +77,14 @@ class UploadHTMLSummary
 
   # Method to appropriately handle the error if connection to LIMS
   # failed
-  def handleLIMSUploadError()
-    puts "Error : Could not upload HTML Summary to LIMS"
+  def handleLIMSUploadError(cmd)
+    puts "Error : Could not upload Summary file to LIMS"
+    from = "p-illumina@bcm.edu"
+    to   = [ "niravs@bcm.edu", "dc12@bcm.edu" ]
+    sub  = "Error in uploading Summary file to LIMS"
+    body = "Summary.htm could not be uploaded to LIMS. Cmd used was : " +
+           cmd
+    @helper.sendEmail(from, to, sub, body)
     exit -1
   end
 
