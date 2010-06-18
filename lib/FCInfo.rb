@@ -30,6 +30,11 @@ class FCInfo
   def refPathValid?(lane)
     refPath = @referencePaths[lane.to_s]
 
+    # If reference is null or empty, return false 
+    if refPath == nil || refPath.eql?("")
+      return false
+    end
+
     # A reference path "sequence" implies building only sequence, and no
     # alignment. Hence it is a valid reference
     if refPath.downcase.eql?("sequence")
@@ -37,12 +42,11 @@ class FCInfo
     end
 
     # A reference path is invalid if any of the following is true
-    # 1) It is null (nil) or empty
-    # 2) It does not exist, or is not a valid directory
-    # 3) It does not end with string "/squash"
+    # 1) It does not exist, or is not a valid directory
+    # 2) It does not end with string "/squash"
     # If all of above are false, reference path is valid
-    if refPath == nil || refPath.eql?("") || !File::exist?(refPath) ||
-       !File::directory?(refPath) || !refPath.match(/\/squash$/)
+    if !File::exist?(refPath) || !File::directory?(refPath) ||
+       !refPath.match(/\/squash$/)
       return false
     end
     return true
@@ -162,6 +166,8 @@ class FCInfo
 end
 
 __END__
+#To Test this class, comment the previous __END__ statement
+
 obj = FCInfo.new("100323_USI-EAS034_0003_PE1_FC61F3YAAXX")
 puts "PAIRED = " + obj.paired?().to_s
 puts "Num Cycles = " + obj.getNumCycles().to_s
@@ -177,5 +183,4 @@ for i in 1..8
   end
 
 end
-#obj = FCInfo.new("091103_USI-EAS376_0009_FC430MPAAXX")
 
