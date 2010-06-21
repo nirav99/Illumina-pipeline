@@ -40,6 +40,11 @@ class PipelineHelper
         fcName = run.slice(2,run.size)
       end
     end
+    # For HiSeqs, a flowcell is prefixed with letter "A" or "B".
+    # We remove this prefix from the reduced flowcell name, since
+    # a flowcell name is entered without the prefix letter in LIMS.
+    # For GA2, there is no change.
+    fcName.slice!(/^[a-zA-Z]/)
     return fcName
   end
 

@@ -78,6 +78,11 @@ class FCInfo
     else
       flowCellName = temp.slice(2, temp.size)
     end
+    # With HiSeqs, a flowcell would have a prefix letter "A" or "B". 
+    # We remove that letter from the flowcell name since the flowcell
+    # is not entered with that prefix in LIMS.
+    # For GA2, this does not have any effect.
+    flowCellName.slice!(/^[a-zA-Z]/)
     return flowCellName
   end
 
@@ -168,7 +173,8 @@ end
 __END__
 #To Test this class, comment the previous __END__ statement
 
-obj = FCInfo.new("100323_USI-EAS034_0003_PE1_FC61F3YAAXX")
+obj = FCInfo.new("100608_SN142_0206_A201JFABXX")
+#obj = FCInfo.new("100604_USI-EAS376_0005_PE1A_FC61TU7AAXX")
 puts "PAIRED = " + obj.paired?().to_s
 puts "Num Cycles = " + obj.getNumCycles().to_s
 
