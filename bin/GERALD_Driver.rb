@@ -205,7 +205,7 @@ class GERALD_Driver
       queueName   = "normal"
       numProc     = 1
       numCores    = 8
-      geraldCores = 12
+      geraldCores = 8
 
       cmd = "bsub -J " + @fcName + "_" + @laneNum + " -o r.o -e r.e " +
             " -q " + queueName + " -n " + numCores.to_s + " -R " +
