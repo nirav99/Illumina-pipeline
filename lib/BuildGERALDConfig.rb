@@ -43,7 +43,7 @@ class BuildGERALDConfig
     if @seqType.eql?("hiseq")
       fileHandle.write("ELAND_SET_SIZE 4\n")
     else
-      fileHandle.write("ELAND_SET_SIZE 24\n")
+      fileHandle.write("ELAND_SET_SIZE 30\n")
     end
 
     fileHandle.write("WEB_DIR_ROOT " + @webDirRoot.to_s  + "\n")
