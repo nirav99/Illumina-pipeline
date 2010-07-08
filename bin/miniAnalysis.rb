@@ -98,6 +98,11 @@ class MiniAnalysis
 
     if lines[1] == ""
       puts "File : " + fileName + " copied successfully"
+      # Since the file is copied properly, zip it
+      cmd = "bzip2 " + @miniDir + "/" + fileName
+      puts "Zipping file : " + fileName
+      output = `#{cmd}`
+      puts "Completed zipping " + fileName
     else
       puts "Error : file : " + fileName + " was not copied"
     end
