@@ -21,9 +21,9 @@ class SlxDataCopier
     elsif @seqName.to_s.match(/034/)
       @destPath = "/stornext/snfs5/next-gen/Illumina/Instruments/EAS034/"
     elsif @seqName.to_s.match(/142/)
-      @destPath = "/stornext/snfs5/next-gen/Illumina/Instruments/HSQ-700142/"
+      @destPath = "/stornext/snfs5/next-gen/Illumina/Instruments/700142/"
     elsif @seqName.to_s.match(/166/)
-      @destPath = "/stornext/snfs5/next-gen/Illumina/Instruments/HSQ-700166/"
+      @destPath = "/stornext/snfs5/next-gen/Illumina/Instruments/700166/"
     else
       raise "Invalid sequencer name specified"
     end
