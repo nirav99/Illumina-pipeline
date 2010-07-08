@@ -5,8 +5,12 @@ require 'fileutils'
 
 class BuildGERALDCommand
   def initialize(fcName)
-    @pipelinePath = "/stornext/snfs5/next-gen/Illumina/GAPipeline/current" +
-                    "/bin/GERALD.pl"
+#    @pipelinePath = "/stornext/snfs5/next-gen/Illumina/GAPipeline/current" +
+#                    "/bin/GERALD.pl"
+
+    @pipelinePath = "/stornext/snfs5/next-gen/Illumina/GAPipeline/CASAVA1_7/" +
+                    "CASAVA-1.7.0-Install/bin/GERALD.pl"
+
     currentDir = FileUtils.pwd
 
     @configPath = currentDir + "/config.txt"

@@ -34,6 +34,7 @@ class BuildGERALDConfig
     writeAnalysisLines(fileHandle)
     fileHandle.write("USE_BASES Y"   + @numCycles.to_s   + "\n")
     fileHandle.write("FLOW_CELL "    + @fcVersion.to_s   + "\n")
+    fileHandle.write("WITH_SEQUENCE true\n")
 
     # As of June 1, 2010
     # we set ELAND_SET_SIZE to 4 for HiSeq analysis based on emails
@@ -89,7 +90,7 @@ class BuildGERALDConfig
       @webDirRoot     = "file:///stornext/snfs5"
       @emailServer    = "mail.hgsc.bcm.tmc.edu"
       @emailDomain    = "bcm.edu"
-      @emailList      = "niravs@bcm.edu"
+      @emailList      = "niravs@bcm.edu, dc12@bcm.edu, yhan@bcm.edu"
       @postRunCommand = "/stornext/snfs5/next-gen/Illumina/ipipe/" +
                         "bin/post_run_cmd.sh" 
     end
