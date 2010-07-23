@@ -198,11 +198,9 @@ class GERALD_Driver
       FileUtils.cd("gerald_dir")
  
       # Each host on cluster has 8 cores.
-      # So we specify 1 host and 8 cores. However, for running the actual
-      # make command, we specify 12 cores. It helps analysis finish faster
-      # Moreover, since eland processes perform lot of I/O, processor 
-      # utilization is improved when we use 12 processes. 
-      queueName   = "normal"
+      # So we specify 1 host and 8 cores. 
+      #queueName   = "normal"
+      queueName   = "high"
       numProc     = 1
       numCores    = 8
       geraldCores = 8
