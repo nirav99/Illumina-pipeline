@@ -11,9 +11,11 @@ require 'PipelineHelper'
 #It works on per-lane basis only.
 class FindUniqueReads
   def initialize()
-    @jarName = "/stornext/snfs5/next-gen/Illumina/ipipe/java/SlxUniqueness.jar"
+    jarName = "/stornext/snfs5/next-gen/Illumina/ipipe/java/SlxUniqueness.jar"
     @lanes   = ""  # Lanes to consider for running uniqueness
     @fcName  = ""
+    javaVM  = "-Xmx8G" # Specifies maximum memory size of JVM
+    @coreCmd = "java " + javaVM + " -jar " + jarName
     @helper  = PipelineHelper.new
     begin
       #findLaneNumbers()
@@ -51,10 +53,10 @@ class FindUniqueReads
     else
       analysisMode = "fragment"
     end
-    cmd = "java -Xmx4G -jar " + @jarName + " " + analysisMode + " " + tmpDir
+    cmd = @coreCmd + " AnalysisMode=" + analysisMode + " TmpDir=" + tmpDir
 
     fileNames.each do |fname|
-      cmd = cmd + " " + fname
+      cmd = cmd + " Input=" + fname
     end
     puts cmd
 
@@ -71,7 +73,7 @@ class FindUniqueReads
 
    # to = [ 'niravs@bcm.edu' ]
     to = [ "deiros@bcm.edu", "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu",
-           "fongeri@bcm.edu", "javaid@bcm.edu", "yw14@bcm.edu" ]
+   #        "fongeri@bcm.edu", "javaid@bcm.edu", "yw14@bcm.edu" ]
     @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
     puts "Finished Computing Uniqueness Results for lane : " + lane
     FileUtils.remove_dir(tmpDir, true)
