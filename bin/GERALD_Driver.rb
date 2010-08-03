@@ -207,7 +207,7 @@ class GERALD_Driver
 
       cmd = "bsub -J " + @fcName + "_" + @laneNum + " -o r.o -e r.e " +
             " -q " + queueName + " -n " + numCores.to_s + " -R " +
-            "'rusage[mem=30000]span[hosts=1]'" + " make -j" +
+            "'rusage[mem=28000]span[hosts=1]'" + " make -j" +
             geraldCores.to_s + " all"
       puts cmd      
       output = `#{cmd}`
