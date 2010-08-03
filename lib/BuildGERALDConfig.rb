@@ -90,7 +90,7 @@ class BuildGERALDConfig
       @webDirRoot     = "file:///stornext/snfs5"
       @emailServer    = "mail.hgsc.bcm.tmc.edu"
       @emailDomain    = "bcm.edu"
-      @emailList      = "niravs@bcm.edu, dc12@bcm.edu, yhan@bcm.edu"
+      @emailList      = "niravs@bcm.edu dc12@bcm.edu"
       @postRunCommand = "/stornext/snfs5/next-gen/Illumina/ipipe/" +
                         "bin/post_run_cmd.sh" 
     end
