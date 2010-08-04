@@ -2,6 +2,7 @@
 # This script generates the GERALD command that can be used to create GERALD
 # directory in the in the flowcell to analyze
 require 'fileutils'
+require 'PipelineHelper'
 
 class BuildGERALDCommand
   def initialize(fcName)
@@ -25,7 +26,10 @@ class BuildGERALDCommand
       raise "Config.txt not present in : " + currentDir
     end
 
-    findFCPath()
+    # Locate base calls directory for the specified flowcell
+    pipelineHelperInstance = PipelineHelper.new
+    @exptDir = pipelineHelperInstance.findBaseCallsDir(@fcName)
+
     fileHandle = File.new(@outputFile, "w")
 
     if !fileHandle || fileHandle == nil
@@ -45,6 +49,7 @@ class BuildGERALDCommand
 
   private
 
+=begin
   # This helper method searches for flowcell in list of volumes
   # If it does not find the path for flowcell, it aborts with an exception
     def findFCPath()
@@ -101,6 +106,7 @@ class BuildGERALDCommand
         @exptDir = @fcPath + "/" + bustardDir
       end
     end
+=end
 
     @pipelinePath = "" # Path to GERALD installation 
     @configPath   = "" # Path to GERALD config file
@@ -111,5 +117,5 @@ class BuildGERALDCommand
     @outputFile   = "" # File containing GERALD command
 end
 
-#obj = BuildGERALDCommand.new("100412_USI-EAS376_0007_PE1_FC61JT0AAXX")
+#obj = BuildGERALDCommand.new("100719_USI-EAS376_0003_PE1_FC6263EAAXX")
 #obj = BuildGERALDCommand.new("100120_USI-EAS376_0018_PE1_FC618U7AAXX")

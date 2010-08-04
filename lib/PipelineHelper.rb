@@ -48,6 +48,60 @@ class PipelineHelper
     return fcName
   end
 
+  # This helper method searches for flowcell in list of volumes and returns
+  # the path of the flowcell including it's directory.
+  # If it does not find the path for flowcell, it aborts with an exception
+    def findFCPath(fcName)
+      fcPath = ""
+
+      # This represents location where to search for flowcell
+      rootDir = "/stornext/snfs5/next-gen/Illumina/Instruments"
+
+      # Populate an array with list of volumes where this flowcell
+      # is expected to be found
+      parentDir = Array.new
+      parentDir << rootDir + "/EAS034"
+      parentDir << rootDir + "/EAS376"
+      parentDir << rootDir + "/700142"
+      parentDir << rootDir + "/700166"
+
+      parentDir.each{ |path|
+        if File::exist?(path + "/" + fcName) &&
+           File::directory?(path + "/" + fcName)
+           fcPath = path + "/" + fcName
+        end
+      }
+
+      if fcPath.eql?("")
+        puts "Error : Did not find path for flowcell : " + fcName
+        raise "Error in finding path for flowcell : " + fcName
+      end
+      return fcPath.to_s
+    end
+
+  # Helper method to locate the basecalls (bustard) directory for the
+  # specified flowcell
+  def findBaseCallsDir(fcName)
+    fcPath = ""
+
+    # This represents directory hierarchy where GERALD directory
+    # gets created.
+    baseCallsDirPaths = Array.new
+    baseCallsDirPaths << "Data/Intensities/BaseCalls"
+    baseCallsDirPaths << "BCLtoQSEQ"
+    
+    fcPath = findFCPath(fcName)
+    
+    baseCallsDirPaths.each{ |bcPath|
+      if File::exist?(fcPath + "/" + bcPath) &&
+         File::directory?(fcPath + "/" + bcPath)
+         return fcPath.to_s + "/" + bcPath.to_s
+      end
+    }
+
+    raise "Did not find Base calls directory for flowcell : " + fcName
+  end
+
   # Method to send an email
   # Parameter "to" is an array of email addresses separated by commas
   def sendEmail(from, to, subject, message)
