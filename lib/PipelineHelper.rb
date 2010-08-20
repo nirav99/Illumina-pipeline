@@ -102,6 +102,18 @@ class PipelineHelper
     raise "Did not find Base calls directory for flowcell : " + fcName
   end
 
+  # Helper method that returns true if the specified flowcell is HiSeq.
+  # False if GA2.
+  def isFCHiSeq(fcName)
+    # If the name of the flowcell contains the string "EAS034" or "EAS376
+    # then it is GA2 flowcell, else it is HiSeq flowcell
+    if !fcName.match("EAS034") && !fcName.match("EAS376")
+      return true
+    else
+      return false
+    end
+  end
+
   # Method to send an email
   # Parameter "to" is an array of email addresses separated by commas
   def sendEmail(from, to, subject, message)

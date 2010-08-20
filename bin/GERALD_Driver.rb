@@ -5,6 +5,7 @@ require 'fileutils'
 require 'FCInfo.rb'
 require 'BuildGERALDConfig.rb'
 require 'BuildGERALDCommand.rb'
+require 'Scheduler'
 
 #Driver script to start GERALD analysis for specified lane of FC
 class GERALD_Driver
@@ -196,22 +197,16 @@ class GERALD_Driver
     def runGERALDMakefile()
       puts "\r\nRunning GERALD Make targets"
       FileUtils.cd("gerald_dir")
- 
-      # Each host on cluster has 8 cores.
-      # So we specify 1 host and 8 cores. 
-      #queueName   = "normal"
-      queueName   = "high"
-      numProc     = 1
-      numCores    = 8
-      geraldCores = 8
 
-      cmd = "bsub -J " + @fcName + "_" + @laneNum + " -o r.o -e r.e " +
-            " -q " + queueName + " -n " + numCores.to_s + " -R " +
-            "'rusage[mem=28000]span[hosts=1]'" + " make -j" +
-            geraldCores.to_s + " all"
-      puts cmd      
-      output = `#{cmd}`
-      puts output
+      # Each host on cluster has 8 cores.
+      numCores    = 8
+
+      makeCmd = "make -j" + numCores.to_s + " all"
+      scheduler = Scheduler.new(@fcName + "_" + @laneNum, makeCmd)
+      scheduler.setMemory(28000)
+      scheduler.setNodeCores(numCores)
+      scheduler.setPriority("high")
+      scheduler.runCommand()
     end
 
     def handleErrorAndAbort(msg)

@@ -27,8 +27,8 @@ class BuildGERALDCommand
     end
 
     # Locate base calls directory for the specified flowcell
-    pipelineHelperInstance = PipelineHelper.new
-    @exptDir = pipelineHelperInstance.findBaseCallsDir(@fcName)
+    @pipelineHelperInstance = PipelineHelper.new
+    @exptDir = @pipelineHelperInstance.findBaseCallsDir(@fcName)
 
     fileHandle = File.new(@outputFile, "w")
 
@@ -45,68 +45,24 @@ class BuildGERALDCommand
     fileHandle.write("&> " + @outputFile  + ".log\n")
     fileHandle.close()
     FileUtils.chmod(0755, @outputFile)
+
+    filterPhixReads()
   end
 
   private
 
-=begin
-  # This helper method searches for flowcell in list of volumes
-  # If it does not find the path for flowcell, it aborts with an exception
-    def findFCPath()
-      @fcPath = ""
-      @exptDir = ""
-      
-      # This represents directory hierarchy where GERALD directory
-      # gets created. With HiSeqs, bustard directory could be called
-      # BCLtoQSEQ instead of BaseCalls. 
-      bustardDirPaths = Array.new
-      bustardDirPaths << "Data/Intensities/BaseCalls"
-      bustardDirPaths << "BCLtoQSEQ"
+  def filterPhixReads()
+    if @pipelineHelperInstance.isFCHiSeq(@fcName) == true
+      # Add a file "filterphix" in EXPT_DIR
+      # Script filtering out phix reads should check for this file before
+      # proceeding
 
-      # Flag to indicate if a valid Bustard directory was found
-      foundBustardDir = false
-      bustardDir      = ""
-     
-      # This represents location where to search for flowcell
-      rootDir = "/stornext/snfs5/next-gen/Illumina/Instruments"
-
-      # Populate an array with list of volumes where this flowcell
-      # is expected to be found
-      parentDir = Array.new
-      parentDir << rootDir + "/EAS034"
-      parentDir << rootDir + "/EAS376"
-      parentDir << rootDir + "/700142"
-      parentDir << rootDir + "/700166"
-
-      parentDir.each{ |path|
-        if File::exist?(path + "/" + @fcName) && 
-           File::directory?(path + "/" + @fcName)
-           @fcPath = path + "/" + @fcName
-        end
-      }
-
-      if @fcPath.eql?("")
-        puts "Error : Did not find path for flowcell : " + @fcName
-        raise "Error in finding path for flowcell : " + @fcName
-      end
-
-      bustardDirPaths.each{ |bustPath|
-        if File::exist?(@fcPath + "/" + bustPath) &&
-           File::directory?(@fcPath + "/" + bustPath)
-           foundBustardDir = true
-           bustardDir      = bustPath
-           puts "Found Bustard Directory : " + bustardDir.to_s
-        end
-      }
-
-      if foundBustardDir == false
-         puts "Error : Did not find Bustard results in " + @fcPath
-         raise "Error in finding Bustard results in " + @fcPath
-      else
-        @exptDir = @fcPath + "/" + bustardDir
-      end
+      currDir = FileUtils.pwd()
+      FileUtils.cd(@exptDir)
+      `touch filterphix`
+      FileUtils.cd(currDir)
     end
-=end
+  end
 
     @pipelinePath = "" # Path to GERALD installation 
     @configPath   = "" # Path to GERALD config file
