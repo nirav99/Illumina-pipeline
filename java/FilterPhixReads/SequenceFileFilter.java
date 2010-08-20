@@ -35,6 +35,7 @@ public class SequenceFileFilter
   public SequenceFileFilter(String seqFileName, 
                             Hashtable<String, String> phixReads)
   {
+    System.out.println("Processing sequence file : " + seqFileName);
     this.fastQSequence = seqFileName;
     this.phixReads = phixReads;
     this.outputFile = seqFileName + ".filtered";  
@@ -65,13 +66,14 @@ public class SequenceFileFilter
     }
     reader.close();
     writer.close();
-    
+
+/*    
     // Replace the original FastQ sequence file with the new file
     File f = new File(fastQSequence);
     f.delete();
     File f2 = new File(outputFile);
     f2.renameTo(f);
-    
+*/    
     System.out.println("Filtering     : " + fastQSequence);
     System.out.println("Total Reads   : " + totalReads);
     System.out.println("Reads Removed : " + discardedReads);
@@ -95,7 +97,8 @@ public class SequenceFileFilter
     }
     return false;
   }
- 
+
+/* 
   private String getReadName(FastqRecord record)
   {
     // Discard the machine name and run number from read name
@@ -103,7 +106,23 @@ public class SequenceFileFilter
     String readName = record.getReadHeader().substring(idx + 1);
     return readName;
   }
- 
+*/
+
+  /**
+   * Helper method to obtain read name in the format stores in hashtable
+   * @param record
+   * @return
+   */
+  private String getReadName(FastqRecord record)
+  {
+    // Construct the read name such that it contains only the fields found
+    // in the hashtable fields 2 through 6.
+    // i.e. fields lane, tile, X-coordinate, Y-coordinate, index sequence
+    int startIdx = record.getReadHeader().indexOf(":");
+    int endIdx   = record.getReadHeader().indexOf("/");
+    String readName = record.getReadHeader().substring(startIdx + 1, endIdx);
+    return readName;
+  } 
   private void showKeys()
   {
     Enumeration<String> keys = phixReads.keys();

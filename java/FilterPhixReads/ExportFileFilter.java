@@ -8,36 +8,63 @@ import java.util.*;
  */
 public class ExportFileFilter
 {
-  private String exportFileName = null;  // Name of export file
+  private String exportFileRead1 = null; // Name of export file for read 1
+  private String exportFileRead2 = null; // Export file for read 2
   private long totalReads       = 0;     // Total reads in export file
   private long discardedReads   = 0;     // Total reads removed (phix)
   
   // To remember reads that map to Phix
   private Hashtable<String, String> phixReads = null;
 
-  private BufferedReader reader      = null; // Instance of file reader
-  private BufferedWriter writer      = null; // To write new file
-
   /**
    * Class constructor
-   */ 
-  public ExportFileFilter(String exportFileName) throws Exception
+   * @param exportFileRead1
+   * @param exportFileRead2
+   * @throws Exception
+   */
+  public ExportFileFilter(String exportFileRead1, String exportFileRead2) 
+  throws Exception
   {
-    this.exportFileName = exportFileName;
-    reader    = new BufferedReader(new FileReader(exportFileName));
+    this.exportFileRead1 = exportFileRead1;
+//    reader    = new BufferedReader(new FileReader(exportFileRead1));
+    
+    if(exportFileRead2 != null && !exportFileRead2.isEmpty())
+    {
+      this.exportFileRead2 = exportFileRead2;
+    }
     phixReads = new Hashtable<String, String>();
   }
 
   /**
-   * Method to remove reads that align to phix from export file
+   * Method to obtain reads that map to phix
+   * @return
+   * @throws Exception
    */
-  public Hashtable<String, String> filterPhixReads() throws Exception
+  public Hashtable<String, String> getPhixReads() throws Exception
+  {
+    buildPhixReadsTable(exportFileRead1);
+    
+    if(exportFileRead2 != null)
+    {
+      buildPhixReadsTable(exportFileRead2);
+    }
+    return phixReads;
+  }
+  
+  /**
+   * Helper method to build a hashtable having names of reads to remove from
+   * the sequence files
+   * @param exportFileName
+   * @throws Exception
+   */
+  private void buildPhixReadsTable(String exportFileName) throws Exception
   {
     String line;
     String tokens[];
 
-    File outputFile = new File(exportFileName + ".filtered");
-    writer = new BufferedWriter(new FileWriter(outputFile));
+    System.out.println("Finding phix reads in : " + exportFileName);
+
+    BufferedReader reader = new BufferedReader(new FileReader(exportFileName));
     
     while((line = reader.readLine()) != null)
     {
@@ -46,29 +73,24 @@ public class ExportFileFilter
 
       if(readMapsToPhix(tokens))
       {
-        discardedReads++;
-        phixReads.put(getReadName(tokens), "");
+        String readName = getReadName(tokens);
+        if(!phixReads.containsKey(readName))
+        {
+          phixReads.put(readName, "");
+          discardedReads++;
+        }
+        readName = null;
       }
-      else
-      {
-        writer.write(line);
-        writer.newLine();
-      }
+      
       tokens = null;
       line = null;
     }
-    writer.close();
     reader.close();
-    File f = new File(exportFileName);
-    f.delete();
-    outputFile.renameTo(new File(exportFileName));
     
     System.out.println("Filtering     : " + exportFileName);
     System.out.println("Total Reads   : " + totalReads);
-    System.out.println("Reads Removed : " + discardedReads);
-    System.out.format("%% Reads Removed : %.2f %%",  1.0 * discardedReads / totalReads * 100.0);
-    System.out.println();
-    return phixReads;
+    System.out.println("Phix Reads    : " + discardedReads);
+    System.out.format("%% Reads         : %.2f %%",  1.0 * discardedReads / totalReads * 100.0);
   }
   
   /**
@@ -79,12 +101,22 @@ public class ExportFileFilter
   private boolean readMapsToPhix(String tokens[])
   {
     //11th field (index 10) represents the mapping information.
+    // It represents the chromosome that this read maps to.
+    // 18th field (index 17) represents the partner chromosome, where partner
+    // paired end read maps to. We want to remove that read also.
+
     if(tokens.length < 11)
     {
       return false;
     }
     if(tokens[10].toLowerCase().startsWith("phix"))
     {
+      // this read maps to phix reference
+      return true;
+    }
+    if(tokens.length >= 18 && tokens[17].toLowerCase().startsWith("phix"))
+    {
+      // In paired end mode, mate of this read maps to phix reference
       return true;
     }
     else
@@ -92,18 +124,28 @@ public class ExportFileFilter
       return false;
     }
   }
- 
+  
   /**
-   * Private helper method to build read name from export file
-   */ 
+   * Helper method to construct a read name for lookup in sequence file.
+   * This read name contains the following fields : 
+   * 1) lane
+   * 2) tile
+   * 3) X-coordinate of cluster
+   * 4) Y-coordinate of cluster
+   * 5) Index sequence
+   * @param tokens
+   * @return
+   * @throws Exception
+   */
   private String getReadName(String tokens[]) throws Exception
   {
-    if(tokens.length < 6)
+    if(tokens.length < 7)
     {
       throw new Exception("Invalid read");
     }
-    return tokens[2] + ":" + tokens[3] + ":" + tokens[4] +
-           ":" + tokens[5] + "#" + tokens[6] + "/" + tokens[7];
+    
+    return tokens[2] + ":" + tokens[3] + ":" + 
+           tokens[4] + ":" + tokens[5] + "#" + tokens[6];
   }
 }
 
