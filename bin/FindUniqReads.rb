@@ -71,9 +71,8 @@ class FindUniqueReads
     resultFile = File.open(resultFileName, "r")
     lines = resultFile.read()
 
-   # to = [ 'niravs@bcm.edu' ]
-    to = [ "deiros@bcm.edu", "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu",
-   #        "fongeri@bcm.edu", "javaid@bcm.edu", "yw14@bcm.edu" ]
+    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "english@bcm.edu", 
+           "fongeri@bcm.edu", "javaid@bcm.edu", "yw14@bcm.edu" ]
     @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
     puts "Finished Computing Uniqueness Results for lane : " + lane
     FileUtils.remove_dir(tmpDir, true)
