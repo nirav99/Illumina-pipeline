@@ -8,9 +8,9 @@ public class Driver
    */
   public static void main(String[] args)
   {
-  String seqFileRead1 = null;
-  String seqFileRead2 = null;
-  
+	String seqFileRead1 = null;
+	String seqFileRead2 = null;
+	
     if(args.length < 1 || args.length > 2)
     {
       printUsage();
@@ -19,21 +19,22 @@ public class Driver
     try
     {
       validateArgs(args);
-      ExportFileFilter expFilter = null;
+      PhixFinder expFilter = null;
       
       if(args.length == 1)
       {
-        expFilter = new ExportFileFilter(args[0], null);
+        expFilter = new PhixFinder(args[0], null);
         seqFileRead1 = args[0].replace("export", "sequence");
       }
       else
       {
-        expFilter = new ExportFileFilter(args[0], args[1]);
+        expFilter = new PhixFinder(args[0], args[1]);
         seqFileRead1 = args[0].replace("export", "sequence");
         seqFileRead2 = args[1].replace("export", "sequence");
       }
       
       Hashtable<String, String> phixReads = expFilter.getPhixReads();
+      expFilter.filterPhixReads();
       SequenceFileFilter seqFilter = new SequenceFileFilter(seqFileRead1, phixReads);
       seqFilter.filterPhixReads();
       seqFilter = null;
@@ -44,7 +45,6 @@ public class Driver
         seqFilter.filterPhixReads();
         seqFilter = null;
       }
-    
     }
     catch(Exception e)
     {
@@ -87,4 +87,3 @@ public class Driver
     }
   }
 }
-

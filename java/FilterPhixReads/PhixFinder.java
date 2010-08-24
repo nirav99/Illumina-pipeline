@@ -6,7 +6,7 @@ import java.util.*;
  * Class to parse Illumina export file to extract the reads that map to
  * phix reference
  */
-public class ExportFileFilter
+public class PhixFinder
 {
   private String exportFileRead1 = null; // Name of export file for read 1
   private String exportFileRead2 = null; // Export file for read 2
@@ -22,11 +22,10 @@ public class ExportFileFilter
    * @param exportFileRead2
    * @throws Exception
    */
-  public ExportFileFilter(String exportFileRead1, String exportFileRead2) 
+  public PhixFinder(String exportFileRead1, String exportFileRead2) 
   throws Exception
   {
     this.exportFileRead1 = exportFileRead1;
-//    reader    = new BufferedReader(new FileReader(exportFileRead1));
     
     if(exportFileRead2 != null && !exportFileRead2.isEmpty())
     {
@@ -46,9 +45,71 @@ public class ExportFileFilter
     
     if(exportFileRead2 != null)
     {
-      buildPhixReadsTable(exportFileRead2);
+			buildPhixReadsTable(exportFileRead2);
     }
     return phixReads;
+  }
+  
+  /**
+   * Method to filter out phix reads from the export file(s)
+   */
+  public void filterPhixReads() throws Exception
+  {
+    removePhixReads(exportFileRead1);
+    
+    if(exportFileRead2 != null)
+    {
+      removePhixReads(exportFileRead2);
+    }
+  }
+  
+  /**
+   * Helper method to remove reads mapping to phix
+   * @param exportFile
+   * @param outputFile
+   * @throws Exception
+   */
+  private void removePhixReads(String exportFile) throws Exception
+  {
+    String line;
+    String tokens[];
+    String outputFile = exportFile + ".filtered";
+    
+    BufferedReader reader = new BufferedReader(new FileReader(exportFile));
+    BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+    
+    while((line = reader.readLine()) != null)
+    {
+      totalReads++;
+      tokens = line.split("\t");
+      String readName = getReadName(tokens);
+      
+      if(!phixReads.containsKey(readName))
+      {
+        writer.write(line);
+        writer.newLine();
+      }
+      else
+      {
+        discardedReads++;
+      }
+      tokens   = null;
+      readName = null;
+      line     = null;
+    }
+    reader.close();
+    writer.close();
+    
+    System.out.println("Filtering     : " + exportFile);
+    System.out.println("Total Reads   : " + totalReads);
+    System.out.println("Phix Reads    : " + discardedReads);
+    System.out.format("%% Reads         : %.2f %%",  1.0 * discardedReads / totalReads * 100.0);
+    System.out.println();
+    
+    File f = new File(exportFile);
+    f.delete();
+    File f2 = new File(outputFile);
+    f2.renameTo(f);
   }
   
   /**
@@ -62,13 +123,10 @@ public class ExportFileFilter
     String line;
     String tokens[];
 
-    System.out.println("Finding phix reads in : " + exportFileName);
-
     BufferedReader reader = new BufferedReader(new FileReader(exportFileName));
     
     while((line = reader.readLine()) != null)
     {
-      totalReads++;
       tokens = line.split("\t");
 
       if(readMapsToPhix(tokens))
@@ -77,7 +135,6 @@ public class ExportFileFilter
         if(!phixReads.containsKey(readName))
         {
           phixReads.put(readName, "");
-          discardedReads++;
         }
         readName = null;
       }
@@ -86,11 +143,6 @@ public class ExportFileFilter
       line = null;
     }
     reader.close();
-    
-    System.out.println("Filtering     : " + exportFileName);
-    System.out.println("Total Reads   : " + totalReads);
-    System.out.println("Phix Reads    : " + discardedReads);
-    System.out.format("%% Reads         : %.2f %%",  1.0 * discardedReads / totalReads * 100.0);
   }
   
   /**
@@ -148,4 +200,3 @@ public class ExportFileFilter
            tokens[4] + ":" + tokens[5] + "#" + tokens[6];
   }
 }
-
