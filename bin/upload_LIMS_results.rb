@@ -20,6 +20,7 @@ class LaneResult
   def buildLIMSResultString(readNum)
     getPhasingPrePhasingResults(readNum)
     getLaneResultSummary(readNum)
+    getUniquenessResult()
 
     result = " LANE_YIELD_KBASES " + @totalBases.to_s + " PERCENT_ERROR_RATE_PF " +
              @errorPercent.to_s +  " CLUSTERS_RAW " + @rawClusters.to_s +
@@ -30,10 +31,39 @@ class LaneResult
              " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + " PERCENT_PHASING " +
              @phasePercent.to_s + " PERCENT_PREPHASING " + @prePhasePercent.to_s +
              " RESULTS_PATH " + FileUtils.pwd
+    if @foundUniquenessResult == true && readNum == 1
+      result = result + " UNIQUE_PERCENT " + @percentUnique.to_s
+    end
     return result
   end
 
   private
+  # Helper method to get uniqueness percentage result
+  # TODO: Possible improvement - if many uniqueness files are present
+  # select the right one based on lane number
+  def getUniquenessResult()
+    @foundUniquenessResult = false
+    
+    fileNames = Dir["Uniqueness_*.txt"]
+
+    if fileNames.size < 1
+      puts "Did not find Uniqueness file"
+      return
+    elsif fileNames.size > 1
+      puts "Found multiple uniqueness files. Ignoring..."
+      return
+    end
+
+    lines = IO.readlines(fileNames[0])
+    lines.each do |line|
+      if line.match(/\% Unique Reads/)
+        @foundUniquenessResult = true
+        line.gsub!(/^\D+/, "")
+        @percentUnique = line.slice(/^[0-9\.]+/)
+        return
+      end
+    end
+  end
 
   # Method to read the LaneResultsSummary section of Summary.xml
   def getLaneResultSummary(readNum)
@@ -111,6 +141,7 @@ class LaneResult
   @avgAlignScore   = 0   # Average Alignment Score
   @prePhasePercent = 0   # Pre-phasing Percentage
   @phasePercent    = 0   # Phasing Percentage
+  @percentUnique   = 0   # Uniqueness Percentage
 end
 
 # Class to upload summary results for all lanes specified in config.txt
