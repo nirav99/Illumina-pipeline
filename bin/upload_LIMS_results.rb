@@ -20,7 +20,7 @@ class LaneResult
   def buildLIMSResultString(readNum)
     getPhasingPrePhasingResults(readNum)
     getLaneResultSummary(readNum)
-    getUniquenessResult()
+#    getUniquenessResult()
 
     result = " LANE_YIELD_KBASES " + @totalBases.to_s + " PERCENT_ERROR_RATE_PF " +
              @errorPercent.to_s +  " CLUSTERS_RAW " + @rawClusters.to_s +
