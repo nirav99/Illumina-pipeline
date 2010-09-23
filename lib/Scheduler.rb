@@ -65,7 +65,7 @@ class Scheduler
  
 # private
 
- # Method to parse LSF job ID from output of bsub command
+ # Method to parse job ID from output of msub command
   def parseJobID(output)
     output.gsub!(/^Job\s+</, "")
     @jobID = output.slice(/\d+/)
@@ -78,11 +78,13 @@ class Scheduler
     @jobName = @jobPrefix + "_" + processID.to_s + "_" + rand(5000).to_s
   end
 
-  # Method to build the LSF command
+  # Method to build the Moab submit command
   def buildCommand()
 
-    @cmd = "bsub -J " + @jobName + " -o " + @stdoutLog + " -e " + @stderrLog +
-           " -q " + @priority + " -n " + @numCores.to_s
+    @cmd = "echo \"#{@userCmd}\" | "
+
+		@cmd = @cmd + "msub -N " + @jobName + " -o " + @stdoutLog +
+           " -e " + @stderrLog + " -q " + @priority + " -d  #{Dir.pwd()} -V"
 
     dependency = buildDependencyList()
 
@@ -90,25 +92,20 @@ class Scheduler
       @cmd = @cmd + dependency
     end
 
-    @cmd = @cmd + " -R \"rusage[mem=" + @memory.to_s + "]span[hosts=1]\"" +
-           " \"" + @userCmd + "\""
+    @cmd = @cmd + " -l nodes=1:ppn=#{@numCores.to_s},mem=#{@memory.to_s}mb"
+ 
     puts @cmd.to_s 
   end
 
-  # Method to create LSF command dependency
+  # Method to create dependency
   def buildDependencyList()
     if @depList != nil && @depList.length > 0
       depCount = @depList.length
-      depString = " -w '"
+      depString = " -l depend=afterok"
 
       for i in 0..(depCount - 1)
-        depString = depString + "done(\"" + @depList.at(i) + "\")"
-
-        if i < (depCount - 1)
-          depString = depString + " && "
-        end
+        depString = depString + ":" + @depList.at(i)
       end
-      depString = depString + "'"
       return depString
     else
       return ""
