@@ -8,6 +8,7 @@
 
 #TODO: Catch errors and report them
 
+ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/PhixFilter.rb
 # Send Summary.htm as an email attachment
 sh /stornext/snfs5/next-gen/Illumina/ipipe/bin/email_analysis_summary.sh
 
@@ -18,7 +19,11 @@ ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_results.rb
 ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_summary.rb
 
 # Run uniqueness analysis
-bsub -J "Uniqueness_analysis" -o u.o -e u.e -q "normal" -n 1 -R "rusage[mem=8000]span[hosts=1]" ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/FindUniqReads.rb
+echo "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/FindUniqReads.rb" | msub -N "Uniqueness_analysis" -q normal -d `pwd` -e u.e -o u.o -l nodes=1:ppn=1,mem=8000mb -V
+
+# Run uniqueness analysis
+#bsub -J "Uniqueness_analysis" -o u.o -e u.e -q "normal" -n 1 -R "rusage[mem=8000]span[hosts=1]" ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/FindUniqReads.rb
 
 # Start mini-analysis
-bsub -J "mini_analysis" -o m.o -e m.e -q "normal" -n 1 -R "rusage[mem=1000]span[hosts=1]" ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/miniAnalysis.rb
+echo "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/miniAnalysis.rb" | msub -N "mini_analysis" -q normal -d `pwd` -e m.e -o m.o -l nodes=1:ppn=1,mem=2000mb -V
+#bsub -J "mini_analysis" -o m.o -e m.e -q "normal" -n 1 -R "rusage[mem=1000]span[hosts=1]" ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/miniAnalysis.rb
