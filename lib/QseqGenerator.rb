@@ -62,6 +62,26 @@ class QseqGenerator
     puts "FOUND JOB ID = " + @jobID.to_s
     @jobName = s.getJobName()
     puts "FOUND JOB NAME = " + @jobName
+
+    # PLEASE NOTE: The function below helps to create MOAB dependency between
+    # GERALD jobs and qseq generator jobs. To disable this functionality, please
+    # comment out the line below.
+    writeJobNameToBaseCallsDir()
+  end
+
+  # Helper method to write job name to base calls dir
+  # Intention is that subsequent jobs can read this ID and put
+  # a dependency in their scheduling
+  def writeJobNameToBaseCallsDir()
+    fileName = @baseCallsDir + "/bclToQseqJobName"
+    file = File.new(fileName, "w")
+    
+    if file
+       file.syswrite(@jobName)
+       file.close
+    else
+       puts "Unable to open file : " + fileName
+    end
   end
 end
 
