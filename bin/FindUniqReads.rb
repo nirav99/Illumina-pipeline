@@ -17,6 +17,7 @@ class FindUniqueReads
     javaVM  = "-Xmx8G" # Specifies maximum memory size of JVM
     @coreCmd = "java " + javaVM + " -jar " + jarName
     @helper  = PipelineHelper.new
+
     begin
       #findLaneNumbers()
       #findFCName()
@@ -72,9 +73,13 @@ class FindUniqueReads
     lines = resultFile.read()
 
     to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "english@bcm.edu", 
-           "fongeri@bcm.edu", "javaid@bcm.edu", "yw14@bcm.edu" ]
+           "fongeri@bcm.edu", "javaid@bcm.edu", "yw14@bcm.edu", "jgreid@bcm.edu" ]
     @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
     puts "Finished Computing Uniqueness Results for lane : " + lane
+
+    # Upload uniqueness results to LIMS
+    uploadResultsToLIMS(resultFileName, lane)
+
     FileUtils.remove_dir(tmpDir, true)
     copyFileMiniAnalysis(resultFileName)
   end
@@ -92,6 +97,38 @@ class FindUniqueReads
     system("mkdir -p #{miniDir}")
     puts "Copying " + fileName + " to mini_analysis directory"
     system("cp #{fileName} #{miniDir}") 
+  end
+
+  # Helper method to upload uniqueness percentage to LIMS
+  #TODO: Make upload part of another script (maybe helper)
+  # and perform error detection if upload to LIMS fails
+  def uploadResultsToLIMS(resultFile, laneNum)
+    limsUploadCmd = "perl /stornext/snfs5/next-gen/Illumina/ipipe/" +
+                    "third_party/setIlluminaLaneStatus.pl " + @fcName +
+                    "-" + laneNum.to_s + " ANALYSIS_FINISHED " +
+                    "UNIQUE_PERCENT "
+
+    foundUniquenessResult = false
+
+    lines = IO.readlines(resultFile)
+
+    lines.each do |line|
+      if line.match(/\% Unique Reads/)
+        foundUniquenessResult = true
+        line.gsub!(/^\D+/, "")
+        uniqPer = line.slice(/^[0-9\.]+/)
+        puts uniqPer.to_s
+        cmd = limsUploadCmd + uniqPer.to_s
+        puts "Uploading uniqueness results"
+        puts cmd
+        `#{cmd}`
+        return
+      end
+    end
+
+    if foundUniquenessResult == false
+      raise "Did not find uniqueness percentage"
+    end
   end
 end
 
