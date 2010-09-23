@@ -6,6 +6,7 @@ require 'FCInfo.rb'
 require 'BuildGERALDConfig.rb'
 require 'BuildGERALDCommand.rb'
 require 'Scheduler'
+require 'PipelineHelper'
 
 #Driver script to start GERALD analysis for specified lane of FC
 class GERALD_Driver
@@ -198,6 +199,15 @@ class GERALD_Driver
       puts "\r\nRunning GERALD Make targets"
       FileUtils.cd("gerald_dir")
 
+      pHelper = PipelineHelper.new
+      baseCallsDir = pHelper.findBaseCallsDir(@fcName)
+      parentJob = nil
+
+      if File::exist?(baseCallsDir + "/bclToQseqJobName")
+        lines = IO.readlines(baseCallsDir + "/bclToQseqJobName")
+        parentJob = lines[0].strip
+      end
+
       # Each host on cluster has 8 cores.
       numCores    = 8
 
@@ -206,6 +216,11 @@ class GERALD_Driver
       scheduler.setMemory(28000)
       scheduler.setNodeCores(numCores)
       scheduler.setPriority("high")
+      
+      if parentJob != nil
+        scheduler.setDependency(parentJob)
+      end
+
       scheduler.runCommand()
     end
 
