@@ -52,6 +52,11 @@ class FCInfo
     return true
   end
 
+  # Method to obtain library name for the specified lane
+  def getLibraryName(lane)
+    return @libraryNames[lane.to_s] 
+  end
+
   private
   @limsScript = ""
   @paired = false
@@ -60,6 +65,7 @@ class FCInfo
   @genusName = nil
   @speciesName = nil
   @referencePaths = nil
+  @libraryNames = nil
 
   # Helper method to handle errors encountered in interacting with LIMS
   # such as error in connecting to LIMS
@@ -107,6 +113,8 @@ class FCInfo
     findNumCycles(output)
     @referencePaths = Hash.new()
     @referencePaths["5"] = parseReferencePath(output)
+    @libraryNames = Hash.new()
+    @libraryNames["5"] = parseLibraryName(output)
 
     for i in 1..8
       if i != 5
@@ -118,6 +126,7 @@ class FCInfo
         end
 
         @referencePaths[i.to_s] = parseReferencePath(output)
+        @libraryNames[i.to_s]   = parseLibraryName(output)
       end
     end
   end
@@ -168,19 +177,32 @@ class FCInfo
       @paired = false
     end
   end
+
+  # Get the library name from the output
+  def parseLibraryName(output)
+    libName = nil
+    # Find the library name
+    if output.match(/Library=/)
+      libName = output.slice(/Library=\S+/) 
+      libName.gsub!(/Library=/, "")
+    end
+  end
 end
 
 __END__
+
 #To Test this class, comment the previous __END__ statement
 
-obj = FCInfo.new("100608_SN142_0206_A201JFABXX")
-#obj = FCInfo.new("100604_USI-EAS376_0005_PE1A_FC61TU7AAXX")
+#obj = FCInfo.new("100608_SN142_0206_A201JFABXX")
+obj = FCInfo.new("100604_USI-EAS376_0005_PE1A_FC61TU7AAXX")
 puts "PAIRED = " + obj.paired?().to_s
 puts "Num Cycles = " + obj.getNumCycles().to_s
 
 for i in 1..8
   refPath = obj.getRefPath(i)
-  puts "Lane " + i.to_s + " : " + refPath
+  libName = obj.getLibraryName(i)
+
+  puts "Lane " + i.to_s + " : " + refPath + " " + libName
 
   if true == obj.refPathValid?(i)
     puts "Reference Path is valid"
