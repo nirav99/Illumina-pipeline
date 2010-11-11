@@ -4,6 +4,7 @@ $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 require 'rubygems'
 require 'hpricot'
 require 'PipelineHelper'
+require 'FCBarcodeFinder'
 
 # Class to upload the Summary.htm files to LIMS
 # This script should be executed from the same directory containing
@@ -18,6 +19,10 @@ class UploadHTMLSummary
                   "uploadHtmlSummary.pl"
     @errorFound = false
     @helper     = PipelineHelper.new()
+
+    @limsBarcode = ""
+    obj = FCBarcodeFinder.new
+    @limsBarcode = obj.getBarcodeForLIMS()
 
     if !File.exists?("Summary.xml")
       handleMissingFileError("Summary.xml")
@@ -44,9 +49,8 @@ class UploadHTMLSummary
 
   # Method to build the LIMS command to upload Summary.htm file
   def uploadSummaryToLIMS()
-    @lanes.each_byte do |lane|
-      cmd = "perl " + @limsScript + " " + @fcName + "-" +
-            lane.chr + " Summary.htm"
+    #@lanes.each_byte do |lane|
+      cmd = "perl " + @limsScript + " " + @limsBarcode + " Summary.htm"
       puts cmd
       output = `#{cmd}`
       output.downcase!
@@ -63,7 +67,7 @@ class UploadHTMLSummary
         @errorFound = true
         handleLIMSUploadError(cmd)
       end
-    end
+    #end
 
     # If all Summary files were successfully uploaded, exit with 
     # return code zero.

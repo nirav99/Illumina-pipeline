@@ -5,6 +5,7 @@ require 'rubygems'
 require 'hpricot'
 require 'fileutils'
 require 'PipelineHelper'
+require 'FCBarcodeFinder'
 
 # Class to parse GERALD analysis summary for specified lane for specified
 # read number (either read 1 or read 2).
@@ -20,7 +21,8 @@ class LaneResult
   def buildLIMSResultString(readNum)
     getPhasingPrePhasingResults(readNum)
     getLaneResultSummary(readNum)
-#    getUniquenessResult()
+    #getUniquenessResult()
+    getAlignmentResult(readNum)
 
     result = " LANE_YIELD_KBASES " + @totalBases.to_s + " PERCENT_ERROR_RATE_PF " +
              @errorPercent.to_s +  " CLUSTERS_RAW " + @rawClusters.to_s +
@@ -31,7 +33,7 @@ class LaneResult
              " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + " PERCENT_PHASING " +
              @phasePercent.to_s + " PERCENT_PREPHASING " + @prePhasePercent.to_s +
              " RESULTS_PATH " + FileUtils.pwd
-    if @foundUniquenessResult == true && readNum == 1
+    if @foundUniquenessResult == true  #&& readNum == 1
       result = result + " UNIQUE_PERCENT " + @percentUnique.to_s
     end
     return result
@@ -62,6 +64,50 @@ class LaneResult
         @percentUnique = line.slice(/^[0-9\.]+/)
         return
       end
+    end
+  end
+
+  def getAlignmentResult(readNum)
+    @foundAlignmentResultFile = false
+
+    fileName = Dir["BWA_Map_Stats.txt"]
+
+    if fileName.size < 1
+      puts "Did not find BWA alignment results file"
+      return
+    elsif fileName.size > 1
+      puts "Found multiple alignment result files. Ignoring..."
+      return
+    else
+      @foundAlignmentResultFile = true
+    end
+
+    # Alignment percentage array
+    mapPercent   = Array.new
+    errPercent   = Array.new
+
+    IO.foreach(fileName[0]) do |line|
+      if line.match(/\% Mapped Reads/)
+        temp = line.gsub(/\% Mapped Reads\s+:\s+/, "")
+        temp.strip!
+        temp.gsub!(/\%$/, "")
+        mapPercent << temp
+      elsif line.match(/Mismatch Percentage/)
+        temp = line.gsub(/Mismatch Percentage\s+:\s+/, "")
+        temp.strip!
+        temp.gsub!(/\%$/, "")
+        errPercent << temp
+      end
+    end
+
+    if readNum == 1
+      @perAlignPF   = mapPercent[0]
+      @errorPercent = errPercent[0]
+    elsif readNum == 2 && mapPercent.size > 1
+      @perAlignPF   = mapPercent[1]
+      @errorPercent = errPercent[1]
+    elsif readNum == 2 && mapPercent.size <= 1
+      puts "Did not find mapping information for read 2" 
     end
   end
 
@@ -156,16 +202,20 @@ class UploadSummaryResults
     @doc    = Hpricot::XML(open('Summary.xml'))
     @fcName = @helper.findFCName()
     @lanes  = @helper.findAnalysisLaneNumbers()
+    obj     = FCBarcodeFinder.new
+    @limsBarcode = obj.getBarcodeForLIMS()
+
     isFCPairedEnd()
   end
 
   # Method to upload results to LIMS
+  # NOTE : THIS WORKS WITH ONLY ONE LANE IN GERALD DIRECTORY
   def uploadResults()
-     @lanes.each_byte do |lane|
-       puts "Generating LIMS upload string for lane : " + lane.chr
-       baseCmd = "perl " + @limsScript + " " + @fcName + "-" + lane.chr +
+#     @lanes.each_byte do |lane|
+       puts "Generating LIMS upload string for lane : " + @lanes
+       baseCmd = "perl " + @limsScript + " " + @limsBarcode +
                  " ANALYSIS_FINISHED READ" 
-       laneRes = LaneResult.new(@doc, lane.chr)
+       laneRes = LaneResult.new(@doc, @lanes)
        cmd = baseCmd + " 1 " + laneRes.buildLIMSResultString(1)
        puts cmd
        executeLIMSUploadCmd(cmd)
@@ -175,7 +225,7 @@ class UploadSummaryResults
          puts cmd
          executeLIMSUploadCmd(cmd)
        end
-     end
+#     end
   end
 
   private
