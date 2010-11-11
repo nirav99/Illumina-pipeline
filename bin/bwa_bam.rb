@@ -201,7 +201,7 @@ class BWA_BAM
   end
 
   def addRGTagCommand()
-    cmd = "java -Xmx4G -jar /stornext/snfs5/next-gen/niravs_scratch/code/AddRGToBam" +
+    cmd = "java -Xmx8G -jar /stornext/snfs5/next-gen/Illumina/ipipe/java" +
           "/AddRGToBam.jar Input=" + @samFileName.to_s + " Output=" + @bamFileName.to_s +
           " RGTag=0 SampleID=unknown"
     return cmd
