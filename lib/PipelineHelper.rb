@@ -40,15 +40,6 @@ class PipelineHelper
       else
          fcName = run
       end
-=begin
-      run = runFolder[/FC(.+)$/]
-      if run == nil
-         run = runFolder[/([a-zA-Z0-9]+)$/]
-         fcName = run
-      else
-        fcName = run.slice(2,run.size)
-      end
-=end
     end
     # For HiSeqs, a flowcell is prefixed with letter "A" or "B".
     # We remove this prefix from the reduced flowcell name, since
