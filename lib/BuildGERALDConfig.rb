@@ -2,7 +2,7 @@
 # Class to encapsulate creation of GERALD configuration file
 
 class BuildGERALDConfig
-  def initialize(lanes, refPath, numCycles, isPaired, output, seqType)
+  def initialize(lanes, refPath, numCycles, isPaired, output, seqType, mapAlgo)
     @lanesToAnalyze = lanes
     @referencePath  = refPath
     @numCycles      = numCycles
@@ -10,6 +10,11 @@ class BuildGERALDConfig
     @fcVersion      = "v4" # hardcode to version 4 FC for now
     @outputFileName = output
     @seqType        = seqType.downcase
+    @mappingAlgo    = mapAlgo.downcase # Mapper to use - bwa or eland
+
+    if !@mappingAlgo.eql?("eland") && !@mappingAlgo.eql?("bwa")
+      raise "Invalid mapping algorithm specified : " + @mappingAlgo
+    end
 
     if !@seqType.eql?("ga2") && !@seqType.eql?("hiseq")
       raise "Invalid sequencer type specified : " + @seqType
@@ -91,8 +96,16 @@ class BuildGERALDConfig
       @emailServer    = "mail.hgsc.bcm.tmc.edu"
       @emailDomain    = "bcm.edu"
       @emailList      = "niravs@bcm.edu dc12@bcm.edu"
-      @postRunCommand = "/stornext/snfs5/next-gen/Illumina/ipipe/" +
-                        "bin/post_run_cmd.sh" 
+
+      # Select the appropriate post run based on whether mapping is to be
+      # done using Eland or BWA
+      if @mappingAlgo.eql?("eland")
+         @postRunCommand = "/stornext/snfs5/next-gen/Illumina/ipipe/" +
+                           "bin/post_run_cmd.sh" 
+      else
+         @postRunCommand = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/" +
+                           "bin/postrun.rb" 
+      end
     end
 
     # Member variables of the class

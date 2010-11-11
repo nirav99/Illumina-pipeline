@@ -130,9 +130,11 @@ class GERALD_Driver
 
         # All is valid so far. Continue to generate GERALD config file
         puts "\r\nWriting GERALD file config.txt in " + @workingDir
+
+        # Use the last paramter to inform BuildGERALDConfig to use eland mapper
         geraldConfig = BuildGERALDConfig.new(@laneNum, @referencePath, @numCycles,
                                              @fcPaired, @workingDir + "/config.txt", 
-                                             seqType)
+                                             seqType, "eland")
         geraldConfig.buildConfigFile()
         puts "Completed..."
       rescue Exception => e
@@ -190,8 +192,17 @@ class GERALD_Driver
           FileUtils.ln_s(geraldDir, "gerald_dir")
           puts "Finished creating GERALD directory at "
           puts geraldDir.to_s
+          writeReferencePathToGeraldDir(geraldDir.to_s)
         end
       end
+    end
+
+    # Helper method to write reference path to GERALD directory to enable BWA
+    # postrun script to use it
+    def writeReferencePathToGeraldDir(geraldDir)
+      referenceFile = File.new(geraldDir + "/referencePath", "w")
+      referenceFile.syswrite(@referencePath)
+      referenceFile.close()
     end
 
     # Helper method to run the GERALD makefile
