@@ -6,15 +6,18 @@ require 'hpricot'
 require 'fileutils'
 require 'net/smtp'
 require 'PipelineHelper'
+require 'FCBarcodeFinder'
 
 #This class is a wrapper for SlxUniqueness.jar to find unique reads.
 #It works on per-lane basis only.
 class FindUniqueReads
   def initialize()
     jarName = "/stornext/snfs5/next-gen/Illumina/ipipe/java/SlxUniqueness.jar"
+    #jarName = "/stornext/snfs5/next-gen/Illumina/ipipe/java/SlxUniqueness/SlxUniqueness.jar"
     @lanes   = ""  # Lanes to consider for running uniqueness
     @fcName  = ""
-    javaVM  = "-Xmx8G" # Specifies maximum memory size of JVM
+    @limsBarcode = ""
+    javaVM   = "-Xmx8G" # Specifies maximum memory size of JVM
     @coreCmd = "java " + javaVM + " -jar " + jarName
     @helper  = PipelineHelper.new
 
@@ -23,6 +26,9 @@ class FindUniqueReads
       #findFCName()
       @lanes  = @helper.findAnalysisLaneNumbers()
       @fcName = @helper.findFCName()
+
+      obj          = FCBarcodeFinder.new
+      @limsBarcode = obj.getBarcodeForLIMS()
       findUniqueness()
     rescue Exception => e
       puts e.message
@@ -33,19 +39,19 @@ class FindUniqueReads
 
   private
 
+  # Method to build JAR command for the specified lane.
+  # Works with only one lane per GERALD directory
   def findUniqueness()
-    @lanes.each_byte do |lane|
-      puts "Generating Uniqueness for lane : " + lane.chr
-      fileNames = findSequenceFileNames(lane.chr)
-      buildJarCommand(lane.chr, fileNames)
-    end
+    puts "Generating Uniqueness for lane : " + @lanes.to_s
+    fileNames = findSequenceFileNames(@lanes.to_s)
+    buildJarCommand(fileNames)
   end
 
-  def buildJarCommand(lane, fileNames)
-    resultFileName = "Uniqueness_" + @fcName + "_" + lane + ".txt"
+  def buildJarCommand(fileNames)
+    resultFileName = "Uniqueness_" + @limsBarcode.to_s + ".txt"
 
     # Create temp directory
-    tmpDir = "tmp_" + lane
+    tmpDir = "tmp_" + @lanes.to_s
     FileUtils.mkdir(tmpDir)
 
     # Select analysis as fragment or paired
@@ -54,34 +60,57 @@ class FindUniqueReads
     else
       analysisMode = "fragment"
     end
-    cmd = @coreCmd + " AnalysisMode=" + analysisMode + " TmpDir=" + tmpDir
-
+    cmd = @coreCmd + " AnalysisMode=" + analysisMode + " TmpDir=" + tmpDir +
+          " DetectAdaptor=true "
+   
     fileNames.each do |fname|
       cmd = cmd + " Input=" + fname
     end
     puts cmd
 
     resultFile = File.new(resultFileName, "w")
-    resultFile.write("Flowcell Name : " + @fcName + " Lane Number : " + lane)
+    resultFile.write("Flowcell Lane : " + @limsBarcode.to_s)
     resultFile.close()
 #    resultFile.write("")
     puts "Computing Uniqueness Results"
     cmd = cmd + " >> " + resultFileName
     `#{cmd}`
 
+    emailUniquenessResults(resultFileName)
+    puts "Finished Computing Uniqueness Results."
+
+    # Upload uniqueness results to LIMS
+    uploadResultsToLIMS(resultFileName)
+
+    # Remove the temporary directory
+    FileUtils.remove_dir(tmpDir, true)
+
+    # Stop saving files to mini analysis
+    #copyFileMiniAnalysis(resultFileName)
+  end
+
+  # Helper method to email uniqueness results
+  def emailUniquenessResults(resultFileName)
+    adaptorPlotFile = "AdaptorReadsDistribution.png"
+    recepients = "niravs@bcm.edu dc12@bcm.edu yhan@bcm.edu fongeri@bcm.edu " +
+                 " javaid@bcm.edu jgreid@bcm.edu"
+
     resultFile = File.open(resultFileName, "r")
     lines = resultFile.read()
 
-    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "english@bcm.edu", 
-           "fongeri@bcm.edu", "javaid@bcm.edu", "yw14@bcm.edu", "jgreid@bcm.edu" ]
-    @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
-    puts "Finished Computing Uniqueness Results for lane : " + lane
-
-    # Upload uniqueness results to LIMS
-    uploadResultsToLIMS(resultFileName, lane)
-
-    FileUtils.remove_dir(tmpDir, true)
-    copyFileMiniAnalysis(resultFileName)
+    if !File::exist?(adaptorPlotFile) || !File::readable?(adaptorPlotFile) ||
+        File::size(adaptorPlotFile) == 0
+      to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", 
+           "fongeri@bcm.edu", "javaid@bcm.edu", "jgreid@bcm.edu" ]
+      @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
+    else
+      # Send the adaptor plot distribution as email attachment
+      cmd = "java -jar /stornext/snfs5/next-gen/Illumina/ipipe/java/SlxResultSummaryMailer.jar " +
+            "sol-pipe@bcm.edu \"Illumina Uniqueness Results\" AdaptorReadsDistribution.png " +
+            "\"" + lines + "\" " + recepients
+      puts cmd
+      `#{cmd}`
+    end
   end
 
   # Helper method to find sequence files for a given lane
@@ -102,11 +131,10 @@ class FindUniqueReads
   # Helper method to upload uniqueness percentage to LIMS
   #TODO: Make upload part of another script (maybe helper)
   # and perform error detection if upload to LIMS fails
-  def uploadResultsToLIMS(resultFile, laneNum)
+  def uploadResultsToLIMS(resultFile)
     limsUploadCmd = "perl /stornext/snfs5/next-gen/Illumina/ipipe/" +
-                    "third_party/setIlluminaLaneStatus.pl " + @fcName +
-                    "-" + laneNum.to_s + " ANALYSIS_FINISHED " +
-                    "UNIQUE_PERCENT "
+                    "third_party/setIlluminaLaneStatus.pl " + @limsBarcode +
+                    " ANALYSIS_FINISHED UNIQUE_PERCENT "
 
     foundUniquenessResult = false
 
