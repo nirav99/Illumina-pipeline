@@ -14,22 +14,6 @@ lanes  = helper.findAnalysisLaneNumbers()
 puts "Analysis Lane Number : " + lanes.to_s
 fcBarCode = fcName + "_" + lanes.to_s
 
-=begin
-# Run filtering phix reads from sequence and export files. 
-# For now, do this with the current machine and the same resources that CASAVA
-# used. Can be improved in future.
-filterPhixCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/PhixFilter.rb"
-`#{filterPhixCmd}`
-=end
-
-# Don't upload results yet. Run upload script as part of bwa
-=begin
-# Upload results to LIMS
-uploadLIMSResultsCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_results.rb"
-output = `#{uploadLIMSResultsCmd}`
-puts output
-=end
-
 #Upload HTML summary to LIMS
 uploadLIMSHTMLCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_summary.rb"
 output = `#{uploadLIMSHTMLCmd}`
