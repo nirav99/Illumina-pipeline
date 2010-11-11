@@ -1,0 +1,113 @@
+/**
+ * @author niravs
+ *
+ */
+public class InputParameters
+{
+  private String inputFile  = null;  // BAM file to add RG tag to
+  private String outputFile = null;  // BAM file to write to
+  private String readGroupID = null; // Read group Id
+  private String sampleID   = null;  // Sample ID for RG tag
+  
+  public InputParameters(String args[])
+  {
+    if(false == validateArgs(args))
+    {
+      printUsage();
+      System.exit(-1);
+    }
+  }
+  
+  private void printUsage()
+  {
+    System.err.println("Usage:");
+    System.err.print("  java -jar AddRGToBAM.jar Input=value Output=value");
+    System.err.println(" RGTag=value SampleID=value");
+    System.err.println("    Input    - Input BAM to add RG tag to");
+    System.err.println("    Output   - Name of output file with RG tag added");
+    System.err.println("    RGTag    - Value of RG tag. Default : 0");
+    System.err.println("    SampleID - Sample name, Default : unknown");
+  }
+  
+  private boolean validateArgs(String args[])
+  {
+    String param;
+    String value;
+    
+    boolean inputFileFound = false;
+    boolean outputFileFound = false;
+    
+    int idx = -1;
+    
+    for(int i = 0; i < args.length; i++)
+    {
+      idx =  args[i].indexOf("=");
+      
+      if(idx < 0)
+      {
+        return false;
+      }
+      param = args[i].substring(0, idx);
+      value = args[i].substring(idx + 1, args[i].length());
+      
+      if(param.equalsIgnoreCase("Input") || param.equalsIgnoreCase("I"))
+      {
+        inputFileFound = true;
+        inputFile = value;
+      }
+      else
+      if(param.equalsIgnoreCase("Output") || param.equalsIgnoreCase("O"))
+      {
+        outputFileFound = true;
+        outputFile = value;
+      }
+      else
+      if(param.equalsIgnoreCase("RGTag"))
+      {
+        readGroupID = value;
+      }
+      else
+      if(param.equalsIgnoreCase("SampleID"))
+      {
+        sampleID = value;
+      }
+    }
+    
+    if(inputFileFound && outputFileFound)
+    {
+      // Input is valid - fix missing fields if applicable
+      if(readGroupID == null)
+      {
+        readGroupID = "0";
+      }
+      if(sampleID == null)
+      {
+        sampleID = "unknown";
+      }
+      return true;
+    }
+    else
+      return false;
+  }
+  
+  public String getInputFile()
+  {
+    return inputFile;
+  }
+  
+  public String getOutputFile()
+  {
+    return outputFile;
+  }
+  
+  public String getReadGroupID()
+  {
+    return readGroupID;
+  }
+  
+  public String getSampleID()
+  {
+    return sampleID;
+  }
+}
+
