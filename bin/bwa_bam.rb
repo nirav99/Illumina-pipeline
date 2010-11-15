@@ -230,7 +230,7 @@ class BWA_BAM
   end
 
   def filterPhixReadsCmd()
-    cmd = "ruby " +  File.dirname(__FILE__) + "/PhixFilterFromBAM.rb"
+    cmd = "ruby " +  File.dirname(__FILE__) + "/PhixFilterFromBAM.rb " + @markedBam
     puts "Command to filter out phix reads : " + cmd
     return cmd
   end
