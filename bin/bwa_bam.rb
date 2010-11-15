@@ -24,6 +24,7 @@ class BWA_BAM
     # Instantiate pipeline helper 
     @helper        = PipelineHelper.new()
     @fcName        = @helper.findFCName()
+    @laneNumber    = @helper.findAnalysisLaneNumbers()
 
     findSequenceFiles()
     generateSamFileName()
@@ -203,7 +204,13 @@ class BWA_BAM
   def addRGTagCommand()
     cmd = "java -Xmx8G -jar /stornext/snfs5/next-gen/Illumina/ipipe/java" +
           "/AddRGToBam.jar Input=" + @samFileName.to_s + " Output=" + @bamFileName.to_s +
-          " RGTag=0 SampleID=unknown"
+          " RGTag=0 "
+    sampleID = @fcName.to_s + "-" + @laneNumber.to_s
+
+    if sampleID == nil || sampleID.empty?()
+      sampleID = "unknown"
+    end
+    cmd = cmd + "SampleID=" + sampleID.to_s 
     return cmd
   end
 
