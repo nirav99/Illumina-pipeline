@@ -4,10 +4,12 @@
  */
 public class InputParameters
 {
-  private String inputFile  = null;  // BAM file to add RG tag to
-  private String outputFile = null;  // BAM file to write to
+  private String inputFile   = null; // BAM file to add RG tag to
+  private String outputFile  = null; // BAM file to write to
   private String readGroupID = null; // Read group Id
-  private String sampleID   = null;  // Sample ID for RG tag
+  private String sampleID    = null; // Sample ID for RG tag
+  private String libraryName = null; // Library name (LB) tag
+  private String platform    = null; // Platform (PL) tag
   
   public InputParameters(String args[])
   {
@@ -27,6 +29,8 @@ public class InputParameters
     System.err.println("    Output   - Name of output file with RG tag added");
     System.err.println("    RGTag    - Value of RG tag. Default : 0");
     System.err.println("    SampleID - Sample name, Default : unknown");
+    System.err.println("    Library  - Library name (optional)");
+    System.err.println("    Platform - Platform name (optional)");
   }
   
   private boolean validateArgs(String args[])
@@ -71,6 +75,16 @@ public class InputParameters
       {
         sampleID = value;
       }
+      else
+      if(param.equalsIgnoreCase("library"))
+      {
+        libraryName = value;
+      }
+      else
+      if(param.equalsIgnoreCase("platform"))
+      {
+        platform = value;
+      }
     }
     
     if(inputFileFound && outputFileFound)
@@ -83,6 +97,14 @@ public class InputParameters
       if(sampleID == null)
       {
         sampleID = "unknown";
+      }
+      if(libraryName == null)
+      {
+        libraryName = "";
+      }
+      if(platform == null)
+      {
+        platform = "";
       }
       return true;
     }
@@ -108,6 +130,16 @@ public class InputParameters
   public String getSampleID()
   {
     return sampleID;
+  }
+
+  public String getLibraryName()
+  {
+    return libraryName;
+  }
+
+  public String getPlatformName()
+  {
+    return platform;
   }
 }
 

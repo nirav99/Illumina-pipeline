@@ -24,7 +24,19 @@ public class AddRGToBam
     
     SAMReadGroupRecord rgTag = new SAMReadGroupRecord(readGroupID);
     rgTag.setSample(ip.getSampleID());
-    
+
+    String libraryName = ip.getLibraryName();
+    if(libraryName != null && !libraryName.isEmpty())
+    {
+      rgTag.setLibrary(libraryName);
+    }
+
+    String platform = ip.getPlatformName();
+    if(platform  != null && !platform.isEmpty())
+    {
+      rgTag.setPlatform(platform);
+    } 
+
     header.addReadGroup(rgTag);
     writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,true, 
 				 new File(ip.getOutputFile()));
