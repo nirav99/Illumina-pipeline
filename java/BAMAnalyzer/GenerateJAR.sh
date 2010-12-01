@@ -11,8 +11,7 @@ echo "SAM Jar : "$samJarName
 echo "Picard Jar : "$picardJarName
 
 echo "Compiling project"
-javac -classpath $samJarName *.java
-
+javac -classpath $samJarName":"$picardJarName *.java
 
 echo "Generating Manifest file"
 manifestFile=`pwd`"/BAMAnalyzerManifest.txt"

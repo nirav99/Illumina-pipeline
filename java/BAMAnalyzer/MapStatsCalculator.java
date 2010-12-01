@@ -17,7 +17,8 @@ public class MapStatsCalculator
   private AlignmentResults read2Results = null;  // Mapping results for read2
   private AlignmentResults fragResults  = null;  // Mapping results for unpaired reads
   private long totalReads               = 0;     // Total Reads in BAM file
-  
+  private InsertSizeCalculator insCalc  = null;  // Class to calculate insert size  
+
   /**
    * Class constructor
    * @param fileName
@@ -33,6 +34,8 @@ public class MapStatsCalculator
       read1Results  = new AlignmentResults("Read1", mmCounter);
       read2Results  = new AlignmentResults("Read2", mmCounter);
       fragResults   = new AlignmentResults("Fragment", mmCounter);
+
+      insCalc = new InsertSizeCalculator();
       
       long startTime = System.currentTimeMillis();
       
@@ -53,6 +56,8 @@ public class MapStatsCalculator
         else
         if(!record.getReadPairedFlag())
           fragResults.processRead(record);
+        
+        insCalc.calculateInsertSize(record);
       }
       
       long stopTime = System.currentTimeMillis();
@@ -64,6 +69,7 @@ public class MapStatsCalculator
       read1Results.showAlignmentResults();
       read2Results.showAlignmentResults();
       fragResults.showAlignmentResults();
+      insCalc.showResult();
       System.out.format("%nComputation Time      : %.3f sec%n%n", (stopTime - startTime)/1000.0);
 	  }
 	  catch(Exception e)
@@ -73,4 +79,3 @@ public class MapStatsCalculator
 	  }
   }
 }
-
