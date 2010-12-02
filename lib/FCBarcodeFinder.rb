@@ -40,6 +40,7 @@ class FCBarcodeFinder
       return @barcode.to_s
   end
 
+=begin
   # Given a valid barcode sequence, return the ID number used to identify
   # this barcode in LIMS
   def findTagID(barcode)
@@ -61,6 +62,7 @@ class FCBarcodeFinder
        raise "Invalid barcode specified"
     end
   end
+=end
 
   # Return the flowcell barcode for upload to LIMS
   def getBarcodeForLIMS()
@@ -68,7 +70,8 @@ class FCBarcodeFinder
     findBarcode()
 
     if @barcode != nil && !@barcode.empty?()
-      limsBarcode = limsBarcode + "-" + findTagID(@barcode.to_s)
+      limsBarcode = limsBarcode + "-" + 
+                    pipelineHelper.findBarcodeTagID(@barcode.to_s)
     end
     return limsBarcode.to_s
   end

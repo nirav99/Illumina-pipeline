@@ -99,7 +99,6 @@ class PipelineHelper
          return fcPath.to_s + "/" + bcPath.to_s
       end
     }
-
     raise "Did not find Base calls directory for flowcell : " + fcName
   end
 
@@ -112,6 +111,50 @@ class PipelineHelper
       return true
     else
       return false
+    end
+  end
+
+  # Given a valid barcode sequence, return the ID number used to identify
+  # this barcode in LIMS
+  def findBarcodeTagID(barcode)
+    if barcode == nil || barcode.empty?()
+      return ""
+    elsif barcode.eql?("CGATGT")
+       return "ID02"
+     elsif barcode.eql?("TGACCA")
+       return "ID04"
+     elsif barcode.eql?("ACAGTG")
+       return "ID05"
+     elsif barcode.eql?("GCCAAT")
+       return "ID06"
+     elsif barcode.eql?("CAGATC")
+       return "ID07"
+     elsif barcode.eql?("CTTGTA")
+       return "ID12"
+     else
+       raise "Invalid barcode specified"
+    end
+  end
+
+  # Given a valid barcode tag, return the sequence for this barcode
+  # this barcode in LIMS
+  def findBarcodeSequence(barcodeTag)
+    if barcodeTag == nil || barcodeTag.empty?()
+      return ""
+    elsif barcodeTag.eql?("ID02")
+       return "CGATGT"
+     elsif barcodeTag.eql?("ID04")
+       return "TGACCA"
+     elsif barcodeTag.eql?("ID05")
+       return "ACAGTG"
+     elsif barcodeTag.eql?("ID06")
+       return "GCCAAT"
+     elsif barcodeTag.eql?("ID07")
+       return "CAGATC"
+     elsif barcodeTag.eql?("ID12")
+       return "CTTGTA"
+     else
+       raise "Invalid barcode specified"
     end
   end
 
