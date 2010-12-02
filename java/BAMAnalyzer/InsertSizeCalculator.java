@@ -96,6 +96,9 @@ public class InsertSizeCalculator
     System.out.println();
     System.out.println("Insert Size Calculations");
     System.out.println();
+    System.out.println("Total Pairs : " + totalPairs);
+    System.out.println();
+
 	  if(frMetrics.getTotalPairs()  > totalPairs * 0.1)
 	  {
       frMetrics.showResult();
