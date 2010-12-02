@@ -35,21 +35,28 @@ import net.sf.picard.sam.SamPairUtil.PairOrientation;
  */
 public class InsertSizeMetrics
 {
-  private PairOrientation orientation; // Orientation of the read pair
-  private int minInsertSize = 100000;  // Minimum insert size
-  private int maxInsertSize = -100000; // Maximum insert size
-  private int medianInsertSize = 0;    // Median value of insert size
-  private int totalPairs = 0;          // Total pairs of records
-  private double meanInsertSize = 0;
+  private PairOrientation orientation;  // Orientation of the read pair
+  private int medianInsertSize  = 0;    // Median value of insert size
+  private int modalInsertSize   = 0;    // Modal value of insert size
+  private int totalPairs        = 0;    // Total pairs of records
+  private double meanInsertSize = 0;    // Mean insert size
   
   private TreeMap<Integer, Integer> insertSizeList = null;
- 
+
+  /**
+   * Class constructor
+   * @param orient - Orientation of the pair 
+   */ 
   public InsertSizeMetrics(PairOrientation orient)
   {
     this.orientation = orient;
     insertSizeList = new TreeMap<Integer, Integer>();
   }
-  
+ 
+  /**
+   * Method to remember the insert size for the current read
+   * @param insertSize - integer corresponding to insert size for the read
+   */ 
   public void addInsertSize(int insertSize)
   {
     totalPairs++;
@@ -77,7 +84,10 @@ public class InsertSizeMetrics
   {
     return totalPairs;
   }
-  
+ 
+  /**
+   * Calculate median insert size
+   */ 
   private void findMedianInsertSize()
   {
     int medianIndex = totalPairs / 2;
@@ -95,7 +105,10 @@ public class InsertSizeMetrics
       key = null;
     }
   }
-  
+ 
+  /**
+   * Calculate mean insert size
+   */ 
   private void findMeanInsertSize()
   {
     double sumInsertSize = 0;
@@ -112,26 +125,45 @@ public class InsertSizeMetrics
   }
 
   /**
+   * Calculate mode of the insert size
+   */
+  private void findModalInsertSize()
+  {
+    Integer modeInsert = insertSizeList.firstKey();
+    Integer modeValue  = insertSizeList.get(modeInsert);
+
+    for(Integer key : insertSizeList.keySet())
+    {
+      if(modeValue < insertSizeList.get(key))
+      {
+        modeInsert = key;
+        modeValue  = insertSizeList.get(key);
+      }
+      key = null;
+    }
+    modalInsertSize = modeInsert.intValue();
+  }
+
+  /**
    * Display the insert size metrics
    */
   public void showResult()
   {
     System.err.println("Number of Elements in TreeMap : " + insertSizeList.size()); 
+
     System.out.print("Pair Orientation : ");
     if(orientation.equals(PairOrientation.FR))
-      System.out.println("FR");
+      System.out.println("FR (5' --F-->     <--R-- 5')");
     else
     if(orientation.equals(PairOrientation.RF))
-      System.out.println("RF");
+      System.out.println("RF (  <--R-- 5' 5' --F-->)");
     else
-      System.out.println("Tandem");
+      System.out.println("Tandem (Both on forward or reverse strands)");
     
     findMedianInsertSize();
-//   findMeanInsertSize();
+    findModalInsertSize();
     System.out.println("Num. Read Pairs    : " + totalPairs);
-    System.out.println("Max Insert Size    : " + insertSizeList.lastKey().toString());
-    System.out.println("Min Insert Size    : " + insertSizeList.firstKey().toString());
     System.out.println("Median Insert Size : " + medianInsertSize);
-//    System.out.println("Mean Insert Size   : " + meanInsertSize);
+    System.out.println("Modal Insert Size  : " + modalInsertSize);
   }
 }
