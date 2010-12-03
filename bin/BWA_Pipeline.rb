@@ -15,7 +15,7 @@ class BWA_Pipeline
       printUsage()
     else
       @fcName        = args[0]
-      @laneNum       = args[1]
+      @laneBarcode   = args[1]
       @numCycles     = 0
       @fcPaired      = false
       @referencePath = ""
@@ -31,7 +31,7 @@ class BWA_Pipeline
       end
 
       puts "Flowcell Name   : " + @fcName
-      puts "Lane to analyze : " + @laneNum
+      puts "Lane to analyze : " + @laneBarcode
       createWorkingDirectory()
       createGERALDConfig()
       createGERALDCommand()
@@ -46,7 +46,7 @@ class BWA_Pipeline
       puts "\r\nScenario 1, Obtaining information from LIMS"
       puts "  ruby " + __FILE__ + " FlowCell LaneNumber"
       puts "\r\nScenario 2, Providing flowcell info on command line"
-      puts "  ruby " + __FILE__ + " FlowCell LaneNumber NumCycles FCType " +
+      puts "  ruby " + __FILE__ + " FlowCell LaneBarCode NumCycles FCType " +
            "ReferencePath"
       puts "    FCType    - Specify paired if FC is paired, otherwise fragment"
       puts ""
@@ -62,7 +62,7 @@ class BWA_Pipeline
       time = Time.new
 
       @workingDir = rootPath + "/" + time.strftime("%Y/%m/%d") +
-                   "/" + @fcName + "-L" + @laneNum.to_s
+                   "/" + @fcName + "-L" + @laneBarcode.to_s
       puts @workingDir.to_s
       FileUtils.mkdir_p(@workingDir)
     end
@@ -89,16 +89,9 @@ class BWA_Pipeline
           @fcPaired  = fcInfo.paired?()
           @numCycles = fcInfo.getNumCycles()
 
-          # If multiple lanes are specified for analysis, ensure that the
-          # reference paths for all these lanes are equal. If yes, then set
-          # the member variable @referencePath and continue.
-          # Otherwise, throw the exception and abort.
-          if @laneNum.length > 1
-            puts "Specify only one lane for analysis in one command"
-            raise "Error : Multiple lanes specified for analysis in a single command"
-          # If single lane is specified for analysis, get its reference path  
-          else
-            @referencePath   = fcInfo.getRefPath(@laneNum)
+          @referencePath   = fcInfo.getRefPath(@laneBarcode)
+          if @referencePath == nil || @referencePath.empty?()
+            raise "Did not find reference path in LIMS for " + @laneBarcode
           end
          
           #TODO: reference path validity checking is suspended. Fix the code to
@@ -129,7 +122,8 @@ class BWA_Pipeline
         # sequence files. BWA will be fired as post-run step.
         # In addition, specify the last parameter for GERALD configuration as
         # bwa to let BuildGERALDConfig know that bwa mapper will be used.
-        geraldConfig = BuildGERALDConfig.new(@laneNum, "sequence", @numCycles,
+        laneNum = @laneBarcode.slice(0).chr.to_s
+        geraldConfig = BuildGERALDConfig.new(laneNum, "sequence", @numCycles,
                                              @fcPaired, @workingDir + "/config.txt", 
                                              seqType, "bwa")
         geraldConfig.buildConfigFile()
@@ -145,7 +139,7 @@ class BWA_Pipeline
       begin
         puts "\r\nWriting generate_makefiles.sh in " + @workingDir
         FileUtils.chdir(@workingDir)
-        geraldCmd = BuildGERALDCommand.new(@fcName)
+        geraldCmd = BuildGERALDCommand.new(@fcName, @laneBarcode)
         puts "Completed..."
       rescue Exception => e
         # puts e.backtrace.inspect
@@ -220,7 +214,7 @@ class BWA_Pipeline
       numCores    = 2
 
       makeCmd = "make -j" + numCores.to_s + " all"
-      scheduler = Scheduler.new(@fcName + "_" + @laneNum, makeCmd)
+      scheduler = Scheduler.new(@fcName + "_" + @laneBarcode, makeCmd)
       scheduler.setMemory(8000)
       scheduler.setNodeCores(numCores)
       scheduler.setPriority("high")
@@ -239,7 +233,7 @@ class BWA_Pipeline
     end
 
     @fcName        = ""    # Flowcell name
-    @laneNum       = ""    # Lanes to analyze
+    @laneBarcode   = ""    # Lane to analyze
     @referencePath = ""    # Reference path
     @numCycles     = 0     # Num. cycles per read
     @fcPaired      = false # If true, paired FC, else fragment

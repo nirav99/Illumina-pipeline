@@ -16,8 +16,8 @@ class BWA_BAM
     @bamFileName   = nil
     @sortedBam     = nil
     @markedBam     = nil
-    @cpuCores      = 8
-    @maxMemory     = 28000 # Maximum memory available per node
+    @cpuCores      = 6
+    @maxMemory     = 28000  # Maximum memory available per node
     @lessMemory    = 28000  # Command requiring less than maximum memory
     @priority      = "high" # Run with high priority (Run in high queue)
   

@@ -3,9 +3,10 @@
 # directory in the in the flowcell to analyze
 require 'fileutils'
 require 'PipelineHelper'
+require 'ExptDir'
 
 class BuildGERALDCommand
-  def initialize(fcName)
+  def initialize(fcName, laneBarcode)
 #    @pipelinePath = "/stornext/snfs5/next-gen/Illumina/GAPipeline/current" +
 #                    "/bin/GERALD.pl"
 
@@ -22,13 +23,21 @@ class BuildGERALDCommand
       raise "Flowcell name is null or empty"
     end
 
+    if laneBarcode == nil || laneBarcode.eql?("")
+      raise "Lane barcode is null or empty"
+    end
+
     if !File::exist?(@configPath)
       raise "Config.txt not present in : " + currentDir
     end
 
     # Locate base calls directory for the specified flowcell
     @pipelineHelperInstance = PipelineHelper.new
-    @exptDir = @pipelineHelperInstance.findBaseCallsDir(@fcName)
+    @baseCallsDir = @pipelineHelperInstance.findBaseCallsDir(@fcName)
+
+    exptDirFinder = ExptDir.new(@fcName)
+    exptDir       = exptDirFinder.getExptDir(laneBarcode)  
+    
 
     fileHandle = File.new(@outputFile, "w")
 
@@ -40,7 +49,7 @@ class BuildGERALDCommand
     fileHandle.write(@pipelinePath + " \\\n")
     fileHandle.write(@configPath + " \\\n")
     fileHandle.write("--EXPT_DIR \\\n")
-    fileHandle.write(@exptDir + " \\\n")
+    fileHandle.write(exptDir + " \\\n")
     fileHandle.write("--make \\\n")
     fileHandle.write("&> " + @outputFile  + ".log\n")
     fileHandle.close()
@@ -53,12 +62,12 @@ class BuildGERALDCommand
 
   def filterPhixReads()
     if @pipelineHelperInstance.isFCHiSeq(@fcName) == true
-      # Add a file "filterphix" in EXPT_DIR
+      # Add a file "filterphix" in base calls directory
       # Script filtering out phix reads should check for this file before
       # proceeding
 
       currDir = FileUtils.pwd()
-      FileUtils.cd(@exptDir)
+      FileUtils.cd(@baseCallsDir)
       `touch filterphix`
       FileUtils.cd(currDir)
     end
@@ -69,7 +78,7 @@ class BuildGERALDCommand
     @logFilePath  = "" # Path to log file created after executing GERALD command
     @fcName       = "" # Full name of Flowcell
     @fcPath       = "" # Path of Flowcell, including its full name
-    @exptDir      = "" # Experiment directory in the flowcell (usually Bustard results)
+    @baseCallsDir = "" # Basecalls directory in the flowcell (usually Bustard results)
     @outputFile   = "" # File containing GERALD command
 end
 
