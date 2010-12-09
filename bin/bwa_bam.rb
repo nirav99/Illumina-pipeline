@@ -121,6 +121,17 @@ class BWA_BAM
     objX.runCommand()
     phixFilterJobName = objX.getJobName()
 
+#TODO: Don't run fix mate info for fragment runs
+    # Fix mate information
+    fixMateCmd = fixMateInfoCmd()
+    objY = Scheduler.new(@fcName + "_fix_mate_info" + @markedBam, fixMateCmd)
+    objY.setMemory(@lessMemory)
+    objY.setNodeCores(1)
+    objY.setPriority(@priority)
+    objY.setDependency(phixFilterJobName)
+    objY.runCommand()
+    fixMateJobName = objY.getJobName()
+
     # Calculate Alignment Stats
     mappingStatsCmd = calculateMappingStats()
     obj7 = Scheduler.new(@fcName + "_" + @markedBam + "_BAM_Stats", mappingStatsCmd)
@@ -128,7 +139,8 @@ class BWA_BAM
     obj7.setNodeCores(1)
     obj7.setPriority(@priority)
 #    obj7.setDependency(markedDupJobName)
-    obj7.setDependency(phixFilterJobName)
+#    obj7.setDependency(phixFilterJobName)
+    obj7.setDependency(fixMateJobName)
     obj7.runCommand()
     runStatsJobName = obj7.getJobName()
 
@@ -211,6 +223,12 @@ class BWA_BAM
       sampleID = "unknown"
     end
     cmd = cmd + "SampleID=" + sampleID.to_s 
+    return cmd
+  end
+
+  def fixMateInfoCommand()
+    cmd = "java -Xmx8G -jar " + @picarcPath + "/FixMateInformation.jar I=" + @markedBam.to_s +
+          " TMP_DIR=/space1/tmp MAX_RECORDS_IN_RAM=1000000 VALIDATION_STRINGENCY=LENIENT"
     return cmd
   end
 
