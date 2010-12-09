@@ -121,16 +121,17 @@ class BWA_BAM
     objX.runCommand()
     phixFilterJobName = objX.getJobName()
 
-#TODO: Don't run fix mate info for fragment runs
-    # Fix mate information
-    fixMateCmd = fixMateInfoCmd()
-    objY = Scheduler.new(@fcName + "_fix_mate_info" + @markedBam, fixMateCmd)
-    objY.setMemory(@lessMemory)
-    objY.setNodeCores(1)
-    objY.setPriority(@priority)
-    objY.setDependency(phixFilterJobName)
-    objY.runCommand()
-    fixMateJobName = objY.getJobName()
+    # Fix mate information for paired end FC
+    if @isFragment == false
+      fixMateCmd = fixMateInfoCmd()
+      objY = Scheduler.new(@fcName + "_fix_mate_info" + @markedBam, fixMateCmd)
+      objY.setMemory(@lessMemory)
+      objY.setNodeCores(1)
+      objY.setPriority(@priority)
+      objY.setDependency(phixFilterJobName)
+      objY.runCommand()
+      fixMateJobName = objY.getJobName()
+    end
 
     # Calculate Alignment Stats
     mappingStatsCmd = calculateMappingStats()
@@ -138,9 +139,13 @@ class BWA_BAM
     obj7.setMemory(@lessMemory)
     obj7.setNodeCores(1)
     obj7.setPriority(@priority)
-#    obj7.setDependency(markedDupJobName)
-#    obj7.setDependency(phixFilterJobName)
-    obj7.setDependency(fixMateJobName)
+    
+    if @isFragment == false
+      obj7.setDependency(fixMateJobName)
+    else
+      obj7.setDependency(phixFilterJobName)
+    end
+
     obj7.runCommand()
     runStatsJobName = obj7.getJobName()
 
@@ -226,12 +231,6 @@ class BWA_BAM
     return cmd
   end
 
-  def fixMateInfoCommand()
-    cmd = "java -Xmx8G -jar " + @picarcPath + "/FixMateInformation.jar I=" + @markedBam.to_s +
-          " TMP_DIR=/space1/tmp MAX_RECORDS_IN_RAM=1000000 VALIDATION_STRINGENCY=LENIENT"
-    return cmd
-  end
-
   def sortBamCommand()
     cmd = "java -Xmx8G -jar " + @picardPath + "/SortSam.jar I=" + @bamFileName +
     " O=" + @sortedBam + " SO=coordinate TMP_DIR=/space1/tmp " +
@@ -249,7 +248,8 @@ class BWA_BAM
 
   # Method to calculate Mapping Stats
   def calculateMappingStats()
-    cmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/BWAMapStats.rb " + @markedBam
+#    cmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/BWAMapStats.rb " + @markedBam
+    cmd = "ruby " + File.dirname(__FILE__) +  "/BWAMapStats.rb " + @markedBam
     puts "Command to generate Mapping Stats : " + cmd
     return cmd
   end
@@ -260,6 +260,12 @@ class BWA_BAM
     return cmd
   end
  
+  def fixMateInfoCommand()
+    cmd = "java -Xmx8G -jar " + @picardPath + "/FixMateInformation.jar I=" + @markedBam.to_s +
+          " TMP_DIR=/space1/tmp MAX_RECORDS_IN_RAM=1000000 VALIDATION_STRINGENCY=LENIENT"
+    return cmd
+  end
+
   @reference     = nil   # Reference path
   @sequenceFiles = nil   # Array of sequence files
   @isFragment    = false # Is read fragment, default is paired (true)
