@@ -36,8 +36,16 @@ public class AddRGToBam
     {
       rgTag.setPlatform(platform);
     } 
-
     header.addReadGroup(rgTag);
+
+    if(ip.getProgramName() != null && ip.getProgramVersion() != null &&
+       !ip.getProgramName().isEmpty() && !ip.getProgramVersion().isEmpty())
+    {
+      SAMProgramRecord pgRecord = new SAMProgramRecord(ip.getProgramName());
+      pgRecord.setProgramVersion(ip.getProgramVersion());
+      header.addProgramRecord(pgRecord);
+    }
+
     writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header,true, 
 				 new File(ip.getOutputFile()));
     

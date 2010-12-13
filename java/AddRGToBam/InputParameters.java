@@ -10,6 +10,8 @@ public class InputParameters
   private String sampleID    = null; // Sample ID for RG tag
   private String libraryName = null; // Library name (LB) tag
   private String platform    = null; // Platform (PL) tag
+  private String prgName     = null; // ID of PG header
+  private String prgVer      = null; // VN field of PG header
   
   public InputParameters(String args[])
   {
@@ -31,6 +33,8 @@ public class InputParameters
     System.err.println("    SampleID - Sample name, Default : unknown");
     System.err.println("    Library  - Library name (optional)");
     System.err.println("    Platform - Platform name (optional)");
+    System.err.println("    Program  - Name of Mapper used (optional)");
+    System.err.println("    Version  - Version of Mapper used (optional)");
   }
   
   private boolean validateArgs(String args[])
@@ -84,6 +88,16 @@ public class InputParameters
       if(param.equalsIgnoreCase("platform"))
       {
         platform = value;
+      }
+      else
+      if(param.equalsIgnoreCase("program"))
+      {
+        prgName = value;
+      }
+      else
+      if(param.equalsIgnoreCase("version"))
+      {
+        prgVer = value;
       }
     }
     
@@ -140,6 +154,16 @@ public class InputParameters
   public String getPlatformName()
   {
     return platform;
+  }
+
+  public String getProgramName()
+  {
+    return prgName;
+  }
+
+  public String getProgramVersion()
+  {
+    return prgVer;
   }
 }
 
