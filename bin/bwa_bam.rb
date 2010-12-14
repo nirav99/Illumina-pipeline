@@ -7,25 +7,29 @@ require 'PipelineHelper'
 
 class BWA_BAM
   def initialize(refPath)
-    @reference     = refPath
-    @sequenceFiles = nil
-    @isFragment    = false
-    @bwaPath       = "/stornext/snfs5/next-gen/niravs_scratch/code/bwa_test/bwa_code/bwa-0.5.8a/bwa"
-    @picardPath    = "/stornext/snfs5/next-gen/software/picard-tools/current"
-    @samFileName   = nil
-    @bamFileName   = nil
-    @sortedBam     = nil
-    @markedBam     = nil
-    @cpuCores      = 6
-    @maxMemory     = 28000  # Maximum memory available per node
-    @lessMemory    = 28000  # Command requiring less than maximum memory
-    @priority      = "high" # Run with high priority (Run in high queue)
+    @reference      = refPath
+    @sequenceFiles  = nil
+    @sangerSeqFiles = nil # Sequence files with sanger qualities
+    @isFragment     = false
+    @bwaPath        = "/stornext/snfs5/next-gen/niravs_scratch/code/bwa_test/bwa_code/bwa-0.5.8a/bwa"
+    @picardPath     = "/stornext/snfs5/next-gen/software/picard-tools/current"
+    @picardTempDir  = "TMP_DIR=/space1/tmp"
+    @picardValStr   = "VALIDATION_STRINGENCY=LENIENT"
+    @illToSanger    = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/maq"
+    @samFileName    = nil
+    @bamFileName    = nil
+    @sortedBam      = nil
+    @markedBam      = nil
+    @cpuCores       = 6
+    @maxMemory      = 28000  # Maximum memory available per node
+    @lessMemory     = 28000  # Command requiring less than maximum memory
+    @priority       = "high" # Run with high priority (Run in high queue)
   
     # Instantiate pipeline helper 
     @helper        = PipelineHelper.new()
     @fcName        = @helper.findFCName()
     @laneNumber    = @helper.findAnalysisLaneNumbers()
-
+    @fcAndLane     = @fcName + "-" + @laneNumber.to_s
     findSequenceFiles()
     generateSamFileName()
 
@@ -36,30 +40,51 @@ class BWA_BAM
   end
 
   def process()
-    outputFile1 = @sequenceFiles[0] + ".sai"
+    # Convert the quality values from Illumina format to Sanger format
+    illToSangerRead1Cmd = illuminaToSangerCommand(@sequenceFiles[0], @sangerSeqFiles[0])
+    objConvRead1 = Scheduler.new("Illumina_Sanger_Read1-" + @fcAndLane, illToSangerRead1Cmd)
+    objConvRead1.setMemory(@maxMemory)
+    objConvRead1.setNodeCores(@cpuCores)
+    objConvRead1.setPriority(@priority)
+    objConvRead1.runCommand()
+    illSangerReadID1 = objConvRead1.getJobName()
 
-    alnCmd1 = buildAlignCommand(@sequenceFiles[0], outputFile1) 
-    obj1 = Scheduler.new(@fcName + "_" + @sequenceFiles[0], alnCmd1)
+    if @isFragment == false
+      illToSangerRead2Cmd = illuminaToSangerCommand(@sequenceFiles[1], @sangerSeqFiles[1])
+      objConvRead2 = Scheduler.new("Illumina_Sanger_Read1-" + @fcAndLane, illToSangerRead2Cmd)
+      objConvRead2.setMemory(@maxMemory)
+      objConvRead2.setNodeCores(@cpuCores)
+      objConvRead2.setPriority(@priority)
+      objConvRead2.runCommand()
+      illSangerReadID2 = objConvRead2.getJobName()
+    end
+
+    outputFile1 = @sangerSeqFiles[0] + ".sai"
+
+    alnCmd1 = buildAlignCommand(@sangerSeqFiles[0], outputFile1) 
+    obj1 = Scheduler.new(@fcAndLane + "_aln_Read1", alnCmd1)
     obj1.setMemory(@maxMemory)
     obj1.setNodeCores(@cpuCores)
     obj1.setPriority(@priority)
+    obj1.setDependency(illSangerReadID1)
     obj1.runCommand()
     alnJobID1 = obj1.getJobName()
 
     # paired end flowcell
     if @isFragment == false
-      outputFile2 = @sequenceFiles[1] + ".sai"
-      alnCmd2 = buildAlignCommand(@sequenceFiles[1], outputFile2)
-      obj2 = Scheduler.new(@fcName + "_" + @sequenceFiles[1], alnCmd2)
+      outputFile2 = @sangerSeqFiles[1] + ".sai"
+      alnCmd2 = buildAlignCommand(@sangerSeqFiles[1], outputFile2)
+      obj2 = Scheduler.new(@fcAndLane + "_aln_Read2", alnCmd2)
       obj2.setMemory(@maxMemory)
       obj2.setNodeCores(@cpuCores)
       obj2.setPriority(@priority)
+      obj2.setDependency(illSangerReadID2)
       obj2.runCommand()
       alnJobID2 = obj2.getJobName()
 
-      sampeCmd = buildSampeCommand(outputFile1, outputFile2, @sequenceFiles[0],
-                                   @sequenceFiles[1])
-      obj3 = Scheduler.new(@fcName + "_" + @samFileName, sampeCmd)
+      sampeCmd = buildSampeCommand(outputFile1, outputFile2, @sangerSeqFiles[0],
+                                   @sangerSeqFiles[1])
+      obj3 = Scheduler.new(@fcAndLane + "_sampe", sampeCmd)
       obj3.setMemory(@lessMemory)
 #      obj3.setNodeCores(@cpuCores)
       obj3.setNodeCores(1)
@@ -70,8 +95,8 @@ class BWA_BAM
       makeSamJobName = obj3.getJobName()
     else
       # Flowcell is fragment
-      samseCmd = buildSamseCommand(outputFile1, @sequenceFiles[0])
-      obj3 = Scheduler.new(@fcName + "_" + @samFileName, samseCmd)
+      samseCmd = buildSamseCommand(outputFile1, @sangerSeqFiles[0])
+      obj3 = Scheduler.new(@fcAndLane + "_samse", samseCmd)
       obj3.setMemory(@lessMemory)
 #      obj3.setNodeCores(@cpuCores)
       obj3.setNodeCores(1)
@@ -83,7 +108,7 @@ class BWA_BAM
 
     # Add RG header and convert to BAM
     addRGCmd = addRGTagCommand() 
-    obj4 = Scheduler.new(@fcName + "_" + @bamFileName, addRGCmd)
+    obj4 = Scheduler.new(@fcAndLane + "_toBam", addRGCmd)
     obj4.setMemory(@lessMemory)
     obj4.setNodeCores(1)
     obj4.setPriority(@priority)
@@ -93,7 +118,7 @@ class BWA_BAM
 
     # Sort a BAM
     sortBamCmd = sortBamCommand()
-    obj5 = Scheduler.new(@fcName + "_" + @sortedBam, sortBamCmd)
+    obj5 = Scheduler.new(@fcAndLane  + "_sortBam", sortBamCmd)
     obj5.setMemory(@lessMemory)
     obj5.setNodeCores(1)
     obj5.setPriority(@priority)
@@ -103,7 +128,7 @@ class BWA_BAM
 
     # Mark duplicates on BAM
     markedDupCmd = markDupCommand()
-    obj6 = Scheduler.new(@fcName + "_" + @markedBam, markedDupCmd)
+    obj6 = Scheduler.new(@fcAndLane + "_markDupBam", markedDupCmd)
     obj6.setMemory(@lessMemory)
     obj6.setNodeCores(1)
     obj6.setPriority(@priority)
@@ -113,7 +138,7 @@ class BWA_BAM
 
     # Filter out phix reads
     phixFilterCmd = filterPhixReadsCmd()
-    objX = Scheduler.new(@fcName + "_phix_filter_" + @markedBam, phixFilterCmd)
+    objX = Scheduler.new(@fcAndLane + "_phixFilter", phixFilterCmd)
     objX.setMemory(@lessMemory)
     objX.setNodeCores(1)
     objX.setPriority(@priority)
@@ -124,7 +149,7 @@ class BWA_BAM
     # Fix mate information for paired end FC
     if @isFragment == false
       fixMateCmd = fixMateInfoCmd()
-      objY = Scheduler.new(@fcName + "_fix_mate_info" + @markedBam, fixMateCmd)
+      objY = Scheduler.new(@fcAndLane + "_fixMateInfo" + @markedBam, fixMateCmd)
       objY.setMemory(@lessMemory)
       objY.setNodeCores(1)
       objY.setPriority(@priority)
@@ -135,7 +160,7 @@ class BWA_BAM
 
     # Calculate Alignment Stats
     mappingStatsCmd = calculateMappingStats()
-    obj7 = Scheduler.new(@fcName + "_" + @markedBam + "_BAM_Stats", mappingStatsCmd)
+    obj7 = Scheduler.new(@fcAndLane + "_AlignStats", mappingStatsCmd)
     obj7.setMemory(@lessMemory)
     obj7.setNodeCores(1)
     obj7.setPriority(@priority)
@@ -151,7 +176,7 @@ class BWA_BAM
 
     # Hook to run code after final BAM is generated
     postRunCmd = "ruby " + File.dirname(__FILE__) + "/bwa_postrun.rb"
-    obj8 = Scheduler.new(@fcName + "_post_run", postRunCmd)
+    obj8 = Scheduler.new(@fcAndLane + "_post_run", postRunCmd)
     obj8.setMemory(2000)
     obj8.setNodeCores(1)
     obj8.setPriority(@priority)
@@ -174,6 +199,16 @@ class BWA_BAM
       @sequenceFiles = fileList
     else
       raise "More than two sequence files detected, perhaps from different reads in directory " + Dir.pwd
+    end
+
+    @sangerSeqFiles = Array.new
+    @sequenceFiles.each do |seqFile|
+      @sangerSeqFiles << seqFile.gsub(/sequence/, "sanger_sequence")
+    end
+
+    puts "List of sanger quality file names"
+    @sangerSeqFiles.each do |line|
+      puts line
     end
   end
  
@@ -218,6 +253,12 @@ class BWA_BAM
     return cmd
   end
 
+  # Method to convert basecalls qualities from Illumina to Sanger format
+  def illuminaToSangerCommand(illuminaSeqFile, sangerSeqFile)
+    cmd = @illToSanger + " sol2sanger " + illuminaSeqFile + " " + sangerSeqFile
+    return cmd
+  end
+
   def addRGTagCommand()
     cmd = "java -Xmx8G -jar /stornext/snfs5/next-gen/Illumina/ipipe/java" +
           "/AddRGToBam.jar Input=" + @samFileName.to_s + " Output=" + @bamFileName.to_s +
@@ -233,22 +274,21 @@ class BWA_BAM
 
   def sortBamCommand()
     cmd = "java -Xmx8G -jar " + @picardPath + "/SortSam.jar I=" + @bamFileName +
-    " O=" + @sortedBam + " SO=coordinate TMP_DIR=/space1/tmp " +
-    " MAX_RECORDS_IN_RAM=1000000 VALIDATION_STRINGENCY=LENIENT"
+    " O=" + @sortedBam + " SO=coordinate " + @picardTempDir + " " +
+    " MAX_RECORDS_IN_RAM=1000000 " + @picardValStr
     return cmd
   end
 
   def markDupCommand()
     cmd = "java -Xmx8G -jar " + @picardPath + "/MarkDuplicates.jar I=" +
-          @sortedBam + " O=" + @markedBam + " TMP_DIR=/space1/tmp " +
+          @sortedBam + " O=" + @markedBam + " " + @picardTempDir + " " +
           "MAX_RECORDS_IN_RAM=1000000 AS=true M=metrics.foo " +
-          "VALIDATION_STRINGENCY=LENIENT" 
+          @picardValStr 
     return cmd
   end
 
   # Method to calculate Mapping Stats
   def calculateMappingStats()
-#    cmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/BWAMapStats.rb " + @markedBam
     cmd = "ruby " + File.dirname(__FILE__) +  "/BWAMapStats.rb " + @markedBam
     puts "Command to generate Mapping Stats : " + cmd
     return cmd
@@ -260,9 +300,9 @@ class BWA_BAM
     return cmd
   end
  
-  def fixMateInfoCommand()
+  def fixMateInfoCmd()
     cmd = "java -Xmx8G -jar " + @picardPath + "/FixMateInformation.jar I=" + @markedBam.to_s +
-          " TMP_DIR=/space1/tmp MAX_RECORDS_IN_RAM=1000000 VALIDATION_STRINGENCY=LENIENT"
+          " " + @picardTempDir + " MAX_RECORDS_IN_RAM=1000000 " + @picardValStr
     return cmd
   end
 
