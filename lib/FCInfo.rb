@@ -1,11 +1,27 @@
 #!/usr/bin/ruby
-#
+$:.unshift File.join(File.dirname(__FILE__), ".", "..", "third_party")
+
 #Class to obtain flowcell information from LIMS
 class FCInfo
-  def initialize(fc)
-    @limsScript = "../third_party/getAnalysisPreData.pl"
-    @fcName = extractFC(fc)
-    getFCInfo()
+  def initialize(fc, laneBarcode)
+    @limsScript  = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/getAnalysisPreData.pl"
+    @fcName      = extractFC(fc)
+    @laneBarcode = laneBarcode
+    @libraryName = ""
+    @refPath     = ""
+    @numCycles   = 0
+    @paired      = false
+    
+    begin
+      contactLIMS()
+    rescue Exception => e
+      puts e.message
+    end
+  end
+
+  # Return library name for the corresponding 
+  def getLibraryName()
+    return @libraryName
   end
 
   # Method to obtain number of cycles per run
@@ -20,9 +36,11 @@ class FCInfo
   end
 
   # Method to retrieve reference paths for a specified lane
-  def getRefPath(lane)
-    return @referencePaths[lane.to_s]
+  def getRefPath()
+    return @refPath
   end
+
+  private
 
   # Method to find out if reference path returned from LIMS is
   # valid for specified lane. Returns true if path is valid, false
@@ -52,21 +70,6 @@ class FCInfo
     return true
   end
 
-  # Method to obtain library name for the specified lane
-  def getLibraryName(lane)
-    return @libraryNames[lane.to_s] 
-  end
-
-  private
-  @limsScript = ""
-  @paired = false
-  @numCycles = 0
-  @fcName = nil
-  @genusName = nil
-  @speciesName = nil
-  @referencePaths = nil
-  @libraryNames = nil
-
   # Helper method to handle errors encountered in interacting with LIMS
   # such as error in connecting to LIMS
   def handleError(msg)
@@ -92,61 +95,37 @@ class FCInfo
     return flowCellName
   end
 
-  # Helper method to obtain number of cycles, reference paths and FC type
-  # (i.e. paired / fragment)
-  def getFCInfo()
-
-    # Use lane 5 to get information for reference path, FC type and
-    # number of cycles
-    cmd = "perl " + @limsScript + " " + @fcName.to_s + "-5"
+  # Invoke the LIMS perl script and parse the output if LIMS could be contacted
+  def contactLIMS()
+    cmd = "perl " + @limsScript + " " + @fcName.to_s + "-" + @laneBarcode
     output = `#{cmd}`
     exitCode = $?
 
-    # Validate that the output from LIMS was proper
-    # Currently validation based on exit code is not supported since they
-    # return zero for success as well as failure cases
     if output.downcase.match(/error/)
       handleError(output)
     end
 
+    # If information was successfully obtained from LIMS, parse the output
     findFCType(output)
     findNumCycles(output)
-    @referencePaths = Hash.new()
-    @referencePaths["5"] = parseReferencePath(output)
-    @libraryNames = Hash.new()
-    @libraryNames["5"] = parseLibraryName(output)
-
-    for i in 1..8
-      if i != 5
-        cmd = "perl " + @limsScript + " " + @fcName.to_s + "-" + i.to_s
-        output = `#{cmd}`
-
-        if output.downcase.match(/error/)
-          handleError(output)
-        end
-
-        @referencePaths[i.to_s] = parseReferencePath(output)
-        @libraryNames[i.to_s]   = parseLibraryName(output)
-      end
-    end
+    parseReferencePath(output)
+    parseLibraryName(output)
   end
 
   # Helper method to parse the LIMS output to find reference path
   def parseReferencePath(output)
-    referencePath = nil
-
     if(output.match(/BUILD_PATH=\s+[Ss]equence/) ||
        output.match(/BUILD_PATH=[Ss]equence/))
-       referencePath = "sequence"
+       @refPath = "sequence"
 
     elsif(output.match(/BUILD_PATH=\s+\/data/) ||
          output.match(/BUILD_PATH=\/data/))
-         referencePath = output.slice(/\/data\/slx\/references\/\S+/)
+         @refPath = output.slice(/\/data\/slx\/references\/\S+/)
         
          # Since reference paths starting with /data/slx/references represent
          # format of reference paths in alkek, change the prefix of these paths
          # to match the file-system structure in ardmore.
-         referencePath.gsub!(/\/data\/slx\/references/,
+         @refPath.gsub!(/\/data\/slx\/references/,
          "/stornext/snfs5/next-gen/Illumina/genomes")
 
     elsif(output.match(/BUILD_PATH=\s+\/stornext/) ||
@@ -154,9 +133,8 @@ class FCInfo
          # If LIMS already has correct path corresponding to the file
          # system structure in ardmore, return that path without any
          # modifications.
-         referencePath = output.slice(/\/stornext\/\S+/)
+         @refPath = output.slice(/\/stornext\/\S+/)
     end
-    return referencePath
   end
 
   # Get number of cycles for the flowcell
@@ -180,35 +158,19 @@ class FCInfo
 
   # Get the library name from the output
   def parseLibraryName(output)
-    libName = nil
     # Find the library name
     if output.match(/Library=/)
-      libName = output.slice(/Library=\S+/) 
-      libName.gsub!(/Library=/, "")
+      @libraryName = output.slice(/Library=\S+/) 
+      @libraryName.gsub!(/Library=/, "")
     end
   end
 end
 
-__END__
-
 #To Test this class, comment the previous __END__ statement
-
-#obj = FCInfo.new("100608_SN142_0206_A201JFABXX")
-obj = FCInfo.new("100604_USI-EAS376_0005_PE1A_FC61TU7AAXX")
-puts "PAIRED = " + obj.paired?().to_s
-puts "Num Cycles = " + obj.getNumCycles().to_s
-
-for i in 1..8
-  refPath = obj.getRefPath(i)
-  libName = obj.getLibraryName(i)
-
-  puts "Lane " + i.to_s + " : " + refPath + " " + libName
-
-  if true == obj.refPathValid?(i)
-    puts "Reference Path is valid"
-  else
-    puts "Reference Path is invalid"
-  end
-
-end
+__END__
+obj = FCInfo.new("101112_SN166_0150_A8063PABXX", "1")
+puts obj.getLibraryName()
+puts obj.getNumCycles()
+puts obj.paired?().to_s
+puts obj.getRefPath()
 

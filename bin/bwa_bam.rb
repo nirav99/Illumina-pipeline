@@ -268,7 +268,13 @@ class BWA_BAM
     if sampleID == nil || sampleID.empty?()
       sampleID = "unknown"
     end
-    cmd = cmd + "SampleID=" + sampleID.to_s 
+    cmd = cmd + "SampleID=" + sampleID.to_s + " Program=BWA Version=0.5.8 " +
+                "Platform=Illumina"
+
+    if File::exist?("libraryName")
+      libraryName = IO.readlines("libraryName")[0].strip
+      cmd = cmd + " Library=" + libraryName.to_s 
+    end
     return cmd
   end
 

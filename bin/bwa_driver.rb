@@ -8,8 +8,8 @@ class BWA_Driver
   def initialize()
     begin
       @referenceFile = "referencePath"
-      @bwaScriptPath = "/stornext/snfs5/next-gen/Illumina/ipipe/bin/bwa_bam.rb"             
-      @limsUploadScript = "/stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_results.rb"
+      @bwaScriptPath    = File.dirname(__FILE__) + "/bwa_bam.rb"             
+      @limsUploadScript = File.dirname(__FILE__) + "/upload_LIMS_results.rb"
 
       lines = IO.readlines("./" + @referenceFile)
 

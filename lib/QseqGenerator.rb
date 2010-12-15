@@ -55,7 +55,7 @@ class QseqGenerator
   def runMake()
     s = Scheduler.new(@fcName + "_Generate_Qseq", "make -j8")
     s.setMemory(28000)
-    s.setNodeCores(8)
+    s.setNodeCores(6)
     s.setPriority("high")
     s.runCommand()
     @jobID = s.getJobID()

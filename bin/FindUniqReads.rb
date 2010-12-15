@@ -114,8 +114,21 @@ class FindUniqueReads
   end
 
   # Helper method to find sequence files for a given lane
+  # Find Sequence files only of the format s_x_sequence.txt (fragment),
+  # s_x_1_sequence.txt (read1), s_x_2_sequence.txt (read2).
+  # Sort the filenames to feed the filenames to the java in the correct order
+  # (read 1 before read2).
   def findSequenceFileNames(laneNum)
-    return Dir["s_" + laneNum + "*sequence.txt"]
+    sequenceFiles = Dir["s_" + laneNum.to_s + "*sequence.txt"]
+    result = Array.new
+    sequenceFiles.each do |file|
+      if file.match(/s_\d_sequence.txt/) || file.match(/s_\d_1_sequence.txt/) ||
+         file.match(/s_\d_2_sequence.txt/)
+         result << file       
+      end
+    end
+    result.sort!
+    return result
   end
 
   # Helper method to copy resultFile to mini analysis

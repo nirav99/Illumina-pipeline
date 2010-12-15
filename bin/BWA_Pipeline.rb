@@ -11,7 +11,7 @@ require 'PipelineHelper'
 #Driver script to build GERALD sequence and BWA analysis for the specified lane of FC
 class BWA_Pipeline
   def initialize(args)
-    if args.length != 2 && args.length != 5
+    if args.length != 5
       printUsage()
     else
       @fcName        = args[0]
@@ -19,7 +19,7 @@ class BWA_Pipeline
       @numCycles     = 0
       @fcPaired      = false
       @referencePath = ""
-
+ 
       if args.length == 5
         @numCycles  = Integer(args[2])
         if args[3].downcase.eql?("paired")
@@ -43,9 +43,9 @@ class BWA_Pipeline
   private
     def printUsage()
       puts "Usage:"
-      puts "\r\nScenario 1, Obtaining information from LIMS"
-      puts "  ruby " + __FILE__ + " FlowCell LaneNumber"
-      puts "\r\nScenario 2, Providing flowcell info on command line"
+#      puts "\r\nScenario 1, Obtaining information from LIMS"
+#      puts "  ruby " + __FILE__ + " FlowCell LaneBarCode"
+#      puts "\r\nScenario 2, Providing flowcell info on command line"
       puts "  ruby " + __FILE__ + " FlowCell LaneBarCode NumCycles FCType " +
            "ReferencePath"
       puts "    FCType    - Specify paired if FC is paired, otherwise fragment"
@@ -77,31 +77,6 @@ class BWA_Pipeline
           seqType = "ga2"
         else
           seqType = "hiseq"
-        end
-
-        # Since the user did not specify reference path, num cycles
-        # and paired / fragment info, we obtain this info from LIMS
-        if @numCycles == 0 || @referencePath.eql?("")
-
-          puts "\r\nContacting LIMS to get flowcell information"
-
-          fcInfo     = FCInfo.new(@fcName)
-          @fcPaired  = fcInfo.paired?()
-          @numCycles = fcInfo.getNumCycles()
-
-          @referencePath   = fcInfo.getRefPath(@laneBarcode)
-          if @referencePath == nil || @referencePath.empty?()
-            raise "Did not find reference path in LIMS for " + @laneBarcode
-          end
-         
-          #TODO: reference path validity checking is suspended. Fix the code to
-          # handle BWA reference and then resume reference path validation 
-=begin
-          if false == fcInfo.refPathValid?(@laneNum[0].chr.to_s)
-            errMsg = "Reference Path " + @referencePath + " is invalid"
-            handleErrorAndAbort(errMsg)
-          end
-=end
         end
 
         puts "\r\nNumber of Cycles : " + @numCycles.to_s
@@ -184,6 +159,7 @@ class BWA_Pipeline
           puts "Finished creating GERALD directory at "
           puts geraldDir.to_s
           writeReferencePathToGeraldDir(geraldDir.to_s)
+          writeLibraryNameToGeraldDir(geraldDir.to_s)
         end
       end
     end
@@ -194,6 +170,22 @@ class BWA_Pipeline
       referenceFile = File.new(geraldDir + "/referencePath", "w")
       referenceFile.syswrite(@referencePath)
       referenceFile.close()
+    end
+
+    # Helper method to write library name to GERALD directory to enable BWA
+    # to pick up library name
+    def writeLibraryNameToGeraldDir(geraldDir)
+      libraryName = nil
+      begin
+        obj = FCInfo.new(@fcName, @laneBarcode)
+        libraryName = obj.getLibraryName()
+      rescue
+      end
+      if libraryName != nil && !libraryName.empty?()
+        libraryFile = File.new(geraldDir + "/libraryName", "w")
+        libraryFile.syswrite(libraryName)
+        libraryFile.close()
+      end
     end
 
     # Helper method to run the GERALD makefile

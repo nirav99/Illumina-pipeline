@@ -43,8 +43,7 @@ class BWAMapStats
 
    # to = [ "dc12@bcm.edu", "niravs@bcm.edu" ]
     to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "fongeri@bcm.edu",
-           "javaid@bcm.edu", "yw14@bcm.edu", "jgreid@bcm.edu", "cbuhay@bcm.edu",
-           "ahawes@bcm.edu" ]
+           "javaid@bcm.edu", "jgreid@bcm.edu", "cbuhay@bcm.edu", "ahawes@bcm.edu" ]
     @helper.sendEmail("sol-pipe@bcm.edu", to, emailSubject, lines)
   end
 
