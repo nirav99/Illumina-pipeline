@@ -56,7 +56,7 @@ class PipelineHelper
       fcPath = ""
 
       # This represents location where to search for flowcell
-      rootDir = "/stornext/snfs5/next-gen/Illumina/Instruments"
+      rootDir = "/stornext/snfs0/next-gen/Illumina/Instruments"
 
       # Populate an array with list of volumes where this flowcell
       # is expected to be found
@@ -65,6 +65,7 @@ class PipelineHelper
       parentDir << rootDir + "/EAS376"
       parentDir << rootDir + "/700142"
       parentDir << rootDir + "/700166"
+      parentDir << rootDir + "/700580"
 
       parentDir.each{ |path|
         if File::exist?(path + "/" + fcName) &&
@@ -117,44 +118,47 @@ class PipelineHelper
   # Given a valid barcode sequence, return the ID number used to identify
   # this barcode in LIMS
   def findBarcodeTagID(barcode)
+    barcodeLabel = ""
     if barcode == nil || barcode.empty?()
       return ""
-    elsif barcode.eql?("CGATGT")
-       return "ID02"
-     elsif barcode.eql?("TGACCA")
-       return "ID04"
-     elsif barcode.eql?("ACAGTG")
-       return "ID05"
-     elsif barcode.eql?("GCCAAT")
-       return "ID06"
-     elsif barcode.eql?("CAGATC")
-       return "ID07"
-     elsif barcode.eql?("CTTGTA")
-       return "ID12"
-     else
-       raise "Invalid barcode specified"
+    end
+    lines = IO.readlines("barcode_label.txt")
+
+    lines.each do |line|
+      tokens = line.split(",")
+      if tokens[1].strip.eql?(barcode)
+         barcodeLabel = tokens[0].strip
+      end
+    end
+
+    if barcodeLabel.empty?()
+      raise "Invalid barcode specified"
+    else
+      return barcodeLabel
     end
   end
 
   # Given a valid barcode tag, return the sequence for this barcode
   # this barcode in LIMS
   def findBarcodeSequence(barcodeTag)
+    barcode = ""
     if barcodeTag == nil || barcodeTag.empty?()
       return ""
-    elsif barcodeTag.eql?("ID02")
-       return "CGATGT"
-     elsif barcodeTag.eql?("ID04")
-       return "TGACCA"
-     elsif barcodeTag.eql?("ID05")
-       return "ACAGTG"
-     elsif barcodeTag.eql?("ID06")
-       return "GCCAAT"
-     elsif barcodeTag.eql?("ID07")
-       return "CAGATC"
-     elsif barcodeTag.eql?("ID12")
-       return "CTTGTA"
-     else
-       raise "Invalid barcode specified"
+    end
+
+    lines = IO.readlines("barcode_label.txt")
+
+    lines.each do |line|
+      tokens = line.split(",")
+      if tokens[0].strip.eql?(barcodeTag)
+         barcode = tokens[1].strip
+      end
+    end
+
+    if barcode.empty?()
+      raise "Invalid barcode tag specified"
+    else
+      return barcode
     end
   end
 
