@@ -93,14 +93,14 @@ class FindUniqueReads
   def emailUniquenessResults(resultFileName)
     adaptorPlotFile = "AdaptorReadsDistribution.png"
     recepients = "niravs@bcm.edu dc12@bcm.edu yhan@bcm.edu fongeri@bcm.edu " +
-                 " javaid@bcm.edu jgreid@bcm.edu"
+                 " javaid@bcm.edu jgreid@bcm.edu pc2@bcm.edu"
 
     resultFile = File.open(resultFileName, "r")
     lines = resultFile.read()
 
     if !File::exist?(adaptorPlotFile) || !File::readable?(adaptorPlotFile) ||
         File::size(adaptorPlotFile) == 0
-      to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", 
+      to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "pc2@bcm.edu",  
            "fongeri@bcm.edu", "javaid@bcm.edu", "jgreid@bcm.edu" ]
       @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
     else

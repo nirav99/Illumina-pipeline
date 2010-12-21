@@ -7,6 +7,7 @@ require 'BuildGERALDConfig.rb'
 require 'BuildGERALDCommand.rb'
 require 'Scheduler'
 require 'PipelineHelper'
+require 'BWAParams'
 
 #Driver script to build GERALD sequence and BWA analysis for the specified lane of FC
 class BWA_Pipeline
@@ -14,11 +15,13 @@ class BWA_Pipeline
     if args.length != 5
       printUsage()
     else
-      @fcName        = args[0]
-      @laneBarcode   = args[1]
-      @numCycles     = 0
-      @fcPaired      = false
-      @referencePath = ""
+      @fcName         = args[0]
+      @laneBarcode    = args[1]
+      @numCycles      = 0
+      @fcPaired       = false
+      @referencePath  = ""
+      @bwaParams      = BWAParams.new
+      @pipelineHelper = PipelineHelper.new
  
       if args.length == 5
         @numCycles  = Integer(args[2])
@@ -71,12 +74,11 @@ class BWA_Pipeline
     # configuration file
     def createGERALDConfig()
       begin
-        # Determine the actual sequencer type by looking at
-        # complete fc name (variable fcName)
-        if @fcName.match("EAS034") || @fcName.match("EAS376")
-          seqType = "ga2"
-        else
+        # Determine the actual sequencer type
+        if @pipelineHelper.isFCHiSeq(@fcName)
           seqType = "hiseq"
+        else
+          seqType = "ga2"
         end
 
         puts "\r\nNumber of Cycles : " + @numCycles.to_s
@@ -160,6 +162,7 @@ class BWA_Pipeline
           puts geraldDir.to_s
           writeReferencePathToGeraldDir(geraldDir.to_s)
           writeLibraryNameToGeraldDir(geraldDir.to_s)
+          writeBWAParamsToGeraldDir(geraldDir.to_s)
         end
       end
     end
@@ -186,6 +189,32 @@ class BWA_Pipeline
         libraryFile.syswrite(libraryName)
         libraryFile.close()
       end
+    end
+
+    # Helper method to populate the BWA config parameters object and write in
+    # GERALD directory
+    def writeBWAParamsToGeraldDir(geraldDir)
+      @bwaParams.setReferencePath(@referencePath)
+      begin
+        libraryName = nil
+        obj = FCInfo.new(@fcName, @laneBarcode)
+        libraryName = obj.getLibraryName()
+
+        if libraryName != nil && !libraryName.empty?()
+          @bwaParams.setLibraryName(libraryName)
+        end
+      rescue
+        puts "Did not obtain library name for : " + @fcName + "-" + @laneBarcode.to_s
+      end
+
+      # Turn on Phix filtering for Hiseq FC that is not phix
+      if @pipelineHelper.isFCHiSeq(@fcName) == true &&
+         !@referencePath.match("PhiX_plus_SNP.fa")
+           @bwaParams.setPhixFilter(true)
+      end
+
+      # Write the parameters to gerald directory
+      @bwaParams.toFile(geraldDir)
     end
 
     # Helper method to run the GERALD makefile

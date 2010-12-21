@@ -42,7 +42,7 @@ class BWAMapStats
     emailSubject = "Illumina BAM Alignment Results : Flowcell " + @fcBarcode.to_s
 
    # to = [ "dc12@bcm.edu", "niravs@bcm.edu" ]
-    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "fongeri@bcm.edu",
+    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "fongeri@bcm.edu", "pc2@bcm.edu", 
            "javaid@bcm.edu", "jgreid@bcm.edu", "cbuhay@bcm.edu", "ahawes@bcm.edu" ]
     @helper.sendEmail("sol-pipe@bcm.edu", to, emailSubject, lines)
   end

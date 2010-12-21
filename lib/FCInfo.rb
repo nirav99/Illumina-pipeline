@@ -98,7 +98,9 @@ class FCInfo
   # Invoke the LIMS perl script and parse the output if LIMS could be contacted
   def contactLIMS()
     cmd = "perl " + @limsScript + " " + @fcName.to_s + "-" + @laneBarcode
+    puts cmd
     output = `#{cmd}`
+    puts output
     exitCode = $?
 
     if output.downcase.match(/error/)
@@ -166,9 +168,9 @@ class FCInfo
   end
 end
 
-#To Test this class, comment the previous __END__ statement
 __END__
-obj = FCInfo.new("101112_SN166_0150_A8063PABXX", "1")
+#To Test this class, comment the previous __END__ statement
+obj = FCInfo.new("101206_USI-EAS376_00018_PE1_FC62RTAAAXX", "1-ID12")
 puts obj.getLibraryName()
 puts obj.getNumCycles()
 puts obj.paired?().to_s

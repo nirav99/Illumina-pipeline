@@ -122,7 +122,7 @@ class PipelineHelper
     if barcode == nil || barcode.empty?()
       return ""
     end
-    lines = IO.readlines("barcode_label.txt")
+    lines = IO.readlines("/stornext/snfs5/next-gen/Illumina/ipipe/lib/barcode_label.txt")
 
     lines.each do |line|
       tokens = line.split(",")
@@ -146,7 +146,7 @@ class PipelineHelper
       return ""
     end
 
-    lines = IO.readlines("barcode_label.txt")
+    lines = IO.readlines("/stornext/snfs5/next-gen/Illumina/ipipe/lib/barcode_label.txt")
 
     lines.each do |line|
       tokens = line.split(",")

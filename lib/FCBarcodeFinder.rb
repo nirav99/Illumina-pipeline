@@ -14,9 +14,9 @@ class FCBarcodeFinder
   # Class constructor
   def initialize()
     @barcode = ""
-    pipelineHelper = PipelineHelper.new
-    @analysisLane = pipelineHelper.findAnalysisLaneNumbers()
-    @fcName       = pipelineHelper.findFCName()
+    @pipelineHelper = PipelineHelper.new
+    @analysisLane = @pipelineHelper.findAnalysisLaneNumbers()
+    @fcName       = @pipelineHelper.findFCName()
     puts @analysisLane.to_s
   end
 
@@ -71,7 +71,7 @@ class FCBarcodeFinder
 
     if @barcode != nil && !@barcode.empty?()
       limsBarcode = limsBarcode + "-" + 
-                    pipelineHelper.findBarcodeTagID(@barcode.to_s)
+                    @pipelineHelper.findBarcodeTagID(@barcode.to_s)
     end
     return limsBarcode.to_s
   end
