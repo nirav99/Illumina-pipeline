@@ -8,7 +8,7 @@ class BWAParams
     @filterPhix    = false  # Don't filter phix reads
 
     # Name of config file
-    @configFile = "/BWAConfigParams.txt"
+    @configFile = "BWAConfigParams.txt"
   end
 
   def getReferencePath()
@@ -74,8 +74,10 @@ class BWAParams
       lines.each do |line|
         if line.match(/LIBRARY_NAME=\S+/)
           @libraryName = line.gsub(/LIBRARY_NAME=/, "")
+          @libraryName.strip!
         elsif line.match(/REFERENCE_PATH=\S+/)
           @referencePath = line.gsub(/REFERENCE_PATH=/, "")
+          @referencePath.strip!
         elsif line.match(/FILTER_PHIX=true/)
           @filterPhix = true
         end
@@ -83,13 +85,15 @@ class BWAParams
     end
   end
 end
-
 __END__
+
 obj = BWAParams.new()
+=begin
 obj.setLibraryName("foofoo")
 obj.setReferencePath("/sdf/sdf/sdf/sdf/sdf/sdf.fa")
 obj.setPhixFilter(true)
 obj.toFile()
+=end
 obj.loadFromFile()
 lib = obj.getLibraryName()
 if lib != nil && !lib.empty?()
