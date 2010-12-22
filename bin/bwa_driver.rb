@@ -27,7 +27,8 @@ class BWA_Driver
       else
         puts "Alignment is not desired. Upload results to LIMS and exit"
         uploadResCmd = "ruby " + @limsUploadScript
-        output = `#{@uploadResCmd}`
+        puts "Command to upload results to LIMS : " + uploadResCmd.to_s
+        output = `#{uploadResCmd}`
         puts output.to_s
       end
     rescue Exception => e
@@ -40,4 +41,4 @@ class BWA_Driver
     @bwaScriptPath = ""             
 end
 
-obj = BWA_Driver.new
+obj = BWA_Driver.new()
