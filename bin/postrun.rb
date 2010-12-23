@@ -25,7 +25,7 @@ output = `#{emailHTMLsummaryCmd}`
 puts output
 
 # Map sequence files using BWA
-bwaCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/bwa_driver.rb"
+bwaCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/bwa_bam.rb"
 output = `#{bwaCmd}`
 puts output
 

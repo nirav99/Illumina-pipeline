@@ -160,13 +160,14 @@ class BWA_Pipeline
           FileUtils.ln_s(geraldDir, "gerald_dir")
           puts "Finished creating GERALD directory at "
           puts geraldDir.to_s
-          writeReferencePathToGeraldDir(geraldDir.to_s)
-          writeLibraryNameToGeraldDir(geraldDir.to_s)
+#          writeReferencePathToGeraldDir(geraldDir.to_s)
+#          writeLibraryNameToGeraldDir(geraldDir.to_s)
           writeBWAParamsToGeraldDir(geraldDir.to_s)
         end
       end
     end
 
+=begin
     # Helper method to write reference path to GERALD directory to enable BWA
     # postrun script to use it
     def writeReferencePathToGeraldDir(geraldDir)
@@ -190,6 +191,7 @@ class BWA_Pipeline
         libraryFile.close()
       end
     end
+=end
 
     # Helper method to populate the BWA config parameters object and write in
     # GERALD directory
