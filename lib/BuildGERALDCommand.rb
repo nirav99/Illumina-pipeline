@@ -55,11 +55,12 @@ class BuildGERALDCommand
     fileHandle.close()
     FileUtils.chmod(0755, @outputFile)
 
-    filterPhixReads()
+#    filterPhixReads()
   end
 
   private
 
+=begin
   def filterPhixReads()
     if @pipelineHelperInstance.isFCHiSeq(@fcName) == true
       # Add a file "filterphix" in base calls directory
@@ -72,6 +73,7 @@ class BuildGERALDCommand
       FileUtils.cd(currDir)
     end
   end
+=end
 
     @pipelinePath = "" # Path to GERALD installation 
     @configPath   = "" # Path to GERALD config file
