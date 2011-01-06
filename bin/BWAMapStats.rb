@@ -21,7 +21,6 @@ class BWAMapStats
       configParams.loadFromFile()
       @library     = configParams.getLibraryName()
     rescue
-      puts "Rescued exception"
       if @fcBarcode.empty?()
          @fcBarcode = "unknown"
       end

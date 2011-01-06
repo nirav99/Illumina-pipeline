@@ -66,6 +66,7 @@ class PipelineHelper
       parentDir << rootDir + "/700142"
       parentDir << rootDir + "/700166"
       parentDir << rootDir + "/700580"
+      parentDir << rootDir + "/700601"
 
       parentDir.each{ |path|
         if File::exist?(path + "/" + fcName) &&
