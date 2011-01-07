@@ -6,6 +6,7 @@ class BWAParams
     @referencePath = nil    # BWA Reference Path
     @libraryName   = nil    # Library name of Sample
     @filterPhix    = false  # Don't filter phix reads
+    @chipDesign    = nil    # Name of chip design
 
     # Name of config file
     @configFile = "BWAConfigParams.txt"
@@ -23,6 +24,10 @@ class BWAParams
     return @filterPhix
   end
 
+  def getChipDesignName()
+    return @chipDesign
+  end
+
   def setReferencePath(value)
     @referencePath = value
   end
@@ -37,6 +42,10 @@ class BWAParams
     else
       @filterPhix = false
     end
+  end
+
+  def setChipDesignName(value)
+    @chipDesign = value
   end
 
   # Write the config parameters to a file
@@ -60,6 +69,11 @@ class BWAParams
     end
     
     fileHandle.puts("FILTER_PHIX=" + @filterPhix.to_s)
+
+    if @chipDesign != nil && !@chipDesign.empty?()
+      fileHandle.puts("CHIP_DESIGN=" + @chipDesign.to_s)
+    end
+
     fileHandle.close()
   end
 
@@ -67,6 +81,7 @@ class BWAParams
     @filterPhix    = false
     @libraryName   = nil
     @referencePath = nil
+    @chipDesign    = nil
 
     if File::exist?(@configFile)
       lines = IO.readlines(@configFile)
@@ -80,6 +95,9 @@ class BWAParams
           @referencePath.strip!
         elsif line.match(/FILTER_PHIX=true/)
           @filterPhix = true
+        elsif line.match(/CHIP_DESIGN=\S+/)
+          @chipDesign = line.gsub(/CHIP_DESIGN=/, "")
+          @chipDesign.strip!
         end
       end
     end
