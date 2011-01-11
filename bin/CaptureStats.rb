@@ -8,12 +8,14 @@ require 'Scheduler'
 require 'PipelineHelper'
 require 'BWAParams'
 require 'fileutils'
+require 'FCBarcodeFinder'
 
 class CaptureStats
   def initialize(inputFile, chipDesign)
     @captureCodeDir = "/stornext/snfs5/next-gen/software/hgsc/capture_stats"
     @outputDir      = "capture_stats"
     @resultPrefix   = "cap_stats"
+    @captureResult  = nil # Instance of CaptureStatsResult class
 
     begin
       if inputFile == nil || inputFile.empty?()
@@ -24,6 +26,14 @@ class CaptureStats
         raise "Chip Design Name must be specified"
       end
       chipDesignPath = getChipDesignPath(chipDesign) 
+
+      # Obtain flowcell barcode for uploading results to LIMS and sending email
+      barcodeObj = FCBarcodeFinder.new()
+      @fcBarcode = barcodeObj.getBarcodeForLIMS()
+
+      # Obtain instance of pipeline helper to send emails
+      @helper    = PipelineHelper.new
+
       runCommand(inputFile, chipDesignPath)
     rescue Exception => e
       puts e.message
@@ -71,14 +81,17 @@ class CaptureStats
     puts "Exit status of Capture Stats Command : " + exitStatus.to_s
 
     if exitStatus == 0
-      uploadResults()
+      parseResults()
+      emailResults()
+      uploadToLIMS()
+      exit 0
     end
-    exit exitStatus
+    exit -1
   end
 
-  # Method to upload capture stats results to LIMS, to be implemented when 
-  # LIMS support is available.
-  def uploadResults()
+  # Method to parse capture stats summary file and instantiate
+  # CaptureStatsResults object
+  def parseResults()
     puts "Uploading results to LIMS"
     summaryFile = Dir[@outputDir + "/*CoverageReport.csv"]
 
@@ -87,15 +100,27 @@ class CaptureStats
     end
 
     puts "Found Summary file : " + summaryFile[0].to_s
-    resultObj = CaptureStatsResults.new(summaryFile[0]) 
-    resultString = resultObj.toString()
-    puts resultString
+    @captureResults = CaptureStatsResults.new(summaryFile[0]) 
   end
 
-  # Stub to email capture results.
+  # Method to email capture results.
   def emailResults()
+    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "fongeri@bcm.edu",
+           "pc2@bcm.edu", "javaid@bcm.edu", "jgreid@bcm.edu", "cbuhay@bcm.edu",
+           "ahawes@bcm.edu" ]
+#    to = [ "niravs@bcm.edu" ]
+    emailSubject = "Illumina Capture Stats : Flowcell " + @fcBarcode.to_s
+ 
+    lines = @captureResults.formatForSTDOUT()
+    @helper.sendEmail("sol-pipe@bcm.edu", to, emailSubject, lines)
+  end
+
+  # Method to upload capture stats to LIMS
+  def uploadToLIMS()
+    result = @captureResults.formatForLIMSUpload()
   end
 end
+
 
 # Class to encapsulate capture stats results
 class CaptureStatsResults
@@ -169,27 +194,29 @@ class CaptureStatsResults
         end
       end
     end
-    show()
+    puts formatForSTDOUT() 
   end
 
-  def show()
-    puts "Buffer aligned reads = " + @numBufferAlignedReads.to_s + " " + @perBufferAlignedReads.to_s
-    puts "Target aligned reads = " + @numTargetAlignedReads.to_s + " " + @perTargetAlignedReads.to_s
-    puts "Targets hit = " + @numTargetsHit.to_s + " " + @perTargetsHit.to_s
-    puts "Target buffers hit = " + @numTargetBuffersHit.to_s + " " + @perTargetBuffersHit.to_s
-    puts "Total targets = " + @numTotalTargets.to_s
-    puts "Non target hits = " + @numNonTarget.to_s
-    puts "Bases on target = " + @numTargetedBases.to_s
-    puts "Buffer bases = " + @numBufferBases.to_s 
-    puts "Bases with 1+ coverage = " + @numBases1Coverage.to_s + " " + @perBases1Coverage.to_s
-    puts "Bases with 4+ coverage = " + @numBases4Coverage.to_s + " " + @perBases4Coverage.to_s
-    puts "Bases with 10+ coverage = " + @numBases10Coverage.to_s + " " + @perBases10Coverage.to_s
-    puts "Bases with 20+ coverage = " + @numBases20Coverage.to_s + " " + @perBases20Coverage.to_s
-    puts "Bases with 40+ coverage = " + @numBases40Coverage.to_s + " " + @perBases40Coverage.to_s
+  # Return the string in a format suitable for display on screen / email
+  def formatForSTDOUT()
+    output =  "Buffer aligned reads = " + @numBufferAlignedReads.to_s + " " + @perBufferAlignedReads.to_s + "\r\n" + 
+     "Target aligned reads = " + @numTargetAlignedReads.to_s + " " + @perTargetAlignedReads.to_s + "\r\n" +
+     "Targets hit = " + @numTargetsHit.to_s + " " + @perTargetsHit.to_s + "\r\n" +
+     "Target buffers hit = " + @numTargetBuffersHit.to_s + " " + @perTargetBuffersHit.to_s + "\r\n" +
+     "Total targets = " + @numTotalTargets.to_s + "\r\n" +
+     "Non target hits = " + @numNonTarget.to_s + "\r\n" +
+     "Bases on target = " + @numTargetedBases.to_s + "\r\n" +
+     "Buffer bases = " + @numBufferBases.to_s + "\r\n" + 
+     "Bases with 1+ coverage = " + @numBases1Coverage.to_s + " " + @perBases1Coverage.to_s + "\r\n" +
+     "Bases with 4+ coverage = " + @numBases4Coverage.to_s + " " + @perBases4Coverage.to_s + "\r\n" +
+     "Bases with 10+ coverage = " + @numBases10Coverage.to_s + " " + @perBases10Coverage.to_s + "\r\n" +
+     "Bases with 20+ coverage = " + @numBases20Coverage.to_s + " " + @perBases20Coverage.to_s + "\r\n" +
+     "Bases with 40+ coverage = " + @numBases40Coverage.to_s + " " + @perBases40Coverage.to_s + "\r\n"
+     return output
   end
 
   # Method to create a result string to upload to LIMS
-  def toString()
+  def formatForLIMSUpload()
     result = "BUFFER_ALIGNED_READS " + @numBufferAlignedReads.to_s +
     " PERCENT_BUFFER_ALIGNED_READS " + @perBufferAlignedReads.to_s +
     " TARGET_ALIGNED_READS " + @numTargetAlignedReads.to_s +
