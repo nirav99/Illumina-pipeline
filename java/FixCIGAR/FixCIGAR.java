@@ -49,14 +49,14 @@ public class FixCIGAR extends CommandLineProgram
     @Usage
     public String USAGE = getStandardUsagePreamble() +
     "Read SAM and perform modify CIGAR and mapping quality. \r\n" +
-    "For mapped reads where CIGAR extends beyond end of chromosome, clip the CIGAR. \r\n" +
+//    "For mapped reads where CIGAR extends beyond end of chromosome, clip the CIGAR. \r\n" +
     "For unmapped reads, reset CIGAR to * and mapping quality to zero.";
 
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to be cleaned.")
     public File INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true,
-    doc = "Where to write cleaned SAM/BAM. If not specified, replaces original input file.")
+            doc = "Where to write cleaned SAM/BAM. If not specified, replaces original input file.")
     public File OUTPUT;
     
 	/**

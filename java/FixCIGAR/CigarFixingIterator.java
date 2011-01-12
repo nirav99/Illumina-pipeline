@@ -33,9 +33,8 @@ import java.util.List;
 
 
 /**
- * Cigar iterator that clips CIGAR if mapping goes beyond chromosome boundary.
  * For an unmapped read, if CIGAR is not null, or mapping quality is non-zero, 
- * it sets CIGAR to null and mapping quality to zero.
+ * set CIGAR to null and mapping quality to zero.
  */
 
 /**
@@ -54,10 +53,14 @@ public class CigarFixingIterator implements CloseableIterator<SAMRecord>
   @Override
   public SAMRecord next()
   {
-	SAMRecord rec = iterator.next();
+	  SAMRecord rec = iterator.next();
 	
     if (!rec.getReadUnmappedFlag())
     {
+      /* Suspending clipping the CIGAR for now till I understand the impact
+       * on MD tag. To be re-enabled once impact on MD tag is learnt.
+       */
+      /*
       SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
       if (rec.getAlignmentEnd() > refseq.getSequenceLength())
       {
@@ -67,6 +70,7 @@ public class CigarFixingIterator implements CloseableIterator<SAMRecord>
         CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
         rec.setCigar(new Cigar(newCigarElements));
       }
+      */
     }
     else
     {
