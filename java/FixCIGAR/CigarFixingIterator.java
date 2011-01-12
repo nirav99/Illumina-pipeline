@@ -55,12 +55,13 @@ public class CigarFixingIterator implements CloseableIterator<SAMRecord>
   {
 	  SAMRecord rec = iterator.next();
 	
+    /* Suspending clipping the CIGAR for now till I understand the impact
+     * on MD tag. To be re-enabled once impact on MD tag is learnt.
+     */
+    /*
     if (!rec.getReadUnmappedFlag())
     {
-      /* Suspending clipping the CIGAR for now till I understand the impact
-       * on MD tag. To be re-enabled once impact on MD tag is learnt.
-       */
-      /*
+      
       SAMSequenceRecord refseq = rec.getHeader().getSequence(rec.getReferenceIndex());
       if (rec.getAlignmentEnd() > refseq.getSequenceLength())
       {
@@ -70,9 +71,9 @@ public class CigarFixingIterator implements CloseableIterator<SAMRecord>
         CigarUtil.softClipEndOfRead(clipFrom, rec.getCigar().getCigarElements());
         rec.setCigar(new Cigar(newCigarElements));
       }
-      */
     }
-    else
+    */
+    if(!rec.getReadUnmappedFlag())
     {
       // For unmapped read, set CIGAR to * and MAPQ to zero.
       if(rec.getMappingQuality() > 0)

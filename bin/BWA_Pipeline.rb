@@ -170,18 +170,26 @@ class BWA_Pipeline
     def writeBWAParamsToGeraldDir(geraldDir)
       @bwaParams.setReferencePath(@referencePath)
       begin
-        libraryName = nil
-        obj = FCInfo.new(@fcName, @laneBarcode)
-        libraryName = obj.getLibraryName()
+        libraryName    = nil
+        chipDesignName = nil
+
+        obj            = FCInfo.new(@fcName, @laneBarcode)
+        libraryName    = obj.getLibraryName()
+        chipDesignName = obj.getChipDesignName()
 
         if libraryName != nil && !libraryName.empty?()
           @bwaParams.setLibraryName(libraryName)
         end
-      rescue
-        puts "Did not obtain library name for : " + @fcName + "-" + @laneBarcode.to_s
+
+        if chipDesignName != nil && !chipDesignName.empty?()
+          @bwaParams.setChipDesignName(chipDesignName.to_s)
+        end
+      rescue Exception => e
+        puts "Error while obtaining information from LIMS : " + e.message
+        puts e.backtrace.inspect
       end
 
-      # Turn on Phix filtering for Hiseq FC that is not phix
+      # Turn on Phix filtering for Hiseq FC that is not mapped to phix
       if @pipelineHelper.isFCHiSeq(@fcName) == true &&
          !@referencePath.match("PhiX_plus_SNP.fa")
            @bwaParams.setPhixFilter(true)
