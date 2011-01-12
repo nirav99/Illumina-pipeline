@@ -185,11 +185,11 @@ class CaptureStatsResults
         elsif line.match(/Bases with 20\+ coverage/)
           tokens = line.split(",")
           @numBases20Coverage = tokens[1]
-          @perBases20Coverage = tokens[2]
+          @perBases20Coverage = formatPercentageValue(tokens[2])
         elsif line.match(/Bases with 40\+ coverage/)
           tokens = line.split(",")
           @numBases40Coverage = tokens[1]
-          @perBases40Coverage = tokens[2]
+          @perBases40Coverage = formatPercentageValue(tokens[2])
           break
         end
       end
@@ -199,19 +199,19 @@ class CaptureStatsResults
 
   # Return the string in a format suitable for display on screen / email
   def formatForSTDOUT()
-    output =  "Buffer aligned reads = " + @numBufferAlignedReads.to_s + " " + @perBufferAlignedReads.to_s + "\r\n" + 
-     "Target aligned reads = " + @numTargetAlignedReads.to_s + " " + @perTargetAlignedReads.to_s + "\r\n" +
-     "Targets hit = " + @numTargetsHit.to_s + " " + @perTargetsHit.to_s + "\r\n" +
-     "Target buffers hit = " + @numTargetBuffersHit.to_s + " " + @perTargetBuffersHit.to_s + "\r\n" +
+    output =  "Buffer aligned reads = " + @numBufferAlignedReads.to_s + " (" + @perBufferAlignedReads.to_s + ")%\r\n" + 
+     "Target aligned reads = " + @numTargetAlignedReads.to_s + " (" + @perTargetAlignedReads.to_s + ")%\r\n" +
+     "Targets hit = " + @numTargetsHit.to_s + " (" + @perTargetsHit.to_s + ")%\r\n" +
+     "Target buffers hit = " + @numTargetBuffersHit.to_s + " (" + @perTargetBuffersHit.to_s + ")%\r\n" +
      "Total targets = " + @numTotalTargets.to_s + "\r\n" +
      "Non target hits = " + @numNonTarget.to_s + "\r\n" +
      "Bases on target = " + @numTargetedBases.to_s + "\r\n" +
      "Buffer bases = " + @numBufferBases.to_s + "\r\n" + 
-     "Bases with 1+ coverage = " + @numBases1Coverage.to_s + " " + @perBases1Coverage.to_s + "\r\n" +
-     "Bases with 4+ coverage = " + @numBases4Coverage.to_s + " " + @perBases4Coverage.to_s + "\r\n" +
-     "Bases with 10+ coverage = " + @numBases10Coverage.to_s + " " + @perBases10Coverage.to_s + "\r\n" +
-     "Bases with 20+ coverage = " + @numBases20Coverage.to_s + " " + @perBases20Coverage.to_s + "\r\n" +
-     "Bases with 40+ coverage = " + @numBases40Coverage.to_s + " " + @perBases40Coverage.to_s + "\r\n"
+     "Bases with 1+ coverage = " + @numBases1Coverage.to_s + " (" + @perBases1Coverage.to_s + ")%\r\n" +
+     "Bases with 4+ coverage = " + @numBases4Coverage.to_s + " (" + @perBases4Coverage.to_s + ")%\r\n" +
+     "Bases with 10+ coverage = " + @numBases10Coverage.to_s + " (" + @perBases10Coverage.to_s + ")%\r\n" +
+     "Bases with 20+ coverage = " + @numBases20Coverage.to_s + " (" + @perBases20Coverage.to_s + ")%\r\n" +
+     "Bases with 40+ coverage = " + @numBases40Coverage.to_s + " (" + @perBases40Coverage.to_s + ")%\r\n"
      return output
   end
 
