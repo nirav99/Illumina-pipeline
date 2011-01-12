@@ -272,7 +272,7 @@ class UploadSummaryResults
   # analysis results to LIMS
   def handleLIMSUploadError(cmd)
     from = "p-illumina@bcm.edu"
-    to   = [ "niravs@bcm.edu", "dc12@bcm.edu" ]
+    to   = [ "niravs@bcm.edu", "dc12@bcm.edu", "pc2@bcm.edu" ]
     sub  = "Error in uploading analysis results to LIMS"
     body = "Results could not be uploaded to LIMS. Cmd used was : " + 
            cmd
