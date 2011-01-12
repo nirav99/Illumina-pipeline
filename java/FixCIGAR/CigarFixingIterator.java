@@ -73,7 +73,7 @@ public class CigarFixingIterator implements CloseableIterator<SAMRecord>
       }
     }
     */
-    if(!rec.getReadUnmappedFlag())
+    if(rec.getReadUnmappedFlag())
     {
       // For unmapped read, set CIGAR to * and MAPQ to zero.
       if(rec.getMappingQuality() > 0)
