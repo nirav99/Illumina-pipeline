@@ -78,6 +78,7 @@ public class FixCIGAR extends CommandLineProgram
   protected int doWork()
   {
 	  IoUtil.assertFileIsReadable(INPUT);
+    long numReadsProcessed = 0;
     
 	  if(OUTPUT != null) OUTPUT = OUTPUT.getAbsoluteFile();
     
@@ -97,6 +98,10 @@ public class FixCIGAR extends CommandLineProgram
     CigarFixingIterator it =new CigarFixingIterator(reader.iterator());
     while(it.hasNext())
     {
+      if(numReadsProcessed % 1000000 == 0)
+      {
+        System.err.print("Processed : " + numReadsProcessed + " reads\r");
+      }
       writer.addAlignment(it.next());
     }
     writer.close();

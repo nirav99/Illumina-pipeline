@@ -44,7 +44,7 @@ import java.util.List;
 public class CigarFixingIterator implements CloseableIterator<SAMRecord> 
 {
   private final CloseableIterator<SAMRecord> iterator;
-  
+ 
   public CigarFixingIterator(CloseableIterator<SAMRecord> iterator)
   {
     this.iterator = iterator;
@@ -54,7 +54,7 @@ public class CigarFixingIterator implements CloseableIterator<SAMRecord>
   public SAMRecord next()
   {
 	  SAMRecord rec = iterator.next();
-	
+
     /* Suspending clipping the CIGAR for now till I understand the impact
      * on MD tag. To be re-enabled once impact on MD tag is learnt.
      */
