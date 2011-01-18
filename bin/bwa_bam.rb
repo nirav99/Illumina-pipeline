@@ -11,9 +11,11 @@ class BWA_BAM
     # Open BWAConfigParams.txt file and read configuration parameters for BWA
     bwaParams = BWAParams.new()
     bwaParams.loadFromFile()
-    @reference   = bwaParams.getReferencePath() # Reference path
-    @filterPhix  = bwaParams.filterPhix?()      # Whether to filter phix reads
-    @libraryName = bwaParams.getLibraryName()
+    @reference   = bwaParams.getReferencePath()  # Reference path
+    @filterPhix  = bwaParams.filterPhix?()       # Whether to filter phix reads
+    @libraryName = bwaParams.getLibraryName()    # Obtain library name
+    @chipDesign  = bwaParams.getChipDesignName() # Chip design name for capture
+                                                 # stats calculation
 
     if @reference == nil || @reference.empty?()
       raise "Error : Reference path MUST be specified"
@@ -70,6 +72,7 @@ class BWA_BAM
     puts "Reference = " + @reference
   end
 
+  # Create jobs to generate alignment
   def process()
     # For lanes that don't need alignment, run post run and exit
     if @reference.eql?("sequence")
@@ -83,7 +86,7 @@ class BWA_BAM
     illToSangerRead1Cmd = illuminaToSangerCommand(@sequenceFiles[0], @sangerSeqFiles[0])
     objConvRead1 = Scheduler.new("Illumina_Sanger_Read1-" + @fcAndLane, illToSangerRead1Cmd)
     objConvRead1.setMemory(@maxMemory)
-    objConvRead1.setNodeCores(@cpuCores)
+    objConvRead1.setNodeCores(1)
     objConvRead1.setPriority(@priority)
     objConvRead1.runCommand()
     illSangerReadID1 = objConvRead1.getJobName()
@@ -92,7 +95,7 @@ class BWA_BAM
       illToSangerRead2Cmd = illuminaToSangerCommand(@sequenceFiles[1], @sangerSeqFiles[1])
       objConvRead2 = Scheduler.new("Illumina_Sanger_Read1-" + @fcAndLane, illToSangerRead2Cmd)
       objConvRead2.setMemory(@maxMemory)
-      objConvRead2.setNodeCores(@cpuCores)
+      objConvRead2.setNodeCores(1)
       objConvRead2.setPriority(@priority)
       objConvRead2.runCommand()
       illSangerReadID2 = objConvRead2.getJobName()
@@ -202,6 +205,20 @@ class BWA_BAM
       prevCmd = fixMateJobName
     end
 
+    # Fix unmapped reads. When a read aligns over the boundary of two
+    # chromosomes, BWA marks this read as unmapped but does not reset CIGAR to *
+    # and mapping quality zero. This causes picard's validator to complain.
+    # Hence, we fix that anomaly here.
+    fixCIGARCmd = buildFixCIGARCmd(@markedBam)
+    fixCIGARObj = Scheduler.new(@fcAndLane + "_fixCIGAR" + @markedBam, fixCIGARCmd)
+    fixCIGARObj.setMemory(@lessMemory)
+    fixCIGARObj.setNodeCores(1)
+    fixCIGARObj.setPriority(@priority)
+    fixCIGARObj.setDependency(prevCmd)
+    fixCIGARObj.runCommand()
+    fixCIGARJobName = fixCIGARObj.getJobName()
+    prevCmd = fixCIGARJobName
+
     # Calculate Alignment Stats
     mappingStatsCmd = calculateMappingStats()
     obj7 = Scheduler.new(@fcAndLane + "_AlignStats", mappingStatsCmd)
@@ -213,11 +230,24 @@ class BWA_BAM
     runStatsJobName = obj7.getJobName()
     prevCmd = runStatsJobName
 
+    if @chipDesign != nil && !@chipDesign.empty()
+      captureStatsCmd = buildCaptureStatsCmd()
+      capStatsObj = Scheduler.new(@fcAndLane + "_CaptureStats", captureStatsCmd)
+      capStatsObj.setMemory(@lessMemory)
+      capStatsObj.setNodeCores(1)
+      capStatsObj.setPriority(@priority)
+      capStatsObj.setDependency(prevCmd)
+      capStatsObj.runCommand()
+      capStatsJobName = capStatsObj.getJobName()
+      prevCmd = capStatsJobName
+    end
+
     # Hook to run code after final BAM is generated
     runPostRunCmd(prevCmd)
   end
 
   private
+  # Method to find sequence file names in the GERALD directory
   def findSequenceFiles()
     # Assumption - 1 directory per lane
     fileList = Dir["*_sequence.txt"]
@@ -245,6 +275,7 @@ class BWA_BAM
     end
   end
  
+  # Method to generate names of various BAM and SAM files
   def generateSamFileName()
     prefix = @sequenceFiles[0].slice(/s_\d/)
     @samFileName = prefix + ".sam"
@@ -272,7 +303,7 @@ class BWA_BAM
     puts read1File + " " + read2File
     puts read1Seq + " " + read2Seq
     puts @samFileName
-    cmd = @bwaPath + " sampe " + @reference + " " + read1File + " " + read2File +
+    cmd = @bwaPath + " sampe -P " + @reference + " " + read1File + " " + read2File +
            " " + read1Seq + " " + read2Seq + " > " + @samFileName.to_s
     puts cmd
     return cmd
@@ -328,7 +359,7 @@ class BWA_BAM
     return cmd
   end
 
-  # Method to calculate Mapping Stats
+  # Method to build command to calculate mapping stats
   def calculateMappingStats()
     cmd = "ruby " + File.dirname(__FILE__) +  "/BWAMapStats.rb " + @markedBam
     puts "Command to generate Mapping Stats : " + cmd
@@ -346,6 +377,21 @@ class BWA_BAM
   def fixMateInfoCmd()
     cmd = "java -Xmx8G -jar " + @picardPath + "/FixMateInformation.jar I=" + @markedBam.to_s +
           " " + @picardTempDir + " MAX_RECORDS_IN_RAM=1000000 " + @picardValStr
+    return cmd
+  end
+
+  # Correct the unmapped reads. Reset CIGAR to * and mapping quality to zero.
+  def buildFixCIGARCmd(bamFile)
+    jarName = @javaDir + "/FixCIGAR.jar"
+    cmd = "java -Xmx8G -jar " + jarName + " I=" + bamFile + " 1>FixCIGAR.o 2>FixCIGAR.e"
+    return cmd
+  end
+
+  # Method to build command to generate capture stats
+  def buildCaptureStatsCmd()
+    cmd = "ruby " + File.dirname(__FILE__) + "/CaptureStats.rb " + @markedBam + 
+          " " + @chipDesign + " 1>CapStats.o 2>CapStats.e"
+    puts "Command to calculate capture stats " + cmd
     return cmd
   end
 

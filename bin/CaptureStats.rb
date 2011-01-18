@@ -16,6 +16,8 @@ class CaptureStats
     @outputDir      = "capture_stats"
     @resultPrefix   = "cap_stats"
     @captureResult  = nil # Instance of CaptureStatsResult class
+    @limsScript     = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
+                      "setIlluminaCaptureResults.pl"
 
     begin
       if inputFile == nil || inputFile.empty?()
@@ -118,6 +120,13 @@ class CaptureStats
   # Method to upload capture stats to LIMS
   def uploadToLIMS()
     result = @captureResults.formatForLIMSUpload()
+    cmd = "perl " + @limsScript + " CAPTURE_FINISHED " + result.to_s
+    puts "Executing command : " + cmd
+    output = `#{cmd}`
+    exitStatus = $?
+    output.downcase!
+    puts output
+    #TODO: Check if an error occurred while uploading and handle it
   end
 end
 
