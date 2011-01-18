@@ -21,6 +21,10 @@ class BWA_BAM
       raise "Error : Reference path MUST be specified"
     end
 
+    if @chipDesign != nil && !@chipDesign.empty?()
+      puts "Chip Design = " + @chipDesign.to_s
+    end
+
     # List of required paths
     # Path to BWA executable
     @bwaPath        = "/stornext/snfs5/next-gen/niravs_scratch/code/bwa_test/bwa_code/bwa-0.5.8a/bwa"
@@ -230,7 +234,7 @@ class BWA_BAM
     runStatsJobName = obj7.getJobName()
     prevCmd = runStatsJobName
 
-    if @chipDesign != nil && !@chipDesign.empty()
+    if @chipDesign != nil && !@chipDesign.empty?()
       captureStatsCmd = buildCaptureStatsCmd()
       capStatsObj = Scheduler.new(@fcAndLane + "_CaptureStats", captureStatsCmd)
       capStatsObj.setMemory(@lessMemory)
