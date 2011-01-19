@@ -38,35 +38,4 @@ sch1.setPriority("normal")
 sch1.runCommand()
 uniqJobName = sch1.getJobName()
 
-=begin
-# Zip sequence files
-zipSeqCmd = "bzip2 *sequence.txt"
-sch2 = Scheduler.new("Zip_sequence_" + fcBarCode, zipSeqCmd)
-sch2.setMemory(4000)
-sch2.setNodeCores(1)
-sch2.setPriority("normal")
-sch2.setDependency(uniqJobName)
-sch2.runCommand()
-
-# Zip export files
-zipExpCmd = "bzip2 *export.txt"
-sch3 = Scheduler.new("Zip_export_" + fcBarCode, zipExpCmd)
-sch3.setMemory(4000)
-sch3.setNodeCores(1)
-sch3.setPriority("normal")
-# No need to include dependency on uniqueness here
-sch3.runCommand()
-
-# Delete unwanted and large files from the GERALD directory
-rmAnomalyCmd = "rm *_anomaly.txt"
-rmReanomrowCmd = "rm *_reanomraw.txt"
-
-puts "Deleting large unused files"
-
-`#{rmAnomalyCmd}`
-`#{rmReanomrowCmd}`
-
-puts "Large unused files deleted"
-=end
-
 puts "Successfully Completed. Terminating."
