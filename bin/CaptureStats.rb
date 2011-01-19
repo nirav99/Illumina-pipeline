@@ -10,6 +10,7 @@ require 'BWAParams'
 require 'fileutils'
 require 'FCBarcodeFinder'
 
+# Class to encapsulate capture metrics calculation
 class CaptureStats
   def initialize(inputFile, chipDesign)
     @captureCodeDir = "/stornext/snfs5/next-gen/software/hgsc/capture_stats"
@@ -26,8 +27,11 @@ class CaptureStats
         raise "Specified file : " + inputFile.to_s + " can not be read"
       elsif chipDesign == nil || chipDesign.empty?()
         raise "Chip Design Name must be specified"
+#      elsif !File::exist?(chipDesignPath)
+#        raise "Chip Design Path : " + chipDesignPath + " does not exist"
       end
       chipDesignPath = getChipDesignPath(chipDesign) 
+      puts "Chip Design Path : " + chipDesignPath.to_s
 
       # Obtain flowcell barcode for uploading results to LIMS and sending email
       barcodeObj = FCBarcodeFinder.new()
@@ -82,27 +86,29 @@ class CaptureStats
     exitStatus = $?
     puts "Exit status of Capture Stats Command : " + exitStatus.to_s
 
-    if exitStatus == 0
+#    if exitStatus == 0
       parseResults()
       emailResults()
       uploadToLIMS()
       exit 0
-    end
-    exit -1
+#    end
+#    exit -1
   end
 
   # Method to parse capture stats summary file and instantiate
   # CaptureStatsResults object
+  # Handle the case where capture stats summary file is missing
   def parseResults()
     puts "Uploading results to LIMS"
     summaryFile = Dir[@outputDir + "/*CoverageReport.csv"]
 
     if summaryFile == nil
-      raise "Error : Did not find any capture stats summary file"
+#      raise "Error : Did not find any capture stats summary file"
+      @captureResults = CaptureStatsResults.new(nil)
+    else
+      puts "Found Summary file : " + summaryFile[0].to_s
+      @captureResults = CaptureStatsResults.new(summaryFile[0]) 
     end
-
-    puts "Found Summary file : " + summaryFile[0].to_s
-    @captureResults = CaptureStatsResults.new(summaryFile[0]) 
   end
 
   # Method to email capture results.
@@ -120,7 +126,7 @@ class CaptureStats
   # Method to upload capture stats to LIMS
   def uploadToLIMS()
     result = @captureResults.formatForLIMSUpload()
-    cmd = "perl " + @limsScript + " CAPTURE_FINISHED " + result.to_s
+    cmd = "perl " + @limsScript + " " + @fcBarcode.to_s + " CAPTURE_FINISHED " + result.to_s
     puts "Executing command : " + cmd
     output = `#{cmd}`
     exitStatus = $?
@@ -133,17 +139,22 @@ end
 
 # Class to encapsulate capture stats results
 class CaptureStatsResults
+
+  # Capture stats 
   def initialize(captureStatsSummaryFile)
+    initializeResultVariables()
+=begin
     if captureStatsSummaryFile == nil || captureStatsSummaryFile.empty?()
       raise "Error : Name of capture stats summary file not specified"
     end
-    if !File::exist?(captureStatsSummaryFile) ||
-       !File::readable?(captureStatsSummaryFile)
-       raise "Error : Specified Capture Stats Summary File : " + captureStatsSummaryFile 
+=end
+    if captureStatsSummaryFile != nil && !captureStatsSummaryFile.empty?()
+       if !File::exist?(captureStatsSummaryFile) || !File::readable?(captureStatsSummaryFile)
+         raise "Error : Specified Capture Stats Summary File : " + captureStatsSummaryFile 
              + " cannot be read"
+       end
+       parseLine(captureStatsSummaryFile)
     end
-    initializeResultVariables()
-    parseLine(captureStatsSummaryFile)
   end
 
   def parseLine(captureStatsSummaryFile)
@@ -153,52 +164,52 @@ class CaptureStatsResults
       if line.index(":") != nil
         if line.match(/Aligned Reads On-Buffer/)
            tokens = line.split(",")
-           @numBufferAlignedReads = tokens[1]
-           @perBufferAlignedReads = formatPercentageValue(tokens[2])
+           @numBufferAlignedReads = tokens[1].strip
+           @perBufferAlignedReads = formatPercentageValue(tokens[2].strip)
         elsif line.match(/Aligned Reads On-Target/)
           tokens = line.split(",")
-          @numTargetAlignedReads = tokens[1]
-          @perTargetAlignedReads = formatPercentageValue(tokens[2])
+          @numTargetAlignedReads = tokens[1].strip
+          @perTargetAlignedReads = formatPercentageValue(tokens[2].strip)
         elsif line.match(/Targets Hit/)
           tokens = line.split(",")
-          @numTargetsHit = tokens[1]
-          @perTargetsHit = formatPercentageValue(tokens[2])
+          @numTargetsHit = tokens[1].strip
+          @perTargetsHit = formatPercentageValue(tokens[2].strip)
         elsif line.match(/Target Buffers Hit/)
           tokens = line.split(",")
-          @numTargetBuffersHit = tokens[1]
-          @perTargetBuffersHit = formatPercentageValue(tokens[2])  
+          @numTargetBuffersHit = tokens[1].strip
+          @perTargetBuffersHit = formatPercentageValue(tokens[2].strip)  
         elsif line.match(/Total Targets/)
           tokens = line.split(",")
-          @numTotalTargets = tokens[1] 
+          @numTotalTargets = tokens[1].strip 
         elsif line.match(/Non target regions with high coverage/)
           tokens = line.split(",")
-          @numTargetedBases = tokens[1]
+          @numTargetedBases = tokens[1].strip
         elsif line.match(/Bases Targeted/)
           tokens = line.split(",")
-          @numTargetedBases = tokens[1]
+          @numTargetedBases = tokens[1].strip
         elsif line.match(/Buffer Bases/)
           tokens = line.split(",")
-          @numBufferBases = tokens[1]
+          @numBufferBases = tokens[1].strip
         elsif line.match(/Bases with 1\+ coverage/)
           tokens = line.split(",")
-          @numBases1Coverage = tokens[1]
-          @perBases1Coverage = formatPercentageValue(tokens[2])
+          @numBases1Coverage = tokens[1].strip
+          @perBases1Coverage = formatPercentageValue(tokens[2].strip)
         elsif line.match(/Bases with 4\+ coverage/)
           tokens = line.split(",")
-          @numBases4Coverage = tokens[1]
-          @perBases4Coverage = formatPercentageValue(tokens[2])
+          @numBases4Coverage = tokens[1].strip
+          @perBases4Coverage = formatPercentageValue(tokens[2].strip)
         elsif line.match(/Bases with 10\+ coverage/)
           tokens = line.split(",")
-          @numBases10Coverage = tokens[1]
-          @perBases10Coverage = formatPercentageValue(tokens[2])
+          @numBases10Coverage = tokens[1].strip
+          @perBases10Coverage = formatPercentageValue(tokens[2].strip)
         elsif line.match(/Bases with 20\+ coverage/)
           tokens = line.split(",")
-          @numBases20Coverage = tokens[1]
-          @perBases20Coverage = formatPercentageValue(tokens[2])
+          @numBases20Coverage = tokens[1].strip
+          @perBases20Coverage = formatPercentageValue(tokens[2].strip)
         elsif line.match(/Bases with 40\+ coverage/)
           tokens = line.split(",")
-          @numBases40Coverage = tokens[1]
-          @perBases40Coverage = formatPercentageValue(tokens[2])
+          @numBases40Coverage = tokens[1].strip
+          @perBases40Coverage = formatPercentageValue(tokens[2].strip)
           break
         end
       end
@@ -230,12 +241,12 @@ class CaptureStatsResults
     " PERCENT_BUFFER_ALIGNED_READS " + @perBufferAlignedReads.to_s +
     " TARGET_ALIGNED_READS " + @numTargetAlignedReads.to_s +
     " PERCENT_TARGET_ALIGNED_READS " + @perTargetAlignedReads.to_s +
-    " TARGETS_HIT " + @numTargetsHit.to_s + "PERCENT_TARGETS_HIT " + @perTargetsHit.to_s +
+    " TARGETS_HIT " + @numTargetsHit.to_s + " PERCENT_TARGETS_HIT " + @perTargetsHit.to_s +
     " TARGET_BUFFERS_HIT " + @numTargetBuffersHit.to_s +
     " PER_TARGET_BUFFERS_HITS " + @perTargetBuffersHit.to_s +
     " TOTAL_TARGETS " + @numTotalTargets.to_s +
     " HIGH_COVERAGE_NON_TARGET_HITS " + @numNonTarget.to_s +
-    " BASES_ON_TARGET " + @numTargetedBases.to_s + "BASES_ON_BUFFER " + @numBufferBases.to_s +
+    " BASES_ON_TARGET " + @numTargetedBases.to_s + " BASES_ON_BUFFER " + @numBufferBases.to_s +
     " 1_COVERAGE_BASES " + @numBases1Coverage.to_s + 
     " PER_1_COVERAGE_BASES " + @perBases1Coverage.to_s +
     " 4_COVERAGE_BASES " + @numBases4Coverage.to_s + 
