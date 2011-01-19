@@ -180,7 +180,7 @@ class FCInfo
     if output.match(/ChipDesign=\S+/)
       temp = output.slice(/ChipDesign=\S+/)
       temp.gsub!(/ChipDesign=/, "")
-      if temp.casecmp("none") != 0
+      if !temp.match(/^[Nn]one/)
         @chipDesign = temp.to_s
       end
     end
@@ -189,9 +189,10 @@ end
 
 __END__
 #To Test this class, comment the previous __END__ statement
-obj = FCInfo.new("101206_USI-EAS376_00018_PE1_FC62RTAAAXX", "1-ID12")
+obj = FCInfo.new("110107_SN601_0070_A818TJABXX1", "8")
 puts obj.getLibraryName()
 puts obj.getNumCycles()
 puts obj.paired?().to_s
 puts obj.getRefPath()
-
+puts obj.getChipDesignName()
+puts "DONE"

@@ -97,7 +97,7 @@ class BWA_BAM
 
     if @isFragment == false
       illToSangerRead2Cmd = illuminaToSangerCommand(@sequenceFiles[1], @sangerSeqFiles[1])
-      objConvRead2 = Scheduler.new("Illumina_Sanger_Read1-" + @fcAndLane, illToSangerRead2Cmd)
+      objConvRead2 = Scheduler.new("Illumina_Sanger_Read2-" + @fcAndLane, illToSangerRead2Cmd)
       objConvRead2.setMemory(@maxMemory)
       objConvRead2.setNodeCores(1)
       objConvRead2.setPriority(@priority)
