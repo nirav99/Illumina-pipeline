@@ -98,6 +98,7 @@ public class FixCIGAR extends CommandLineProgram
     CigarFixingIterator it =new CigarFixingIterator(reader.iterator());
     while(it.hasNext())
     {
+      numReadsProcessed++;
       if(numReadsProcessed % 1000000 == 0)
       {
         System.err.print("Processed : " + numReadsProcessed + " reads\r");
