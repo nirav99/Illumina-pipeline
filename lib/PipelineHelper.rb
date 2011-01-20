@@ -71,17 +71,6 @@ class PipelineHelper
         end
       end
 
-=begin
-      # Populate an array with list of volumes where this flowcell
-      # is expected to be found
-      parentDir << rootDir + "/EAS034"
-      parentDir << rootDir + "/EAS376"
-      parentDir << rootDir + "/700142"
-      parentDir << rootDir + "/700166"
-      parentDir << rootDir + "/700580"
-      parentDir << rootDir + "/700601"
-=end
-
       parentDir.each{ |path|
         if File::exist?(path + "/" + fcName) &&
            File::directory?(path + "/" + fcName)
@@ -176,24 +165,4 @@ class PipelineHelper
       return barcode
     end
   end
-
-  # Method to send an email
-  # Parameter "to" is an array of email addresses separated by commas
-  def sendEmail(from, to, subject, message)
-     toMail = ""
-     to.each { |x| toMail= toMail + ",#{x}" }
-
-msg = <<END_OF_MESSAGE
-From: <#{from}>
-To: <#{toMail}>
-Subject: #{subject}
-
-#{message}
-END_OF_MESSAGE
-
-      Net::SMTP.start('smtp.bcm.tmc.edu') do |smtp|
-      smtp.send_message msg, from, to
-    end
-  end
 end
-

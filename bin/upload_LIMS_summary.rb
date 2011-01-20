@@ -5,6 +5,7 @@ require 'rubygems'
 require 'hpricot'
 require 'PipelineHelper'
 require 'FCBarcodeFinder'
+require 'EmailHelper'
 
 # Class to upload the Summary.htm files to LIMS
 # This script should be executed from the same directory containing
@@ -83,12 +84,14 @@ class UploadHTMLSummary
   # failed
   def handleLIMSUploadError(cmd)
     puts "Error : Could not upload Summary file to LIMS"
-    from = "p-illumina@bcm.edu"
-    to   = [ "niravs@bcm.edu", "dc12@bcm.edu" ]
-    sub  = "Error in uploading Summary file to LIMS"
-    body = "Summary.htm could not be uploaded to LIMS. Cmd used was : " +
-           cmd
-    @helper.sendEmail(from, to, sub, body)
+
+    obj          = EmailHelper.new()
+    emailFrom    = "sol-pipe@bcm.edu"
+    emailTo      = obj.getErrorRecepientEmailList()
+    emailSubject = "Error in uploading Summary file to LIMS"
+    emailText    = "Summary.htm could not be uploaded to LIMS. Cmd used was : " +
+                   cmd
+    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
     exit -1
   end
 

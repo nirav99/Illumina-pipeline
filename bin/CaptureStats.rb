@@ -5,10 +5,10 @@ $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 #Author: Nirav Shah niravs@bcm.edu
 
 require 'Scheduler'
-require 'PipelineHelper'
 require 'BWAParams'
 require 'fileutils'
 require 'FCBarcodeFinder'
+require 'EmailHelper'
 
 # Class to encapsulate capture metrics calculation
 class CaptureStats
@@ -36,9 +36,6 @@ class CaptureStats
       # Obtain flowcell barcode for uploading results to LIMS and sending email
       barcodeObj = FCBarcodeFinder.new()
       @fcBarcode = barcodeObj.getBarcodeForLIMS()
-
-      # Obtain instance of pipeline helper to send emails
-      @helper    = PipelineHelper.new
 
       runCommand(inputFile, chipDesignPath)
     rescue Exception => e
@@ -111,13 +108,13 @@ class CaptureStats
 
   # Method to email capture results.
   def emailResults()
-    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "pc2@bcm.edu",
-           "jgreid@bcm.edu", "cbuhay@bcm.edu", "ahawes@bcm.edu" ]
-#    to = [ "niravs@bcm.edu" ]
+    obj          = EmailHelper.new()
     emailSubject = "Illumina Capture Stats : Flowcell " + @fcBarcode.to_s
- 
-    lines = @captureResults.formatForSTDOUT()
-    @helper.sendEmail("sol-pipe@bcm.edu", to, emailSubject, lines)
+    emailFrom    = "sol-pipe@bcm.edu" 
+    emailText    = @captureResults.formatForSTDOUT()
+    emailTo      = obj.getCaptureResultRecepientEmailList()
+
+    obj.sendEmail(emailFrom emailTo, emailSubject, emailText)
   end
 
   # Method to upload capture stats to LIMS

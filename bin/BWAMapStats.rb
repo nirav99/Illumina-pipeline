@@ -6,12 +6,12 @@ require 'Scheduler'
 require 'PipelineHelper'
 require 'FCBarcodeFinder'
 require 'BWAParams'
+require 'EmailHelper'
 
 class BWAMapStats
   def initialize(bamFileName)
     @bamFile    = bamFileName
     @outputFile = "BWA_Map_Stats.txt"
-    @helper     = PipelineHelper.new
     @fcBarcode  = ""
     @library    = ""
     begin
@@ -47,22 +47,30 @@ class BWAMapStats
     lines << "File-system Path : " 
     lines << Dir.pwd + "/" + @bamFile.to_s
 
+    # Fill in the fields for sending the email
     emailSubject = "Illumina Alignment Results : Flowcell " + @fcBarcode.to_s
-    
+
     if @library != nil && !@library.empty?
        emailSubject = emailSubject + " Library : " + @library.to_s
     end
 
-    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "fongeri@bcm.edu", "pc2@bcm.edu", 
-           "javaid@bcm.edu", "jgreid@bcm.edu", "cbuhay@bcm.edu", "ahawes@bcm.edu" ]
-    @helper.sendEmail("sol-pipe@bcm.edu", to, emailSubject, lines)
+    from = "sol-pipe@bcm.edu" 
+
+    obj = EmailHelper.new()
+
+    # Find the list of people to send the email to
+    # In the file ../config/email_recepients.txt, use the list corresponding to
+    # the label EMAIL_RESULTS
+    to = obj.getResultRecepientEmailList()
+
+    # Send the email
+    obj.sendEmail(from, to, emailSubject, lines)
   end
 
   private
 
   @bamFile     = nil   # BAM File to process for stats calculations
   @outputFile  = ""    # Name of the output file
-  @helper      = nil   # PipelineHelper instance
   @fcName      = ""    # Flowcell name
 end
 

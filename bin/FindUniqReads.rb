@@ -7,6 +7,7 @@ require 'fileutils'
 require 'net/smtp'
 require 'PipelineHelper'
 require 'FCBarcodeFinder'
+require 'EmailHelper'
 
 #This class is a wrapper for SlxUniqueness.jar to find unique reads.
 #It works on per-lane basis only.
@@ -92,24 +93,24 @@ class FindUniqueReads
   # Helper method to email uniqueness results
   def emailUniquenessResults(resultFileName)
     adaptorPlotFile = "AdaptorReadsDistribution.png"
-    recepients = "niravs@bcm.edu dc12@bcm.edu yhan@bcm.edu fongeri@bcm.edu " +
-                 " javaid@bcm.edu jgreid@bcm.edu pc2@bcm.edu"
+
+    emailFrom    = "sol-pipe@bcm.edu"
+    emailSubject = "Illumina Uniqueness Results"
+    emailTo      = nil
+    emailText    = nil
+
+    obj = EmailHelper.new()
+    emailTo = obj.getResultRecepientEmailList()
 
     resultFile = File.open(resultFileName, "r")
-    lines = resultFile.read()
+    emailText = resultFile.read()
 
     if !File::exist?(adaptorPlotFile) || !File::readable?(adaptorPlotFile) ||
         File::size(adaptorPlotFile) == 0
-      to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "pc2@bcm.edu",  
-           "fongeri@bcm.edu", "javaid@bcm.edu", "jgreid@bcm.edu" ]
-      @helper.sendEmail("sol-pipe@bcm.edu", to, "Illumina Uniqueness Results", lines)
+        obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
     else
       # Send the adaptor plot distribution as email attachment
-      cmd = "java -jar /stornext/snfs5/next-gen/Illumina/ipipe/java/SlxResultSummaryMailer.jar " +
-            "sol-pipe@bcm.edu \"Illumina Uniqueness Results\" AdaptorReadsDistribution.png " +
-            "\"" + lines + "\" " + recepients
-      puts cmd
-      `#{cmd}`
+      obj.sendEmailWithAttachment(emailFrom, emailTo, emailSubject, emailText, adaptorPlotFile)
     end
   end
 

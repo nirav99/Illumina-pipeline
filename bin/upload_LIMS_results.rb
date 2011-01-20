@@ -6,6 +6,7 @@ require 'hpricot'
 require 'fileutils'
 require 'PipelineHelper'
 require 'FCBarcodeFinder'
+require 'EmailHelper'
 
 # Class to parse GERALD analysis summary for specified lane for specified
 # read number (either read 1 or read 2).
@@ -271,12 +272,14 @@ class UploadSummaryResults
   # Method to send email if error was encountered while uploading
   # analysis results to LIMS
   def handleLIMSUploadError(cmd)
-    from = "p-illumina@bcm.edu"
-    to   = [ "niravs@bcm.edu", "dc12@bcm.edu", "pc2@bcm.edu" ]
-    sub  = "Error in uploading analysis results to LIMS"
-    body = "Results could not be uploaded to LIMS. Cmd used was : " + 
-           cmd
-    @helper.sendEmail(from, to, sub, body)
+    obj          = EmailHelper.new()
+
+    emailFrom    = "sol-pipe@bcm.edu"
+    emailTo      = obj.getErrorRecepientEmailList()
+    emailSubject = "Error in uploading analysis results to LIMS"
+    emailText    = "Results could not be uploaded to LIMS. Cmd used was : " +
+                   cmd
+    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
   end
 end
 
