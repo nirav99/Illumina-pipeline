@@ -43,7 +43,8 @@ class CaptureStats
       runCommand(inputFile, chipDesignPath)
     rescue Exception => e
       puts e.message
-      exit -1
+      puts e.backtrace.inspect
+      exit 0
     end
   end
 
@@ -86,13 +87,10 @@ class CaptureStats
     exitStatus = $?
     puts "Exit status of Capture Stats Command : " + exitStatus.to_s
 
-#    if exitStatus == 0
-      parseResults()
-      emailResults()
-      uploadToLIMS()
-      exit 0
-#    end
-#    exit -1
+    parseResults()
+    emailResults()
+    uploadToLIMS()
+    puts "Completed uploading to LIMS"
   end
 
   # Method to parse capture stats summary file and instantiate
@@ -113,9 +111,8 @@ class CaptureStats
 
   # Method to email capture results.
   def emailResults()
-    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "yhan@bcm.edu", "fongeri@bcm.edu",
-           "pc2@bcm.edu", "javaid@bcm.edu", "jgreid@bcm.edu", "cbuhay@bcm.edu",
-           "ahawes@bcm.edu" ]
+    to = [ "dc12@bcm.edu", "niravs@bcm.edu", "pc2@bcm.edu",
+           "jgreid@bcm.edu", "cbuhay@bcm.edu", "ahawes@bcm.edu" ]
 #    to = [ "niravs@bcm.edu" ]
     emailSubject = "Illumina Capture Stats : Flowcell " + @fcBarcode.to_s
  
