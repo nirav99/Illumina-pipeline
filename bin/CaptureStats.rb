@@ -12,7 +12,7 @@ require 'EmailHelper'
 
 # Class to encapsulate capture metrics calculation
 class CaptureStats
-  def initialize(inputFile, chipDesign)
+  def initialize(inputFile, chipDesignPath)
     @captureCodeDir = "/stornext/snfs5/next-gen/software/hgsc/capture_stats"
     @outputDir      = "capture_stats"
     @resultPrefix   = "cap_stats"
@@ -25,12 +25,11 @@ class CaptureStats
         raise "BAM File name must be specified"
       elsif !File::exist?(inputFile) || !File::readable?(inputFile)
         raise "Specified file : " + inputFile.to_s + " can not be read"
-      elsif chipDesign == nil || chipDesign.empty?()
+      elsif chipDesignPath == nil || chipDesignPath.empty?()
         raise "Chip Design Name must be specified"
-#      elsif !File::exist?(chipDesignPath)
-#        raise "Chip Design Path : " + chipDesignPath + " does not exist"
+      elsif !File::exist?(chipDesignPath)
+        raise "Chip Design Path : " + chipDesignPath + " does not exist"
       end
-      chipDesignPath = getChipDesignPath(chipDesign) 
       puts "Chip Design Path : " + chipDesignPath.to_s
 
       # Obtain flowcell barcode for uploading results to LIMS and sending email
@@ -47,30 +46,6 @@ class CaptureStats
   end
 
   private
-  # Method to obtain chip design path from it's symbolic name. Soft links have
-  # been created in p-illumina user's home directory that point soft links to
-  # the actual path.
-  def getChipDesignPath(cDesign)
-    cdPath = nil
-    homeDir = File.expand_path("~")
-
-    filesInHome = Dir[homeDir + "/*"]
-
-    filesInHome.each do |file|
-      designName = File.basename(file)
-      if designName.casecmp(cDesign) == 0
-        cdPath = file
-        break;
-      end
-    end
-
-    if cdPath == nil
-      raise "Did not find chip design path for : " + chipDesign
-    end
-    puts "Found chip design path : " + cdPath
-    return cdPath
-  end
-
   # Method to run the capture stats calculation application
   def runCommand(bamFile, chipDesignPath)
     FileUtils.mkdir(@outputDir)
