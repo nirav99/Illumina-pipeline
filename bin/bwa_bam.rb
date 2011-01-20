@@ -373,7 +373,7 @@ class BWA_BAM
   # Filter reads mapping to phix and phix contig from the BAM header
   def filterPhixReadsCmd(bamFile)
     jarName = @javaDir + "/PhixFilterFromBAM.jar"
-    cmd = "java -Xmx8G -jar " + jarName + " I=" + bamFile + " 1>phixfilter.out 2>phixfilter.err" 
+    cmd = "java -Xmx8G -jar " + jarName + " I=" + bamFile
     return cmd
   end
  
@@ -387,14 +387,14 @@ class BWA_BAM
   # Correct the unmapped reads. Reset CIGAR to * and mapping quality to zero.
   def buildFixCIGARCmd(bamFile)
     jarName = @javaDir + "/FixCIGAR.jar"
-    cmd = "java -Xmx8G -jar " + jarName + " I=" + bamFile + " 1>FixCIGAR.o 2>FixCIGAR.e"
+    cmd = "java -Xmx8G -jar " + jarName + " I=" + bamFile
     return cmd
   end
 
   # Method to build command to generate capture stats
   def buildCaptureStatsCmd()
     cmd = "ruby " + File.dirname(__FILE__) + "/CaptureStats.rb " + @markedBam + 
-          " " + @chipDesign + " 1>CapStats.o 2>CapStats.e"
+          " " + @chipDesign
     puts "Command to calculate capture stats " + cmd
     return cmd
   end

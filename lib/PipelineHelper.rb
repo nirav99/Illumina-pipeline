@@ -53,20 +53,34 @@ class PipelineHelper
   # the path of the flowcell including it's directory.
   # If it does not find the path for flowcell, it aborts with an exception
     def findFCPath(fcName)
-      fcPath = ""
+      fcPath    = ""
+      parentDir = Array.new
 
       # This represents location where to search for flowcell
-      rootDir = "/stornext/snfs0/next-gen/Illumina/Instruments"
+      rootDir    = "/stornext/snfs0/next-gen/Illumina/Instruments"
 
+      dirEntries = Dir.entries(rootDir)
+
+      # In the rootDir of the data copied over from the sequencers, find 
+      # directories corresponding to each sequencer and populate the 
+      # parentDir array
+      dirEntries.each do |dirEntry|
+        if !dirEntry.eql?(".") && !dirEntry.eql?("..") &&
+           File::directory?(rootDir + "/" + dirEntry.to_s)
+           parentDir << rootDir + "/" + dirEntry.to_s
+        end
+      end
+
+=begin
       # Populate an array with list of volumes where this flowcell
       # is expected to be found
-      parentDir = Array.new
       parentDir << rootDir + "/EAS034"
       parentDir << rootDir + "/EAS376"
       parentDir << rootDir + "/700142"
       parentDir << rootDir + "/700166"
       parentDir << rootDir + "/700580"
       parentDir << rootDir + "/700601"
+=end
 
       parentDir.each{ |path|
         if File::exist?(path + "/" + fcName) &&

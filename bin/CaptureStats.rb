@@ -44,8 +44,9 @@ class CaptureStats
     rescue Exception => e
       puts e.message
       puts e.backtrace.inspect
-      exit 0
+      exit -1
     end
+    exit 0
   end
 
   private
@@ -90,7 +91,7 @@ class CaptureStats
     parseResults()
     emailResults()
     uploadToLIMS()
-    puts "Completed uploading to LIMS"
+    puts "Completed Everything"
   end
 
   # Method to parse capture stats summary file and instantiate
@@ -101,7 +102,6 @@ class CaptureStats
     summaryFile = Dir[@outputDir + "/*CoverageReport.csv"]
 
     if summaryFile == nil
-#      raise "Error : Did not find any capture stats summary file"
       @captureResults = CaptureStatsResults.new(nil)
     else
       puts "Found Summary file : " + summaryFile[0].to_s
@@ -128,7 +128,7 @@ class CaptureStats
     output = `#{cmd}`
     exitStatus = $?
     output.downcase!
-    puts output
+    puts "Output from LIMS : " + output
     #TODO: Check if an error occurred while uploading and handle it
   end
 end
@@ -140,11 +140,7 @@ class CaptureStatsResults
   # Capture stats 
   def initialize(captureStatsSummaryFile)
     initializeResultVariables()
-=begin
-    if captureStatsSummaryFile == nil || captureStatsSummaryFile.empty?()
-      raise "Error : Name of capture stats summary file not specified"
-    end
-=end
+
     if captureStatsSummaryFile != nil && !captureStatsSummaryFile.empty?()
        if !File::exist?(captureStatsSummaryFile) || !File::readable?(captureStatsSummaryFile)
          raise "Error : Specified Capture Stats Summary File : " + captureStatsSummaryFile 

@@ -7,8 +7,9 @@ require 'net/smtp'
 # This class encapsulates common routines required by email utilities
 class EmailHelper
   def initialize()
-    @resultRecepients = nil
-    @errorRecepients  = nil
+    @resultRecepients  = nil
+    @errorRecepients   = nil
+    @captureRecepients = nil
     getEmailList()
   end
 
@@ -21,6 +22,11 @@ class EmailHelper
   def getErrorRecepientEmailList()
     return @errorRecepients
   end  
+
+  # Get a list of recepients to receive capture summary email
+  def getCaptureResultRecepientEmailList()
+    return @captureRecepients
+  end
 
   # Method to send an email
   # Parameter "to" is an array of email addresses 
@@ -72,6 +78,10 @@ END_OF_MESSAGE
         temp = line.gsub(/EMAIL_ERRORS=/, "")
         temp.strip!
         @errorRecepients = temp.split(",")        
+      elsif line.match(/^EMAIL_CAPTURE/)
+        temp = line.gsub(/EMAIL_CAPTURE=/, "")
+        temp.strip!
+        @captureRecepients = temp.split(",")        
       end
     end
   end
