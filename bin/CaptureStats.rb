@@ -20,6 +20,9 @@ class CaptureStats
     @limsScript     = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
                       "setIlluminaCaptureResults.pl"
 
+    if !chipDesignPath.match(/p-illumina/)
+      chipDesignPath = "/users/p-illumina/" + chipDesignPath.to_s
+    end
     begin
       if inputFile == nil || inputFile.empty?()
         raise "BAM File name must be specified"
@@ -89,7 +92,7 @@ class CaptureStats
     emailText    = @captureResults.formatForSTDOUT()
     emailTo      = obj.getCaptureResultRecepientEmailList()
 
-    obj.sendEmail(emailFrom emailTo, emailSubject, emailText)
+    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
   end
 
   # Method to upload capture stats to LIMS
