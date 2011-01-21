@@ -40,30 +40,6 @@ class FCBarcodeFinder
       return @barcode.to_s
   end
 
-=begin
-  # Given a valid barcode sequence, return the ID number used to identify
-  # this barcode in LIMS
-  def findTagID(barcode)
-    if barcode == nil || barcode.empty?()
-      return ""
-    elsif barcode.eql?("CGATGT")
-       return "ID02"
-     elsif barcode.eql?("TGACCA")
-       return "ID04"
-     elsif barcode.eql?("ACAGTG")
-       return "ID05"
-     elsif barcode.eql?("GCCAAT")
-       return "ID06"
-     elsif barcode.eql?("CAGATC")
-       return "ID07"
-     elsif barcode.eql?("CTTGTA")
-       return "ID12"
-     else
-       raise "Invalid barcode specified"
-    end
-  end
-=end
-
   # Return the flowcell barcode for upload to LIMS
   def getBarcodeForLIMS()
     limsBarcode = @fcName + "-" + @analysisLane.to_s 
@@ -135,6 +111,6 @@ class FCBarcodeFinder
   end
 end
 
-#__END__
+__END__
 obj = FCBarcodeFinder.new
 puts "LIMS barcode = " + obj.getBarcodeForLIMS()

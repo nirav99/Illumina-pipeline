@@ -126,7 +126,15 @@ class PipelineHelper
     if barcode == nil || barcode.empty?()
       return ""
     end
-    lines = IO.readlines("/stornext/snfs5/next-gen/Illumina/ipipe/lib/barcode_label.txt")
+
+    if File.dirname(__FILE__).eql?(".")
+      barcodeLabelFile = "../config/barcode_label.txt"
+    else
+      barcodeLabelFile = File.dirname(File.dirname(__FILE__)) +
+                         "/config/barcode_label.txt"
+    end
+
+    lines = IO.readlines(barcodeLabelFile)
 
     lines.each do |line|
       tokens = line.split(",")
@@ -150,7 +158,14 @@ class PipelineHelper
       return ""
     end
 
-    lines = IO.readlines("/stornext/snfs5/next-gen/Illumina/ipipe/lib/barcode_label.txt")
+    if File.dirname(__FILE__).eql?(".")
+      barcodeLabelFile = "../config/barcode_label.txt"
+    else
+      barcodeLabelFile = File.dirname(File.dirname(__FILE__)) +
+                         "/config/barcode_label.txt"
+    end
+
+    lines = IO.readlines(barcodeLabelFile)
 
     lines.each do |line|
       tokens = line.split(",")
