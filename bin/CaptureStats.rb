@@ -105,6 +105,10 @@ class CaptureStats
     output.downcase!
     puts "Output from LIMS : " + output
     #TODO: Check if an error occurred while uploading and handle it
+
+    if output.match(/capturesummary has successfully/)
+      puts "LIMS acknowledged receiving the data. Current Time : " + Time.now.to_s
+    end
   end
 end
 

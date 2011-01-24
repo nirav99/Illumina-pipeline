@@ -17,6 +17,10 @@ puts "Deleting Temp Files"
 deleteTempFilesCmd = "rm *.sam *.sai *_sanger_sequence.txt"
 `#{deleteTempFilesCmd}`
 
+puts "Deleting Temporary Directories"
+deleteTempDirCmd = "rm -rf ./Stats ./Temp ./Plots"
+`#{deleteTempDirCmd}`
+
 puts "Zipping sequence files"
 zipCommand = "bzip2 *sequence.txt"
 `#{zipCommand}`

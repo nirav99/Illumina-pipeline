@@ -189,7 +189,7 @@ end
 
 __END__
 #To Test this class, comment the previous __END__ statement
-obj = FCInfo.new("110107_SN601_0070_A818TJABXX1", "8")
+obj = FCInfo.new("818THABXX", "1")
 puts obj.getLibraryName()
 puts obj.getNumCycles()
 puts obj.paired?().to_s
