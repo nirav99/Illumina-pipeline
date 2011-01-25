@@ -31,7 +31,7 @@ puts output
 
 # Run uniqueness analysis
 uniqCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/FindUniqReads.rb"
-sch1 = Scheduler.new("Uniqueness_" + fcBarCode, uniqCmd)
+sch1 = Scheduler.new(fcBarCode + "_Uniqueness", uniqCmd)
 sch1.setMemory(8000)
 sch1.setNodeCores(1)
 sch1.setPriority("normal")
