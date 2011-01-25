@@ -41,7 +41,7 @@ class QseqGenerator
     end
   end
 
-  # Methods to return LSF job ID and LSF job name
+  # Methods to return job ID and job name on the cluster
   def getJobName()
     return @jobName
   end 
@@ -51,7 +51,7 @@ class QseqGenerator
   end
 
   private
-  # Method to run "make" command with LSF
+  # Method to run "make" command on the cluster
   def runMake()
     s = Scheduler.new(@fcName + "_Generate_Qseq", "make -j8")
     s.setMemory(28000)

@@ -50,6 +50,37 @@ class QseqSplitter
       end 
     end
 
+    # Obtain the lane barcode for the flowcell from LIMS
+    def getLaneBarcodes()
+      limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/"
+
+      limsQueryCmd = "perl " + limsScript + " " + extractFCNameForLIMS(@fcName)
+      puts "Querying LIMS to obtain lane barcodes. Command : " + limsQueryCmd
+
+      output = `#{limsQueryCmd}`
+
+      if output.match(/[Ee]rror/)
+        puts "ERROR in obtaining lane barcode information. Message : " + output 
+        exit -1
+      end
+
+      # LIMS did not report any errors, proceed to parse the barcodes
+      lines = output.split("\n")
+
+      lines.each do |line|
+
+        if(line.match(/-[1-8]$/))
+          laneBC = line.slice(/[1-8]$/)
+          puts laneBC.to_s
+          @laneBarcodes << laneBC.to_s
+        elsif line.match(/-[1-8]-ID[01][0-9]$/)
+          laneBC = line.slice(/[1-8]-ID[01][0-9]$/)
+          puts laneBC.to_s
+          @laneBarcodes << laneBC.to_s
+        end
+      end
+    end
+
     # Method to determine if the flowcell has multiplexed lanes
     # A flowcell is multiplexed if at least one lane has a barcode.
     # If a lane has a barcode, it would have the format x-IDYY, where
@@ -90,6 +121,23 @@ class QseqSplitter
         puts "Error in creating SampleSheet.csv in " + @baseCallsDir.to_s
         exit -1
       end
+    end
+
+    # Helper method to reduce full flowcell name to FC name used in LIMS
+    def extractFCNameForLIMS(fc)
+      flowCellName = nil
+      temp = fc.slice(/FC(.+)$/)
+      if temp == nil
+        flowCellName = fc.slice(/([a-zA-Z0-9]+)$/)
+      else
+        flowCellName = temp.slice(2, temp.size)
+      end
+      # With HiSeqs, a flowcell would have a prefix letter "A" or "B".
+      # We remove that letter from the flowcell name since the flowcell
+      # is not entered with that prefix in LIMS.
+      # For GA2, this does not have any effect.
+      flowCellName.slice!(/^[a-zA-Z]/)
+      return flowCellName
     end
 
     # Method to run Illumina's demultiplex tool and create different directory

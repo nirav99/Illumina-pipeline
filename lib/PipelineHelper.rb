@@ -158,12 +158,17 @@ class PipelineHelper
       return ""
     end
 
+    puts "Value of dirname = " + File.dirname(__FILE__).to_s
+=begin
     if File.dirname(__FILE__).eql?(".")
       barcodeLabelFile = "../config/barcode_label.txt"
     else
       barcodeLabelFile = File.dirname(File.dirname(__FILE__)) +
                          "/config/barcode_label.txt"
     end
+=end
+    barcodeLabelFile = "/stornext/snfs5/next-gen/Illumina/ipipe/config//barcode_label.txt"
+    puts "Looking for barcode labels in : " + barcodeLabelFile
 
     lines = IO.readlines(barcodeLabelFile)
 
