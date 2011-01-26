@@ -197,6 +197,6 @@ class QseqSplitter
   end
 end
 
-flowcell        = ARGV[0]
+flowcell = ARGV[0]
 
 obj = QseqSplitter.new(ARGV[0])
