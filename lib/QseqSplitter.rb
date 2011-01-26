@@ -109,7 +109,7 @@ class QseqSplitter
     # Method to write a SampleSheet.csv in the basecalls directory of the
     # flowcell as part of the CASAVA step for splitting the reads
     def writeSampleSheet()
-      puts "WRITING SAMPLE SHEET"
+      puts "Writing SampleSheet.csv"
       fileName = @baseCallsDir + "/SampleSheet.csv" 
       file = File.new(fileName, "w")
 
@@ -182,6 +182,7 @@ class QseqSplitter
 
   # Method to run "make" command on the cluster
   def runMake()
+    puts "Running make command to split the Qseq files"
     currDir = Dir.pwd
     dir.chdir(@outputDir)
     s = Scheduler.new(@fcName + "_split_Qseq", "make -j6")
