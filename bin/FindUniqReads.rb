@@ -14,7 +14,6 @@ require 'EmailHelper'
 class FindUniqueReads
   def initialize()
     jarName = "/stornext/snfs5/next-gen/Illumina/ipipe/java/SlxUniqueness.jar"
-    #jarName = "/stornext/snfs5/next-gen/Illumina/ipipe/java/SlxUniqueness/SlxUniqueness.jar"
     @lanes   = ""  # Lanes to consider for running uniqueness
     @fcName  = ""
     @limsBarcode = ""
@@ -75,7 +74,9 @@ class FindUniqueReads
 #    resultFile.write("")
     puts "Computing Uniqueness Results"
     cmd = cmd + " >> " + resultFileName
+    puts "Starting Time   : " + Time.now.to_s
     `#{cmd}`
+    puts "Completion Time : " + Time.now.to_s
 
     emailUniquenessResults(resultFileName)
     puts "Finished Computing Uniqueness Results."
@@ -132,6 +133,7 @@ class FindUniqueReads
     return result
   end
 
+=begin
   # Helper method to copy resultFile to mini analysis
   def copyFileMiniAnalysis(fileName)
     currentDir = Dir.pwd
@@ -141,6 +143,7 @@ class FindUniqueReads
     puts "Copying " + fileName + " to mini_analysis directory"
     system("cp #{fileName} #{miniDir}") 
   end
+=end
 
   # Helper method to upload uniqueness percentage to LIMS
   #TODO: Make upload part of another script (maybe helper)
@@ -163,7 +166,8 @@ class FindUniqueReads
         cmd = limsUploadCmd + uniqPer.to_s
         puts "Uploading uniqueness results"
         puts cmd
-        `#{cmd}`
+        output = `#{cmd}`
+        puts "Output from LIMS upload command : " + output.to_s
         return
       end
     end
