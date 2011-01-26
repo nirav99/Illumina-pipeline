@@ -330,7 +330,7 @@ class BWA_BAM
   # Add RG tag to the header of SAM file produced by BWA and generate a BAM.
   # It also adds PG header.
   def addRGTagCommand()
-    cmd = "java -Xmx8G -jar " + @javaDir + "/AddRGToBam.jar Input=" + 
+    cmd = "time java -Xmx8G -jar " + @javaDir + "/AddRGToBam.jar Input=" + 
     @samFileName.to_s + " Output=" + @bamFileName.to_s + " RGTag=0 "
     sampleID = @fcName.to_s + "-" + @laneNumber.to_s
 
@@ -348,7 +348,7 @@ class BWA_BAM
 
   # Sort the BAM by mapping coordinates
   def sortBamCommand()
-    cmd = "java -Xmx8G -jar " + @picardPath + "/SortSam.jar I=" + @bamFileName +
+    cmd = "time java -Xmx8G -jar " + @picardPath + "/SortSam.jar I=" + @bamFileName +
     " O=" + @sortedBam + " SO=coordinate " + @picardTempDir + " " +
     " MAX_RECORDS_IN_RAM=1000000 " + @picardValStr
     return cmd
@@ -356,7 +356,7 @@ class BWA_BAM
 
   # Mark duplicates on a sorted BAM
   def markDupCommand()
-    cmd = "java -Xmx8G -jar " + @picardPath + "/MarkDuplicates.jar I=" +
+    cmd = "time java -Xmx8G -jar " + @picardPath + "/MarkDuplicates.jar I=" +
           @sortedBam + " O=" + @markedBam + " " + @picardTempDir + " " +
           "MAX_RECORDS_IN_RAM=1000000 AS=true M=metrics.foo " +
           @picardValStr 
@@ -373,13 +373,13 @@ class BWA_BAM
   # Filter reads mapping to phix and phix contig from the BAM header
   def filterPhixReadsCmd(bamFile)
     jarName = @javaDir + "/PhixFilterFromBAM.jar"
-    cmd = "java -Xmx8G -jar " + jarName + " I=" + bamFile
+    cmd = "time java -Xmx8G -jar " + jarName + " I=" + bamFile
     return cmd
   end
  
   # Correct the flag describing the strand of the mate
   def fixMateInfoCmd()
-    cmd = "java -Xmx8G -jar " + @picardPath + "/FixMateInformation.jar I=" + @markedBam.to_s +
+    cmd = "time java -Xmx8G -jar " + @picardPath + "/FixMateInformation.jar I=" + @markedBam.to_s +
           " " + @picardTempDir + " MAX_RECORDS_IN_RAM=1000000 " + @picardValStr
     return cmd
   end
@@ -387,7 +387,7 @@ class BWA_BAM
   # Correct the unmapped reads. Reset CIGAR to * and mapping quality to zero.
   def buildFixCIGARCmd(bamFile)
     jarName = @javaDir + "/FixCIGAR.jar"
-    cmd = "java -Xmx8G -jar " + jarName + " I=" + bamFile
+    cmd = "time java -Xmx8G -jar " + jarName + " I=" + bamFile
     return cmd
   end
 
