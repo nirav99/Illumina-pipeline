@@ -1,4 +1,5 @@
 #!/usr/bin/ruby
+$:.unshift File.join(File.dirname(__FILE__), ".", "..", "third_party")
 
 require 'fileutils'
 require 'PipelineHelper'
@@ -7,25 +8,35 @@ require 'Scheduler'
 # Class to create SampleSheet.csv in the basecalls directory
 # and split the reads into directory bins based on the barcodes
 class QseqSplitter
-  def initialize(flowcellName, laneBarcodeFile)
+  def initialize(flowcellName)
     initializeDefaultValues()
     @fcName = flowcellName
 
-    readLaneBarcodes(laneBarcodeFile)
-    if false == flowcellMultiplexed?()
-      return
-    end
-    @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
+    getLaneBarcodes()
+    puts "Found the following lane barcodes : "
+    puts "Total barcodes = " + @laneBarcodes.length.to_s
 
-    if @baseCallsDir == nil || @baseCallsDir.empty?()
-      puts "ERROR : Did not find basecalls directory for FC : " + @fcName
-      exit -1
+    puts "List of barcodes found"
+    @laneBarcodes.each do |bc|
+      puts bc.to_s 
     end
 
-    @outputDir = @baseCallsDir = "/Demultiplexed"
+    # If the flowcell is multiplexed, write SampleSheet to basecalls directory
+    # and create the output directory bins under bascalls/Demultiplexed using
+    # Illumina CASAVA's demultiplexer
+    if flowcellMultiplexed?()
+      @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
+
+      if @baseCallsDir == nil || @baseCallsDir.empty?()
+        puts "ERROR : Did not find basecalls directory for FC : " + @fcName
+        exit -1
+      end
+
+      @outputDir = @baseCallsDir + "/Demultiplexed"
  
-    writeSampleSheet()
-    createDirectoryBins()
+      writeSampleSheet()
+      createDirectoryBins()
+    end
   end
 
   private
@@ -52,7 +63,8 @@ class QseqSplitter
 
     # Obtain the lane barcode for the flowcell from LIMS
     def getLaneBarcodes()
-      limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/"
+      limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
+                   "getFlowCellInfo.pl"
 
       limsQueryCmd = "perl " + limsScript + " " + extractFCNameForLIMS(@fcName)
       puts "Querying LIMS to obtain lane barcodes. Command : " + limsQueryCmd
@@ -71,11 +83,9 @@ class QseqSplitter
 
         if(line.match(/-[1-8]$/))
           laneBC = line.slice(/[1-8]$/)
-          puts laneBC.to_s
           @laneBarcodes << laneBC.to_s
         elsif line.match(/-[1-8]-ID[01][0-9]$/)
           laneBC = line.slice(/[1-8]-ID[01][0-9]$/)
-          puts laneBC.to_s
           @laneBarcodes << laneBC.to_s
         end
       end
@@ -99,6 +109,7 @@ class QseqSplitter
     # Method to write a SampleSheet.csv in the basecalls directory of the
     # flowcell as part of the CASAVA step for splitting the reads
     def writeSampleSheet()
+      puts "WRITING SAMPLE SHEET"
       fileName = @baseCallsDir + "/SampleSheet.csv" 
       file = File.new(fileName, "w")
 
@@ -187,6 +198,5 @@ class QseqSplitter
 end
 
 flowcell        = ARGV[0]
-laneBarcodeFile = ARGV[1]
 
-obj = QseqSplitter.new(ARGV[0], ARGV[1])
+obj = QseqSplitter.new(ARGV[0])
