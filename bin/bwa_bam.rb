@@ -25,6 +25,16 @@ class BWA_BAM
       puts "Chip Design = " + @chipDesign.to_s
     end
 
+    # Computing cluster specific members
+    @cpuCores       = 6      # Max CPU cores to use
+    # Note: Maximum available CPU cores are 8. However, due to ardmore
+    # idiosyncracies, jobs requesting 8 cores wait for more than a day to obtain
+    # a node. Thus, selected 6 as the max CPU cores based on the observation
+    # that jobs requesting 6 cores easily find a node
+    @maxMemory      = 28000  # Maximum memory available per node
+    @lessMemory     = 28000  # Command requiring less than maximum memory
+    @priority       = "high" # Run with high priority (Run in high queue)
+  
     # List of required paths
     # Path to BWA executable
     @bwaPath        = "/stornext/snfs5/next-gen/niravs_scratch/code/bwa_test/bwa_code/bwa-0.5.8a/bwa"
@@ -34,10 +44,14 @@ class BWA_BAM
     @javaDir        = "/stornext/snfs5/next-gen/Illumina/ipipe/java"
 
     # Parameters for picard commands
-    @picardPath     = "/stornext/snfs5/next-gen/software/picard-tools/current"
-    @picardValStr   = "VALIDATION_STRINGENCY=LENIENT"
+    @picardPath       = "/stornext/snfs5/next-gen/software/picard-tools/current"
+    @picardValStr     = "VALIDATION_STRINGENCY=LENIENT"
     # Name of temp directory used by picard
-    @picardTempDir  = "TMP_DIR=/space1/tmp"
+    @picardTempDir   = "TMP_DIR=/space1/tmp"
+    # Number of records to hold in RAM
+    @maxRecordsInRam = 2000000
+    # Maximum Java heap size
+    @heapSize        = "-Xmx12G"
 
     @sequenceFiles  = nil # Sequence files with Illumina qualities
     @sangerSeqFiles = nil # Sequence files with sanger qualities
@@ -51,17 +65,6 @@ class BWA_BAM
     @sortedBam      = nil # Coordinate sorted BAM file
     @markedBam      = nil # Coordinate sorted BAM with duplicates marked
 
-    # Computing cluster specific members
-    @cpuCores       = 6      # Max CPU cores to use
-    # Note: Maximum available CPU cores are 8. However, due to ardmore
-    # idiosyncracies, jobs requesting 8 cores wait for more than a day to obtain
-    # a node. Thus, selected 6 as the max CPU cores based on the observation
-    # that jobs requesting 6 cores easily find a node
-
-    @maxMemory      = 28000  # Maximum memory available per node
-    @lessMemory     = 28000  # Command requiring less than maximum memory
-    @priority       = "high" # Run with high priority (Run in high queue)
-  
     # Instantiate pipeline helper 
     @helper        = PipelineHelper.new()
     @fcName        = @helper.findFCName()
@@ -288,10 +291,16 @@ class BWA_BAM
     @markedBam   = prefix + "_marked.bam"
   end
 
+  # Method to convert basecalls qualities from Illumina to Sanger format
+  def illuminaToSangerCommand(illuminaSeqFile, sangerSeqFile)
+    cmd = @illToSanger + " sol2sanger " + illuminaSeqFile + " " + sangerSeqFile
+    return cmd
+  end
+
   # BWA aln command - configured to run on 8 cores
   def buildAlignCommand(readFile, outputFile)
-    cmd = @bwaPath + " aln -t " + @cpuCores.to_s + " " + @reference + " " + readFile + " > " +
-          outputFile
+    cmd = "time " + @bwaPath + " aln -t " + @cpuCores.to_s + " " +
+           @reference + " " + readFile + " > " + outputFile
     return cmd
   end
 
@@ -307,8 +316,8 @@ class BWA_BAM
     puts read1File + " " + read2File
     puts read1Seq + " " + read2Seq
     puts @samFileName
-    cmd = @bwaPath + " sampe -P " + @reference + " " + read1File + " " + read2File +
-           " " + read1Seq + " " + read2Seq + " > " + @samFileName.to_s
+    cmd = "time " + @bwaPath + " sampe -P " + @reference + " " + read1File +
+           " " + read2File + " " + read1Seq + " " + read2Seq + " > " + @samFileName.to_s
     puts cmd
     return cmd
   end
@@ -317,20 +326,15 @@ class BWA_BAM
   # read1File - sai file for read1
   # read1Seq  - sequence file for read1
   def buildSamseCommand(read1File, read1Seq)
-    cmd = @bwaPath + " samse " + @reference + " " + read1File + " " + read1Seq + " > " + @samFileName
-    return cmd
-  end
-
-  # Method to convert basecalls qualities from Illumina to Sanger format
-  def illuminaToSangerCommand(illuminaSeqFile, sangerSeqFile)
-    cmd = @illToSanger + " sol2sanger " + illuminaSeqFile + " " + sangerSeqFile
+    cmd = "time " + @bwaPath + " samse " + @reference + " " + read1File + " " +
+           read1Seq + " > " + @samFileName
     return cmd
   end
 
   # Add RG tag to the header of SAM file produced by BWA and generate a BAM.
   # It also adds PG header.
   def addRGTagCommand()
-    cmd = "time java -Xmx8G -jar " + @javaDir + "/AddRGToBam.jar Input=" + 
+    cmd = "time java " + @heapSize + " -jar " + @javaDir + "/AddRGToBam.jar Input=" + 
     @samFileName.to_s + " Output=" + @bamFileName.to_s + " RGTag=0 "
     sampleID = @fcName.to_s + "-" + @laneNumber.to_s
 
@@ -348,17 +352,17 @@ class BWA_BAM
 
   # Sort the BAM by mapping coordinates
   def sortBamCommand()
-    cmd = "time java -Xmx8G -jar " + @picardPath + "/SortSam.jar I=" + @bamFileName +
+    cmd = "time java " + @heapSize + " -jar " + @picardPath + "/SortSam.jar I=" + @bamFileName +
     " O=" + @sortedBam + " SO=coordinate " + @picardTempDir + " " +
-    " MAX_RECORDS_IN_RAM=1000000 " + @picardValStr
+    " MAX_RECORDS_IN_RAM=" + @maxRecordsInRam.to_s + " " + @picardValStr
     return cmd
   end
 
   # Mark duplicates on a sorted BAM
   def markDupCommand()
-    cmd = "time java -Xmx8G -jar " + @picardPath + "/MarkDuplicates.jar I=" +
+    cmd = "time java " + @heapSize + " -jar " + @picardPath + "/MarkDuplicates.jar I=" +
           @sortedBam + " O=" + @markedBam + " " + @picardTempDir + " " +
-          "MAX_RECORDS_IN_RAM=1000000 AS=true M=metrics.foo " +
+          "MAX_RECORDS_IN_RAM=" + @maxRecordsInRam.to_s + " AS=true M=metrics.foo " +
           @picardValStr 
     return cmd
   end
@@ -373,21 +377,22 @@ class BWA_BAM
   # Filter reads mapping to phix and phix contig from the BAM header
   def filterPhixReadsCmd(bamFile)
     jarName = @javaDir + "/PhixFilterFromBAM.jar"
-    cmd = "time java -Xmx8G -jar " + jarName + " I=" + bamFile
+    cmd = "time java " + @heapSize + " -jar " + jarName + " I=" + bamFile
     return cmd
   end
  
   # Correct the flag describing the strand of the mate
   def fixMateInfoCmd()
-    cmd = "time java -Xmx8G -jar " + @picardPath + "/FixMateInformation.jar I=" + @markedBam.to_s +
-          " " + @picardTempDir + " MAX_RECORDS_IN_RAM=1000000 " + @picardValStr
+    cmd = "time java " + @heapSize + " -jar " + @picardPath + "/FixMateInformation.jar I=" +
+           @markedBam.to_s + " " + @picardTempDir +
+           " MAX_RECORDS_IN_RAM=" + @maxRecordsInRam.to_s + " " + @picardValStr
     return cmd
   end
 
   # Correct the unmapped reads. Reset CIGAR to * and mapping quality to zero.
   def buildFixCIGARCmd(bamFile)
     jarName = @javaDir + "/FixCIGAR.jar"
-    cmd = "time java -Xmx8G -jar " + jarName + " I=" + bamFile
+    cmd = "time java " + @heapSize + " -jar " + jarName + " I=" + bamFile
     return cmd
   end
 
