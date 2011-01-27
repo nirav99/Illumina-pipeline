@@ -21,6 +21,10 @@ puts "Deleting Temporary Directories"
 deleteTempDirCmd = "rm -rf ./Stats ./Temp ./Plots"
 `#{deleteTempDirCmd}`
 
+puts "Deleting Temporary Files"
+deleteTempFilesCmd = "rm *.htm *_tiles.txt *_finished.txt finished.txt tiles.txt"
+`#{deleteTempFilesCmd}`
+
 puts "Zipping sequence files"
 zipCommand = "bzip2 *sequence.txt"
 `#{zipCommand}`
