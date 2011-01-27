@@ -3,10 +3,11 @@
 # Class representing parameters to be passed to BWA
 class BWAParams
   def initialize
-    @referencePath = nil    # BWA Reference Path
-    @libraryName   = nil    # Library name of Sample
-    @filterPhix    = false  # Don't filter phix reads
-    @chipDesign    = nil    # Name of chip design
+    @referencePath = nil      # BWA Reference Path
+    @libraryName   = nil      # Library name of Sample
+    @filterPhix    = false    # Don't filter phix reads
+    @chipDesign    = nil      # Name of chip design
+    @schedulingQ   = "normal" # Scheduler queue to use - high, normal
 
     # Name of config file
     @configFile = "BWAConfigParams.txt"
@@ -28,6 +29,10 @@ class BWAParams
     return @chipDesign
   end
 
+  def getSchedulingQueue()
+    return @schedulingQ
+  end
+
   def setReferencePath(value)
     @referencePath = value
   end
@@ -46,6 +51,12 @@ class BWAParams
 
   def setChipDesignName(value)
     @chipDesign = value
+  end
+
+  def setschedulingQ(value)
+    if value.eql?("high")
+      @schedulingQ = "high"
+    end
   end
 
   # Write the config parameters to a file
@@ -74,6 +85,10 @@ class BWAParams
       fileHandle.puts("CHIP_DESIGN=" + @chipDesign.to_s)
     end
 
+    if @schedulingQ != nil && !@schedulingQ.empty?()
+      fileHandle.puts("SCHEDULER_QUEUE=" + @schedulingQ.to_s)
+    end
+
     fileHandle.close()
   end
 
@@ -82,6 +97,7 @@ class BWAParams
     @libraryName   = nil
     @referencePath = nil
     @chipDesign    = nil
+    @schedulingQ   = "normal"
 
     if File::exist?(@configFile)
       lines = IO.readlines(@configFile)
@@ -98,6 +114,9 @@ class BWAParams
         elsif line.match(/CHIP_DESIGN=\S+/)
           @chipDesign = line.gsub(/CHIP_DESIGN=/, "")
           @chipDesign.strip!
+        elsif line.match(/SCHEDULER_QUEUE=\S+/)
+          @schedulingQ = line.gsub(/SCHEDULER_QUEUE=/, "")
+          @schedulingQ.strip!
         end
       end
     end
