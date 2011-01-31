@@ -4,7 +4,7 @@ require 'fileutils'
 require 'PipelineHelper'
 require 'Scheduler'
 
-# Class to generate qseq files from the base calls directory
+# Class to generate qseq files in the base calls directory
 class QseqGenerator
 
   # Class constructor - to prepare base calls directory to generate qseq
@@ -41,6 +41,7 @@ class QseqGenerator
     end
   end
 
+=begin
   # Methods to return job ID and job name on the cluster
   def getJobName()
     return @jobName
@@ -49,24 +50,28 @@ class QseqGenerator
   def getJobID()
     return @jobID
   end
+=end
 
   private
   # Method to run "make" command on the cluster
+  # This generates qseq files.
   def runMake()
+    puts "Running make command to generate qseq files"
     s = Scheduler.new(@fcName + "_Generate_Qseq", "make -j8")
     s.setMemory(28000)
     s.setNodeCores(6)
     s.setPriority("high")
     s.runCommand()
-    @jobID = s.getJobID()
-    puts "FOUND JOB ID = " + @jobID.to_s
-    @jobName = s.getJobName()
-    puts "FOUND JOB NAME = " + @jobName
+    @qseqGenerationJobName = s.getJobName()
+    puts "Qseq Generation Job Name = " + @qseqGenerationJobName.to_s
 
     # PLEASE NOTE: The function below helps to create MOAB dependency between
     # GERALD jobs and qseq generator jobs. To disable this functionality, please
     # comment out the line below.
     writeJobNameToBaseCallsDir()
+
+    # Added functionality to split qseq files
+    splitQseqFiles()
   end
 
   # Helper method to write job name to base calls dir
@@ -77,11 +82,30 @@ class QseqGenerator
     file = File.new(fileName, "w")
     
     if file
-       file.syswrite(@jobName)
+       file.syswrite(@qseqGenerationJobName.to_s)
        file.close
     else
        puts "Unable to open file : " + fileName
     end
+  end
+
+  # For a multiplexed flowcell, the qseq files have to be split based on the
+  # barcode information. This method achieves that through the supporting
+  # script.
+  # If this flowcell is not multiplexed, the supporting script will simply
+  # return without attempting to split any qseq files.
+  def splitQseqFiles()
+    splitCmd = "ruby " + File.dirname(__FILE__) + "/QseqSplitter.rb " + @fcName.to_s
+    puts "Command to split qseq files : " + splitCmd
+
+    s = Scheduler.new(@fcName + "_Split_Qseq", splitCmd)
+    s.setMemory(2000)
+    s.setNodeCores(1)
+    s.setPriority("high")
+    s.setDependency(@qseqGenerationJobName.to_s)
+    s.runCommand()
+    @splitQseqJobName = s.getJobName()
+    puts "Splitting Qseq Job Name  = " + @splitQseqJobName.to_s
   end
 end
 
