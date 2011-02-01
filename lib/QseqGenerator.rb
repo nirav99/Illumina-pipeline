@@ -41,17 +41,6 @@ class QseqGenerator
     end
   end
 
-=begin
-  # Methods to return job ID and job name on the cluster
-  def getJobName()
-    return @jobName
-  end 
-
-  def getJobID()
-    return @jobID
-  end
-=end
-
   private
   # Method to run "make" command on the cluster
   # This generates qseq files.
@@ -95,7 +84,9 @@ class QseqGenerator
   # If this flowcell is not multiplexed, the supporting script will simply
   # return without attempting to split any qseq files.
   def splitQseqFiles()
-    splitCmd = "ruby " + File.dirname(__FILE__) + "/QseqSplitter.rb " + @fcName.to_s
+#    splitCmd = "ruby " + File.dirname(__FILE__) + "/QseqSplitter.rb " + @fcName.to_s
+    splitCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/lib/QseqSplitter.rb " +
+               @fcName.to_s
     puts "Command to split qseq files : " + splitCmd
 
     s = Scheduler.new(@fcName + "_Split_Qseq", splitCmd)

@@ -36,6 +36,7 @@ class QseqSplitter
  
       writeSampleSheet()
       createDirectoryBins()
+      runMake()
     end
   end
 
@@ -184,7 +185,8 @@ class QseqSplitter
   def runMake()
     puts "Running make command to split the Qseq files"
     currDir = Dir.pwd
-    dir.chdir(@outputDir)
+    puts "Changing to output directory : " + @outputDir.to_s
+    Dir.chdir(@outputDir)
     s = Scheduler.new(@fcName + "_split_Qseq", "make -j6")
     s.setMemory(28000)
     s.setNodeCores(6)
@@ -194,7 +196,7 @@ class QseqSplitter
     puts "FOUND JOB ID = " + @jobID.to_s
     @jobName = s.getJobName()
     puts "FOUND JOB NAME = " + @jobName
-    dir.chdir(currDir)
+    Dir.chdir(currDir)
   end
 end
 
