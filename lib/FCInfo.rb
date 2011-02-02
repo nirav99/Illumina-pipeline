@@ -196,8 +196,11 @@ class FCInfo
   # Get the sample name from the output
   def parseSampleName(output)
     if output.match(/Sample=\S+/)
-      @sample = output.slice(/Sample=\S+/)
-      @sample.gsub!(/Sample=/, "")
+      temp = output.slice(/Sample=\S+/)
+      temp.gsub!(/Sample=/, "")
+      if !temp.match(/^[Nn]one/)
+        @sample = temp.to_s
+      end
     end
   end
 end
