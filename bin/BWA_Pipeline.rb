@@ -172,10 +172,17 @@ class BWA_Pipeline
       begin
         libraryName    = nil
         chipDesignName = nil
+        sampleName     = nil
 
         obj            = FCInfo.new(@fcName, @laneBarcode)
         libraryName    = obj.getLibraryName()
         chipDesignName = obj.getChipDesignName()
+        sampleName     = obj.getSampleName()
+
+        #TODO: Add sample name to BWA config params file
+        if sampleName != nil && !sampleName.empty?()
+          @bwaParams.setSampleName(sampleName.to_s)
+        end
 
         if libraryName != nil && !libraryName.empty?()
           @bwaParams.setLibraryName(libraryName)

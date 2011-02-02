@@ -12,6 +12,7 @@ class FCInfo
     @numCycles   = 0
     @paired      = false
     @chipDesign  = nil
+    @sample      = ""
     
     begin
       contactLIMS()
@@ -44,6 +45,11 @@ class FCInfo
   # Method to retrieve chip design name for a specified lane barcode
   def getChipDesignName()
     return @chipDesign
+  end
+
+  # Method to retrieve sample name for a specified lane barcode
+  def getSampleName()
+    return @sample.to_s
   end
 
   private
@@ -120,6 +126,7 @@ class FCInfo
     parseReferencePath(output)
     parseLibraryName(output)
     parseChipDesignName(output)
+    parseSampleName(output)
   end
 
   # Helper method to parse the LIMS output to find reference path
@@ -183,6 +190,14 @@ class FCInfo
       if !temp.match(/^[Nn]one/)
         @chipDesign = temp.to_s
       end
+    end
+  end
+
+  # Get the sample name from the output
+  def parseSampleName(output)
+    if output.match(/Sample=\S+/)
+      @sample = output.slice(/Sample=\S+/)
+      @sample.gsub!(/Sample=/, "")
     end
   end
 end

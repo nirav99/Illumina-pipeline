@@ -7,6 +7,7 @@ class BWAParams
     @libraryName   = nil      # Library name of Sample
     @filterPhix    = false    # Don't filter phix reads
     @chipDesign    = nil      # Name of chip design
+    @sampleName    = nil      # Sample name
     @schedulingQ   = "normal" # Scheduler queue to use - high, normal
 
     # Name of config file
@@ -19,6 +20,10 @@ class BWAParams
 
   def getLibraryName()
     return @libraryName
+  end
+
+  def getSampleName()
+    return @sampleName
   end
 
   def filterPhix?()
@@ -39,6 +44,10 @@ class BWAParams
 
   def setLibraryName(value)
     @libraryName = value
+  end
+
+  def setSampleName(value)
+    @sampleName = value
   end
 
   def setPhixFilter(value)
@@ -78,6 +87,10 @@ class BWAParams
     else
       fileHandle.puts("LIBRARY_NAME=")
     end
+
+    if @sampleName != nil && !@sampleName.empty?()
+      fileHandle.puts("SAMPLE_NAME=" + @sampleName.to_s)
+    end
     
     fileHandle.puts("FILTER_PHIX=" + @filterPhix.to_s)
 
@@ -97,6 +110,7 @@ class BWAParams
     @libraryName   = nil
     @referencePath = nil
     @chipDesign    = nil
+    @sampleName    = nil
     @schedulingQ   = "normal"
 
     if File::exist?(@configFile)
@@ -106,6 +120,9 @@ class BWAParams
         if line.match(/LIBRARY_NAME=\S+/)
           @libraryName = line.gsub(/LIBRARY_NAME=/, "")
           @libraryName.strip!
+        elsif line.match(/SAMPLE_NAME=\S+/)
+          @sampleName = line.gsub(/SAMPLE_NAME=/, "")
+          @sampleName.strip!
         elsif line.match(/REFERENCE_PATH=\S+/)
           @referencePath = line.gsub(/REFERENCE_PATH=/, "")
           @referencePath.strip!
