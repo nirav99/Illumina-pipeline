@@ -7,12 +7,12 @@ class FCInfo
     @limsScript  = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/getAnalysisPreData.pl"
     @fcName      = extractFC(fc)
     @laneBarcode = laneBarcode
-    @libraryName = ""
-    @refPath     = ""
+    @libraryName = nil
+    @refPath     = nil
     @numCycles   = 0
     @paired      = false
     @chipDesign  = nil
-    @sample      = ""
+    @sample      = nil
     
     begin
       contactLIMS()
@@ -49,7 +49,7 @@ class FCInfo
 
   # Method to retrieve sample name for a specified lane barcode
   def getSampleName()
-    return @sample.to_s
+    return @sample
   end
 
   private
@@ -120,13 +120,23 @@ class FCInfo
       handleError(output)
     end
 
-    # If information was successfully obtained from LIMS, parse the output
-    findFCType(output)
-    findNumCycles(output)
-    parseReferencePath(output)
-    parseLibraryName(output)
-    parseChipDesignName(output)
-    parseSampleName(output)
+    tokens = output.split(";")
+
+    tokens.each do |token|
+      if token.match(/FLOWCELL_TYPE=/)
+         findFCType(token)
+      elsif token.match(/Library=/)
+         parseLibraryName(token)
+      elsif token.match(/Sample=/)
+         parseSampleName(token)
+      elsif token.match(/ChipDesign=/)
+         parseChipDesignName(token)
+      elsif token.match(/NUMBER_OF_CYCLES_READ1=/)
+         findNumCycles(token)
+      elsif token.match(/BUILD_PATH=/)
+         parseReferencePath(token)
+      end
+    end
   end
 
   # Helper method to parse the LIMS output to find reference path
@@ -177,16 +187,18 @@ class FCInfo
   def parseLibraryName(output)
     # Find the library name
     if output.match(/Library=/)
-      @libraryName = output.slice(/Library=\S+/) 
-      @libraryName.gsub!(/Library=/, "")
+      @libraryName = output.gsub(/Library=/, "")
+      if @libraryName != nil && !@libraryName.empty?()
+        @libraryName.strip!
+      end
     end
   end
 
   # Get the chip design name from the output
   def parseChipDesignName(output)
-    if output.match(/ChipDesign=\S+/)
-      temp = output.slice(/ChipDesign=\S+/)
-      temp.gsub!(/ChipDesign=/, "")
+    if output.match(/ChipDesign=/)
+      temp = output.gsub(/ChipDesign=/, "")
+      temp.strip!
       if !temp.match(/^[Nn]one/)
         @chipDesign = temp.to_s
       end
@@ -196,10 +208,12 @@ class FCInfo
   # Get the sample name from the output
   def parseSampleName(output)
     if output.match(/Sample=\S+/)
-      temp = output.slice(/Sample=\S+/)
-      temp.gsub!(/Sample=/, "")
+      temp = output.gsub(/Sample=/,"")
+      temp.strip!
       if !temp.match(/^[Nn]one/)
         @sample = temp.to_s
+      else
+        @sample = nil
       end
     end
   end
@@ -207,10 +221,22 @@ end
 
 __END__
 #To Test this class, comment the previous __END__ statement
-obj = FCInfo.new("818THABXX", "1")
-puts obj.getLibraryName()
-puts obj.getNumCycles()
-puts obj.paired?().to_s
-puts obj.getRefPath()
-puts obj.getChipDesignName()
+obj = FCInfo.new("15006043", "1")
+puts "Library name = " + obj.getLibraryName()
+puts "Num cycles = " + obj.getNumCycles().to_s
+puts "Paired end : " + obj.paired?().to_s
+puts "Ref path = " + obj.getRefPath()
+chipDesign = obj.getChipDesignName()
+if chipDesign != nil
+  puts "Chip Design = " + chipDesign.to_s
+else
+  puts "chip design is null"
+end
+sample = obj.getSampleName()
+
+if sample != nil
+  puts "Sample =" + sample.to_s
+else
+  puts "sample is null"
+end
 puts "DONE"
