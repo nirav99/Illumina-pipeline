@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 $:.unshift File.join(File.dirname(__FILE__), ".", "..", "third_party")
+$:.unshift File.dirname(__FILE__)
 
 require 'fileutils'
 require 'PipelineHelper'
