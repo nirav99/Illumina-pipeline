@@ -28,6 +28,7 @@ class BWA_BAM
 
     # Computing cluster specific members
     @cpuCores       = 6      # Max CPU cores to use
+    @minCpuCores    = 6      # Min CPU cores to use
     # Note: Maximum available CPU cores are 8. However, due to ardmore
     # idiosyncracies, jobs requesting 8 cores wait for more than a day to obtain
     # a node. Thus, selected 6 as the max CPU cores based on the observation
@@ -111,7 +112,7 @@ class BWA_BAM
       obj3 = Scheduler.new(@fcAndLane + "_sampe", sampeCmd)
       obj3.setMemory(@lessMemory)
 #      obj3.setNodeCores(@cpuCores)
-      obj3.setNodeCores(1)
+      obj3.setNodeCores(@minCpuCores)
       obj3.setPriority(@priority)
       obj3.setDependency(alnJobID1)
       obj3.setDependency(alnJobID2)
@@ -123,7 +124,7 @@ class BWA_BAM
       obj3 = Scheduler.new(@fcAndLane + "_samse", samseCmd)
       obj3.setMemory(@lessMemory)
 #      obj3.setNodeCores(@cpuCores)
-      obj3.setNodeCores(1)
+      obj3.setNodeCores(@minCpuCores)
       obj3.setPriority(@priority)
       obj3.setDependency(alnJobID1)
       obj3.runCommand()
@@ -134,7 +135,7 @@ class BWA_BAM
     sortBamCmd = sortBamCommand()
     obj5 = Scheduler.new(@fcAndLane  + "_sortBam", sortBamCmd)
     obj5.setMemory(@lessMemory)
-    obj5.setNodeCores(1)
+    obj5.setNodeCores(@minCpuCores)
     obj5.setPriority(@priority)
     obj5.setDependency(makeSamJobName)
     obj5.runCommand()
@@ -144,7 +145,7 @@ class BWA_BAM
     markedDupCmd = markDupCommand()
     obj6 = Scheduler.new(@fcAndLane + "_markDupBam", markedDupCmd)
     obj6.setMemory(@lessMemory)
-    obj6.setNodeCores(1)
+    obj6.setNodeCores(@minCpuCores)
     obj6.setPriority(@priority)
     obj6.setDependency(sortBamJobName)
     obj6.runCommand()
@@ -156,7 +157,7 @@ class BWA_BAM
       phixFilterCmd = filterPhixReadsCmd(@markedBam)
       objX = Scheduler.new(@fcAndLane + "_phixFilter", phixFilterCmd)
       objX.setMemory(@lessMemory)
-      objX.setNodeCores(1)
+      objX.setNodeCores(@minCpuCores)
       objX.setPriority(@priority)
       objX.setDependency(prevCmd)
       objX.runCommand()
@@ -169,7 +170,7 @@ class BWA_BAM
       fixMateCmd = fixMateInfoCmd()
       objY = Scheduler.new(@fcAndLane + "_fixMateInfo" + @markedBam, fixMateCmd)
       objY.setMemory(@lessMemory)
-      objY.setNodeCores(1)
+      objY.setNodeCores(@minCpuCores)
       objY.setPriority(@priority)
       objY.setDependency(prevCmd)
       objY.runCommand()
@@ -184,7 +185,7 @@ class BWA_BAM
     fixCIGARCmd = buildFixCIGARCmd(@markedBam)
     fixCIGARObj = Scheduler.new(@fcAndLane + "_fixCIGAR" + @markedBam, fixCIGARCmd)
     fixCIGARObj.setMemory(@lessMemory)
-    fixCIGARObj.setNodeCores(1)
+    fixCIGARObj.setNodeCores(@minCpuCores)
     fixCIGARObj.setPriority(@priority)
     fixCIGARObj.setDependency(prevCmd)
     fixCIGARObj.runCommand()
@@ -195,7 +196,7 @@ class BWA_BAM
     mappingStatsCmd = calculateMappingStats()
     obj7 = Scheduler.new(@fcAndLane + "_AlignStats", mappingStatsCmd)
     obj7.setMemory(@lessMemory)
-    obj7.setNodeCores(1)
+    obj7.setNodeCores(@minCpuCores)
     obj7.setPriority(@priority)
     obj7.setDependency(prevCmd)
     obj7.runCommand()
@@ -206,7 +207,7 @@ class BWA_BAM
       captureStatsCmd = buildCaptureStatsCmd()
       capStatsObj = Scheduler.new(@fcAndLane + "_CaptureStats", captureStatsCmd)
       capStatsObj.setMemory(@lessMemory)
-      capStatsObj.setNodeCores(1)
+      capStatsObj.setNodeCores(@minCpuCores)
       capStatsObj.setPriority(@priority)
       capStatsObj.setDependency(prevCmd)
       capStatsObj.runCommand()
