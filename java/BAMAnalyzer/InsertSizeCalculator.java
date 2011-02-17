@@ -137,7 +137,7 @@ public class InsertSizeCalculator
   {
     PairOrientation orientation = metrics.getPairOrientation();
   
-    System.out.print("Pair Orientation : ");
+    System.out.print("Pair Orientation   : ");
 
     if(orientation.equals(PairOrientation.FR))
       System.out.println("FR (5' --F-->     <--R-- 5')");
@@ -147,8 +147,8 @@ public class InsertSizeCalculator
     else
       System.out.println("Tandem (Both on forward or reverse strands)");
 
-    System.out.println("Num. Read Pairs : " + metrics.getTotalPairs());
-    System.out.format("%% Read Pairs   : %.2f %%\n", 1.0 * metrics.getTotalPairs() / totalPairs * 100.0); 
+    System.out.println("Num. Read Pairs    : " + metrics.getTotalPairs());
+    System.out.format("%% Read Pairs       : %.2f %%\n", 1.0 * metrics.getTotalPairs() / totalPairs * 100.0); 
     System.out.println("Median Insert Size : " + metrics.getMedianInsertSize());
     System.out.println("Mode Insert Size   : " + metrics.getModeInsertSize());
     System.out.println();
