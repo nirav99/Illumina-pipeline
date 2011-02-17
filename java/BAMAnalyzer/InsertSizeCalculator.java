@@ -42,8 +42,11 @@ public class InsertSizeCalculator
                                            // orientation
   private InsertSizeMetrics tandemMetrics; // Metrics for read pairs having
                                            // tandem orientation
-  private int totalPairs = 0;              // Total pairs encountered so far
-  
+  private int totalMappedPairs = 0;        // Total pairs where both reads are
+                                           // mapped
+  private int totalPairs = 0;              // Total pairs, irrespective of
+                                           // whether mapping status of the reads  
+
   /**
    * Class constructor
    */
@@ -60,6 +63,12 @@ public class InsertSizeCalculator
    */
   public void calculateInsertSize(SAMRecord record)
   {
+    // On encountering a paired read for the second read, increment
+    // total number of pairs
+    if(record.getReadPairedFlag() && !record.getFirstOfPairFlag())
+    {
+       totalPairs++;
+    }
     if (!record.getReadPairedFlag() ||
          record.getReadUnmappedFlag() ||
          record.getMateUnmappedFlag() ||
@@ -69,7 +78,7 @@ public class InsertSizeCalculator
          record.getInferredInsertSize() == 0)
       return;
     
-    totalPairs++;
+    totalMappedPairs++;
     
     int insertSize = Math.abs(record.getInferredInsertSize());
     PairOrientation orientation = SamPairUtil.getPairOrientation(record);
@@ -88,7 +97,7 @@ public class InsertSizeCalculator
    */
   public void showResult()
   {
-    if(totalPairs <= 0)
+    if(totalMappedPairs <= 0)
     {
       return;
     }
@@ -96,22 +105,25 @@ public class InsertSizeCalculator
     System.out.println();
     System.out.println("Insert Size Calculations");
     System.out.println();
-    System.out.println("Total Pairs : " + totalPairs);
+    System.out.println("Total Read Pairs : " + totalPairs);
+    System.out.println();
+    System.out.println("Pairs with Both Reads Mapped   : " + totalMappedPairs);
+    System.out.format("%% Pairs with Both Reads Mapped : %.2f%%\n", 1.0 * totalMappedPairs / totalPairs * 100.0);
     System.out.println();
 
-	  if(frMetrics.getTotalPairs()  > totalPairs * 0.1)
+	  if(frMetrics.getTotalPairs()  > totalMappedPairs * 0.1)
 	  {
       frMetrics.showResult();
       System.out.println();
 	  }
     
-	  if(rfMetrics.getTotalPairs() > totalPairs * 0.1)
+	  if(rfMetrics.getTotalPairs() > totalMappedPairs * 0.1)
 	  {
       rfMetrics.showResult();
       System.out.println();
 	  }
     
-    if(tandemMetrics.getTotalPairs() > totalPairs * 0.1)
+    if(tandemMetrics.getTotalPairs() > totalMappedPairs * 0.1)
     {
       tandemMetrics.showResult();
       System.out.println();
