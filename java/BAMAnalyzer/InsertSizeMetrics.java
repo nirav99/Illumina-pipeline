@@ -30,7 +30,7 @@ import net.sf.picard.sam.SamPairUtil.PairOrientation;
  */
 
 /**
- * @author niravs
+ * @author Nirav Shah niravs@bcm.edu
  * Class encapsulating insert size metrics
  */
 public class InsertSizeMetrics
@@ -84,7 +84,22 @@ public class InsertSizeMetrics
   {
     return totalPairs;
   }
- 
+
+  public int getMedianInsertSize()
+  {
+    return medianInsertSize;
+  }
+
+  public int getModeInsertSize()
+  {
+    return modalInsertSize;
+  } 
+
+  public PairOrientation getPairOrientation()
+  {
+    return orientation;
+  }
+
   /**
    * Calculate median insert size
    */ 
@@ -147,23 +162,10 @@ public class InsertSizeMetrics
   /**
    * Display the insert size metrics
    */
-  public void showResult()
+  public void calculateResult()
   {
     System.err.println("Number of Elements in TreeMap : " + insertSizeList.size()); 
-
-    System.out.print("Pair Orientation : ");
-    if(orientation.equals(PairOrientation.FR))
-      System.out.println("FR (5' --F-->     <--R-- 5')");
-    else
-    if(orientation.equals(PairOrientation.RF))
-      System.out.println("RF (  <--R-- 5' 5' --F-->)");
-    else
-      System.out.println("Tandem (Both on forward or reverse strands)");
-    
     findMedianInsertSize();
     findModalInsertSize();
-    System.out.println("Num. Read Pairs    : " + totalPairs);
-    System.out.println("Median Insert Size : " + medianInsertSize);
-    System.out.println("Modal Insert Size  : " + modalInsertSize);
   }
 }

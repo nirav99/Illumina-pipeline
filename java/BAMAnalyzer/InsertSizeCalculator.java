@@ -30,7 +30,7 @@ import net.sf.samtools.*;
 import net.sf.picard.sam.*;
 
 /**
- * @author niravs
+ * @author Nirav Shah niravs@bcm.edu
  * Class to calculate insert size. Insert size values are shown only for the 
  * orientation that is at least 10% of the total number of pairs.
  */
@@ -113,20 +113,44 @@ public class InsertSizeCalculator
 
     if(frMetrics.getTotalPairs()  > totalMappedPairs * 0.1)
     {
-      frMetrics.showResult();
-      System.out.println();
+      frMetrics.calculateResult();
+      showResult(frMetrics);
     }
     
     if(rfMetrics.getTotalPairs() > totalMappedPairs * 0.1)
     {
-      rfMetrics.showResult();
-      System.out.println();
+      rfMetrics.calculateResult();
+      showResult(rfMetrics);
     }
     
     if(tandemMetrics.getTotalPairs() > totalMappedPairs * 0.1)
     {
-      tandemMetrics.showResult();
-      System.out.println();
+      tandemMetrics.calculateResult();
+      showResult(tandemMetrics);
     }
+  }
+
+  /**
+   * Display the result
+   */
+  private void showResult(InsertSizeMetrics metrics)
+  {
+    PairOrientation orientation = metrics.getPairOrientation();
+  
+    System.out.print("Pair Orientation : ");
+
+    if(orientation.equals(PairOrientation.FR))
+      System.out.println("FR (5' --F-->     <--R-- 5')");
+    else
+    if(orientation.equals(PairOrientation.RF))
+      System.out.println("RF (<--R-- 5'     5' --F-->)");
+    else
+      System.out.println("Tandem (Both on forward or reverse strands)");
+
+    System.out.println("Num. Read Pairs : " + metrics.getTotalPairs());
+    System.out.format("%% Read Pairs   : %.2f %%\n", 1.0 * metrics.getTotalPairs() / totalPairs * 100.0); 
+    System.out.println("Median Insert Size : " + metrics.getMedianInsertSize());
+    System.out.println("Mode Insert Size   : " + metrics.getModeInsertSize());
+    System.out.println();
   }
 }
