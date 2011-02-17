@@ -111,17 +111,17 @@ public class InsertSizeCalculator
     System.out.format("%% Pairs with Both Reads Mapped : %.2f%%\n", 1.0 * totalMappedPairs / totalPairs * 100.0);
     System.out.println();
 
-	  if(frMetrics.getTotalPairs()  > totalMappedPairs * 0.1)
-	  {
+    if(frMetrics.getTotalPairs()  > totalMappedPairs * 0.1)
+    {
       frMetrics.showResult();
       System.out.println();
-	  }
+    }
     
-	  if(rfMetrics.getTotalPairs() > totalMappedPairs * 0.1)
-	  {
+    if(rfMetrics.getTotalPairs() > totalMappedPairs * 0.1)
+    {
       rfMetrics.showResult();
       System.out.println();
-	  }
+    }
     
     if(tandemMetrics.getTotalPairs() > totalMappedPairs * 0.1)
     {
