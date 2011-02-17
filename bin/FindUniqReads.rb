@@ -51,7 +51,13 @@ class FindUniqueReads
     resultFileName = "Uniqueness_" + @limsBarcode.to_s + ".txt"
 
     # Create temp directory
-    tmpDir = "tmp_" + @lanes.to_s
+    # Use the scratch directory on the cluster nodes for the temporary files.
+    # If scratch directory on cluster nodes should not be used, simply remove
+    # "/space1/tmp/" prefix from the tmpDir name.
+    processID = $$
+    tmpDir = "/space1/tmp/tmp_" + @limsBarcode.to_s + "_" + processID.to_s
+
+    puts "Creating temp directory : " + tmpDir.to_s
     FileUtils.mkdir(tmpDir)
 
     # Select analysis as fragment or paired
@@ -132,18 +138,6 @@ class FindUniqueReads
     result.sort!
     return result
   end
-
-=begin
-  # Helper method to copy resultFile to mini analysis
-  def copyFileMiniAnalysis(fileName)
-    currentDir = Dir.pwd
-    miniDir    = currentDir.gsub(/Data.*$/, 'mini_analysis')
-    puts "Creating mini_analysis directory"
-    system("mkdir -p #{miniDir}")
-    puts "Copying " + fileName + " to mini_analysis directory"
-    system("cp #{fileName} #{miniDir}") 
-  end
-=end
 
   # Helper method to upload uniqueness percentage to LIMS
   #TODO: Make upload part of another script (maybe helper)
