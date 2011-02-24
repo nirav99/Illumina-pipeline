@@ -26,10 +26,12 @@ public class UniquenessCalc
   private FindAdaptorSequence adapSeq = null;
   private boolean calculateAdaptorSeq = false;
 
+  // Instance of class to calculate bad reads
+  private FindBadReads badReadsFinder = null;
+
   // Results to compute and display
-  private long totalReads = 0;
+  private long totalReads  = 0;
   private long uniqueReads = 0;
-  private long badReads = 0;
   
   /**
    * Class constructor
@@ -45,6 +47,8 @@ public class UniquenessCalc
     {
       calculateAdaptorSeq = true;
     }
+
+    badReadsFinder = new FindBadReads();
 /*
     if(inputParams.adaptorFile != null)
     {
@@ -77,9 +81,9 @@ public class UniquenessCalc
    */
   private void readFiles() throws Exception 
   {
-  String line;
-  String lineToWrite;
-  String fileNames[] = inputParams.inputFiles;
+    String line;
+    String lineToWrite;
+    String fileNames[] = inputParams.inputFiles;
   
     for(int i = 0; i < fileNames.length; i++)
     {
@@ -100,6 +104,8 @@ public class UniquenessCalc
             }
             adapSeq.checkRead(line, 1);
           }
+
+          badReadsFinder.checkRead(line, 1);
 
           lineToWrite = line.substring(0, seedLength - 1);
           writeToTempFile(lineToWrite);
@@ -162,6 +168,8 @@ public class UniquenessCalc
             adapSeq.checkRead(line1, 1);
             adapSeq.checkRead(line2, 2);
           } 
+          badReadsFinder.checkRead(line1, 1);
+          badReadsFinder.checkRead(line2, 2);
 
           lineToWrite = line1.substring(0, seedLength - 1) + line2.substring(0, seedLength -1);
           writeToTempFile(lineToWrite);
@@ -237,46 +245,27 @@ public class UniquenessCalc
 
       totalReads += res.totalReads;
       uniqueReads += res.uniqueReads;
-      badReads += res.badReads;
     }
     
     System.out.println("");
-    System.out.println("");
+    System.out.println("Unique Reads");
     System.out.println("Total Reads    : " + totalReads);
     System.out.println("Unique Reads   : " + uniqueReads);
     System.out.format("%% Unique Reads : %.2f %%",  1.0 * uniqueReads / totalReads * 100.0);
     System.out.println("");
-    System.out.println("Bad Reads    : " + badReads);
-    System.out.println("");
-    System.out.println("");
 
     if(calculateAdaptorSeq)
     {
+      System.out.println("");
+      System.out.println("Adaptor Reads");
       AdaptorCount adapCount = adapSeq.getAdaptorCount();
       adapCount.showResult();
     }
-    /*
-    if(calculateAdaptorSeq)
-    {
-      AdaptorCount count = adapSeq.getAdaptorCount();
-      System.out.println("Total Reads (Read 1) : " + count.totalRead1);
-      System.out.println("Reads with Adaptor   : " + count.adaptorRead1);
-      System.out.format("%% Reads with Adaptor : %.2f %%", 1.0 * count.adaptorRead1 / count.totalRead1 * 100.0);
-      System.out.println("");
-      System.out.println("");
-      System.out.println("");
-
-      if(count.totalRead2 > 0)
-      {
-        System.out.println("Total Reads (Read 2) : " + count.totalRead2);
-        System.out.println("Reads with Adaptor   : " + count.adaptorRead2);
-        System.out.format("%% Reads with Adaptor : %.2f %%", 1.0 * count.adaptorRead2 / count.totalRead2 * 100.0);
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-      }
-    }
-    */
+    
+    System.out.println("");
+    System.out.println("Bad Reads");
+    BadReadCount bCount = badReadsFinder.getBadReadCount();
+    bCount.showResult();
   }
   
   /**
