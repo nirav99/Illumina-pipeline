@@ -27,8 +27,8 @@ class BWA_BAM
     end
 
     # Computing cluster specific members
-    @cpuCores       = 6      # Max CPU cores to use
-    @minCpuCores    = 6      # Min CPU cores to use
+    @cpuCores       = 7      # Max CPU cores to use
+    @minCpuCores    = 7      # Min CPU cores to use
     # Note: Maximum available CPU cores are 8. However, due to ardmore
     # idiosyncracies, jobs requesting 8 cores wait for more than a day to obtain
     # a node. Thus, selected 6 as the max CPU cores based on the observation
@@ -49,9 +49,9 @@ class BWA_BAM
     # Name of temp directory used by picard
     @picardTempDir   = "TMP_DIR=/space1/tmp"
     # Number of records to hold in RAM
-    @maxRecordsInRam = 2000000
+    @maxRecordsInRam = 3000000
     # Maximum Java heap size
-    @heapSize        = "-Xmx12G"
+    @heapSize        = "-Xmx20G"
 
     @sequenceFiles  = nil # Sequence files with Illumina qualities
 
