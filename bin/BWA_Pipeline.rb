@@ -179,7 +179,6 @@ class BWA_Pipeline
         chipDesignName = obj.getChipDesignName()
         sampleName     = obj.getSampleName()
 
-        #TODO: Add sample name to BWA config params file
         if sampleName != nil && !sampleName.empty?()
           @bwaParams.setSampleName(sampleName.to_s)
         end
@@ -196,12 +195,19 @@ class BWA_Pipeline
         puts e.backtrace.inspect
       end
 
+     # Nirav Shah on Feb 28, 2011 :
+     # Hiseq flowcells are contaminated with 2% phix. We were contaminating reference
+     # sequences with phix and then attempt to filter out phix reads from the BAM files.
+     # It was decided on 25th Feb to stop removing phix since most of the data we generate
+     # is humans. It might need to be re-enabled only if some project requires de-novo assembly.
+     # In that case, uncomment the following lines, or set its value to true in BWAConfigParams.txt
+=begin
       # Turn on Phix filtering for Hiseq FC that is not mapped to phix
       if @pipelineHelper.isFCHiSeq(@fcName) == true &&
          !@referencePath.match("PhiX_plus_SNP.fa")
            @bwaParams.setPhixFilter(true)
       end
-
+=end
       # Write the parameters to gerald directory
       @bwaParams.toFile(geraldDir)
     end
