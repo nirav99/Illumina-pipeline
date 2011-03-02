@@ -22,7 +22,7 @@ deleteTempDirCmd = "rm -rf ./Stats ./Temp ./Plots"
 `#{deleteTempDirCmd}`
 
 puts "Deleting Temporary Files"
-deleteTempFilesCmd = "rm *.htm *_tiles.txt *_finished.txt finished.txt tiles.txt"
+deleteTempFilesCmd = "rm *_tiles.txt *_finished.txt finished.txt tiles.txt"
 `#{deleteTempFilesCmd}`
 
 puts "Zipping sequence files"
