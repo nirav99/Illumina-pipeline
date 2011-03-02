@@ -101,7 +101,7 @@ class BuildGERALDConfig
       # done using Eland or BWA
       if @mappingAlgo.eql?("eland")
          @postRunCommand = "/stornext/snfs5/next-gen/Illumina/ipipe/" +
-                           "bin/post_run_cmd.sh" 
+                           "bin/postrun_eland.sh" 
       else
          @postRunCommand = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/" +
                            "bin/postrun.rb" 
