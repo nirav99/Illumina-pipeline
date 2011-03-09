@@ -12,6 +12,8 @@ public class InputParameters
   private String platform    = null; // Platform (PL) tag
   private String prgName     = null; // ID of PG header
   private String prgVer      = null; // VN field of PG header
+  private String center      = "BCM";// Name of the sequencing center
+  private String pUnit       = null; // Platform unit (PU) tag
   
   public InputParameters(String args[])
   {
@@ -27,14 +29,16 @@ public class InputParameters
     System.err.println("Usage:");
     System.err.print("  java -jar AddRGToBAM.jar Input=value Output=value");
     System.err.println(" RGTag=value SampleID=value");
-    System.err.println("    Input    - Input BAM to add RG tag to");
-    System.err.println("    Output   - Name of output file with RG tag added");
-    System.err.println("    RGTag    - Value of RG tag. Default : 0");
-    System.err.println("    SampleID - Sample name, Default : unknown");
-    System.err.println("    Library  - Library name (optional)");
-    System.err.println("    Platform - Platform name (optional)");
-    System.err.println("    Program  - Name of Mapper used (optional)");
-    System.err.println("    Version  - Version of Mapper used (optional)");
+    System.err.println("    Input         - Input BAM to add RG tag to");
+    System.err.println("    Output        - Name of output file with RG tag added");
+    System.err.println("    RGTag         - Value of RG tag. Default : 0");
+    System.err.println("    SampleID      - Sample name, Default : unknown");
+    System.err.println("    Library       - Library name (optional)");
+    System.err.println("    Platform      - Platform name (PL tag) (optional)");
+    System.err.println("    PlatformUnit  - Platform Unit (PU tag) (optional)");
+    System.err.println("    Center        - Name of the sequencing center, default BCM");
+    System.err.println("    Program       - Mapper name (optional)");
+    System.err.println("    Version       - Mapper Version (optional)");
   }
   
   private boolean validateArgs(String args[])
@@ -90,6 +94,11 @@ public class InputParameters
         platform = value;
       }
       else
+      if(param.equalsIgnoreCase("platformunit"))
+      {
+        pUnit = value;
+      }
+      else
       if(param.equalsIgnoreCase("program"))
       {
         prgName = value;
@@ -98,6 +107,11 @@ public class InputParameters
       if(param.equalsIgnoreCase("version"))
       {
         prgVer = value;
+      }
+      else
+      if(param.equalsIgnoreCase("center"))
+      {
+        center = value; 
       }
     }
     
@@ -156,6 +170,10 @@ public class InputParameters
     return platform;
   }
 
+  public String getPlatformUnitName()
+  {
+    return pUnit;
+  }
   public String getProgramName()
   {
     return prgName;
@@ -164,6 +182,11 @@ public class InputParameters
   public String getProgramVersion()
   {
     return prgVer;
+  }
+
+  public String getCenterName()
+  {
+    return center;
   }
 }
 
