@@ -10,6 +10,8 @@
 public class FindBadReads
 {
   private BadReadCount bCounter = null;   // Object to remember bad reads
+  private double badReadThreshold = 0.15; // 15% threshold for Ns in a read to
+                                          // be classified as a bad read
  
   /**
    * Class constructor
@@ -57,12 +59,12 @@ public class FindBadReads
   }
   
   /**
-   * Helper method to check if given read sequence contains at least one
-   * adaptor sequence
+   * Helper method to check if given read sequence is bad, i.e. having N
+   * beyond a certain threshold
    * @param readSequence - A string representing read sequence
-   * @return - True if prefix of read sequence contains adaptor sequence,
-   * false otherwise
+   * @return - True if the read sequence is bad, false otherwise.
    */
+/*
   private boolean isReadBad(String readSequence)
   {
     boolean result = true;
@@ -73,5 +75,28 @@ public class FindBadReads
         result = false;
     }
     return result;
+  }
+*/
+
+  /**
+   * Helper method to check if a given read sequence is bad, i.e., having
+   * "N" as the value of bases exceeding the specified threshold.
+   */
+  private boolean isReadBad(String readSequence)
+  {
+    int readLen = readSequence.length();
+    int maxAllowedNs =  (int) (badReadThreshold * readLen);
+    int numNs = 0;
+
+    for(int i = 0; i < readLen; i++)
+    {
+      if(readSequence.charAt(i) == 'N' || readSequence.charAt(i) == 'n')
+      {
+        numNs++;
+        if(numNs >= maxAllowedNs)
+          return true;
+      }
+    }
+    return false;
   }
 }
