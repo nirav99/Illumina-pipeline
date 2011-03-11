@@ -212,21 +212,19 @@ class UploadSummaryResults
   # Method to upload results to LIMS
   # NOTE : THIS WORKS WITH ONLY ONE LANE IN GERALD DIRECTORY
   def uploadResults()
-#     @lanes.each_byte do |lane|
-       puts "Generating LIMS upload string for lane : " + @lanes
-       baseCmd = "perl " + @limsScript + " " + @limsBarcode +
-                 " ANALYSIS_FINISHED READ" 
-       laneRes = LaneResult.new(@doc, @lanes)
-       cmd = baseCmd + " 1 " + laneRes.buildLIMSResultString(1)
+     puts "Generating LIMS upload string for lane : " + @lanes
+     baseCmd = "perl " + @limsScript + " " + @limsBarcode +
+               " ANALYSIS_FINISHED READ" 
+     laneRes = LaneResult.new(@doc, @lanes)
+     cmd = baseCmd + " 1 " + laneRes.buildLIMSResultString(1)
+     puts cmd
+     executeLIMSUploadCmd(cmd)
+
+     if @pairedEnd == true
+       cmd = baseCmd + " 2 " + laneRes.buildLIMSResultString(2) 
        puts cmd
        executeLIMSUploadCmd(cmd)
-
-       if @pairedEnd == true
-         cmd = baseCmd + " 2 " + laneRes.buildLIMSResultString(2) 
-         puts cmd
-         executeLIMSUploadCmd(cmd)
-       end
-#     end
+     end
   end
 
   private
@@ -260,12 +258,24 @@ class UploadSummaryResults
   end
 
   # Find out if flowcell is fragment or paired
+  # Sometimes, they abort READ2 on several flowcells. In these cases, the
+  # Summary file will have information about both the reads, but it is incorrect
+  # since the flowcell would have been analyzed in the fragment mode. Thus, we
+  # also look for the number of sequence files in the directory. If there are
+  # two sequence files and Summary shows two reads, it is treated as a paired
+  # end flowcell, fragment otherwise.
   def isFCPairedEnd()
     (@doc/:'ExpandedLaneSummary Read').each do|read|
        readNumber = (read/'readNumber').inner_html
        if readNumber.to_s.eql?("2")
          @pairedEnd = true
        end
+    end
+
+    sequenceFiles = Dir["*_sequence.txt*"]
+    
+    if sequenceFiles.size < 2
+      @pairedEnd = false
     end
   end
 
