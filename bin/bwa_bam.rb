@@ -286,6 +286,8 @@ class BWA_BAM
   # Method to build RG string in the format expected by BWA sampe
   # and samse commands
   def buildRGString()
+    currentTime = Time.new
+
     # If sample name was provided in the configuration parameters, use it.
     # If not, use FC-lane as the sample name. If that also is not availble
     # use the string "unknown" as the sampleID
@@ -306,7 +308,14 @@ class BWA_BAM
       rgString = rgString + "\\tLB:" + @libraryName.to_s
     end
 
+    if @fcName != nil && !@fcName.empty?() && @laneNumber != nil &&
+       !@laneNumber.to_s.empty?()
+       rgString = rgString + "\\tPU:" + @fcName.to_s + "-" + @laneNumber.to_s
+    end
+    rgString = rgString + "\\tCN:BCM\\tDT:" + currentTime.strftime("%Y-%m-%dT%H:%M:%S%z")
+    rgString = rgString + "\\tPL:Illumina"
     rgString = rgString + "'"
+    puts "RGString = " + rgString.to_s
     return rgString.to_s
   end
 
