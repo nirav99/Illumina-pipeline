@@ -17,3 +17,4 @@ echo "Building Jar file"
 jar cvfm $outJarName $manifestFile *.class
 chmod +x $outJarName
 cp $outJarName ../
+cp mail.jar ../
