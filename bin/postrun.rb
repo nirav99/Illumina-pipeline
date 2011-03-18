@@ -37,7 +37,7 @@ output = `#{uploadLIMSHTMLCmd}`
 puts output
 
 # Email the Summary.htm file
-emailSummaryHTML(fcBarCode)
+#emailSummaryHTML(fcBarCode)
 
 # Map sequence files using BWA
 bwaCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/bwa_bam.rb"

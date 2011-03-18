@@ -11,6 +11,10 @@ uploadLIMSResultsCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_
 output = `#{uploadLIMSResultsCmd}`
 puts "Output from LIMS : " + output
 
+# Send analysis result email
+emailAnalysisResultCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/ResultMailer.rb"
+output = `#{emailAnalysisResultCmd}`
+
 # Appropriate code can be added here to clean up the GERALD directory of
 # unwanted files such as .sam, intermediate .bam files, .sai files etc.
 puts "Deleting Temp Files"

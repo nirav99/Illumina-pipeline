@@ -84,7 +84,7 @@ class FindUniqueReads
     `#{cmd}`
     puts "Completion Time : " + Time.now.to_s
 
-    emailUniquenessResults(resultFileName)
+    #emailUniquenessResults(resultFileName)
     puts "Finished Computing Uniqueness Results."
 
     # Upload uniqueness results to LIMS

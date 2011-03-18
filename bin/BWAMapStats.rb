@@ -36,7 +36,7 @@ class BWAMapStats
     `#{cmd}`
 
     # Email the results
-    emailResults()
+  #  emailResults()
   end
 
   # Method to email the mapping results
