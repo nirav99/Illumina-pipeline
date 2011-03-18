@@ -24,6 +24,8 @@
 
 import java.util.TreeMap;
 import net.sf.picard.sam.SamPairUtil.PairOrientation;
+import java.io.*;
+import java.util.LinkedList;
 
 /**
  * Class to encapsulate insert size metrics
@@ -40,6 +42,7 @@ public class InsertSizeMetrics
   private int modalInsertSize   = 0;    // Modal value of insert size
   private int totalPairs        = 0;    // Total pairs of records
   private double meanInsertSize = 0;    // Mean insert size
+  private double threshold      = 0.01; // To clip insert size chart
   
   private TreeMap<Integer, Integer> insertSizeList = null;
 
@@ -71,7 +74,7 @@ public class InsertSizeMetrics
     }
     else
     {
-      insertSizeList.put(iSize, 0);
+      insertSizeList.put(iSize, 1);
     }
     iSize = null;
   }
@@ -101,26 +104,90 @@ public class InsertSizeMetrics
   }
 
   /**
-   * Calculate median insert size
-   */ 
-  private void findMedianInsertSize()
+   * Log insert size distribution in a CSV
+   */
+  private void logInsertSizeDistribution() throws IOException
   {
-    int medianIndex = totalPairs / 2;
-    int numElements = 0;
+    System.err.println("Logging time");
+    String logFileName    = orientation.toString() + "_InsertSizeDist.csv";
+    BufferedWriter writer = new BufferedWriter(new FileWriter(logFileName));
+    
+    for(Integer key : insertSizeList.keySet())
+    {
+      writer.write(key.toString() + "," + insertSizeList.get(key).toString());
+      writer.newLine();
+    }
+    writer.close();
+  }
+
+  /**
+   * Plot the distribution of insert size using GNUPlot
+   */
+  private void createDistributionChart()
+  {
+    System.err.println("chart time");
+    String outputFile = orientation.toString() + "_InsertSizeDist.png";
+
+    trimInsertSizeDistribution();
+   
+    System.err.println("CHART TRIMMED.. PLOT TIME");
+ 
+    int length = insertSizeList.keySet().size();
+    double xAxis[] = new double[length];
+    double yAxis[] = new double[length];
+    int idx = 0;
+    
+    for(Integer key : insertSizeList.keySet())
+    {
+      xAxis[idx] = key.doubleValue();
+      yAxis[idx] = insertSizeList.get(key).doubleValue();
+      idx++;
+    }
+    try
+    {
+      Plot p = new Plot(outputFile, "Insert Size Distribution", "Insert Size",
+                        "Number of Reads", orientation.toString() + "_Distribution",
+                        xAxis, yAxis);
+      p.plotGraph();
+    }
+    catch(Exception e)
+    {
+      System.err.println(e.getMessage());
+    }
+  }
+ 
+  /**
+   * Method to calculate median and mode values of insert size
+   */
+  private void calculateStats()
+  {
+    int medianIndex     = totalPairs / 2;
+    int numElements     = 0;
+    boolean foundMedian = false;
+    
+    Integer modeInsert = insertSizeList.firstKey();
+    Integer modeValue  = insertSizeList.get(modeInsert);
     
     for(Integer key : insertSizeList.keySet())
     {
       numElements = numElements + insertSizeList.get(key).intValue();
       
-      if(numElements > medianIndex)
+      if(numElements > medianIndex && foundMedian == false)
       {
-        medianInsertSize = key.intValue();
-        break;
+			  medianInsertSize = key.intValue();
+			  foundMedian = true;
+      }
+      
+      if(modeValue < insertSizeList.get(key))
+      {
+        modeInsert = key;
+        modeValue  = insertSizeList.get(key);
       }
       key = null;
     }
+    modalInsertSize = modeInsert.intValue();
   }
- 
+  
   /**
    * Calculate mean insert size
    */ 
@@ -140,32 +207,53 @@ public class InsertSizeMetrics
   }
 
   /**
-   * Calculate mode of the insert size
+   * Trim insert size distribution to plot a meaningful graph
    */
-  private void findModalInsertSize()
+  private void trimInsertSizeDistribution()
   {
-    Integer modeInsert = insertSizeList.firstKey();
-    Integer modeValue  = insertSizeList.get(modeInsert);
-
+    int numModeElements = insertSizeList.get(modalInsertSize).intValue();
+    int minValue = (int)(threshold * numModeElements);
+    int val;
+    LinkedList<Integer> binsToRemove = new LinkedList<Integer>();
+    
+    /**
+     * Keep all the insert size values lower than the modal value.
+     * For the insert size value beyond the modal value, keep only the
+     * records that exceed the minimum threshold.
+     */
     for(Integer key : insertSizeList.keySet())
     {
-      if(modeValue < insertSizeList.get(key))
+      val = insertSizeList.get(key).intValue();
+      if((key.intValue() > modalInsertSize) && (val < minValue))
       {
-        modeInsert = key;
-        modeValue  = insertSizeList.get(key);
+        binsToRemove.add(key);
       }
-      key = null;
     }
-    modalInsertSize = modeInsert.intValue();
+    
+    for(int i = 0; i < binsToRemove.size(); i++)
+    {
+      insertSizeList.remove(binsToRemove.get(i));
+    }
+    System.err.println("List size after trimming : " + insertSizeList.size());
   }
-
+ 
   /**
    * Display the insert size metrics
    */
   public void calculateResult()
   {
     System.err.println("Number of Elements in TreeMap : " + insertSizeList.size()); 
-    findMedianInsertSize();
-    findModalInsertSize();
+    calculateStats();
+    
+    try
+    {
+      logInsertSizeDistribution();
+      createDistributionChart();
+    }
+    catch(Exception e)
+    {
+      System.err.println(e.getMessage());
+    }
   }
 }
+

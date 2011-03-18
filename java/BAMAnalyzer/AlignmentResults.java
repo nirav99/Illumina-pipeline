@@ -1,11 +1,8 @@
-/**
- * Class to encapsulate alignment results for a specific type of read
- */
 import net.sf.samtools.*;
 import java.text.*;
 
 /**
- * @author niravs
+ * @author Nirav Shah niravs@bcm.edu
  *
  */
 public class AlignmentResults 
@@ -40,9 +37,9 @@ public class AlignmentResults
   {
 	  // We assume that the caller will check for the type of the
     // read and invoke the function with the correct type of read.
-	
+
 	  totalReads++;
-	
+
 	  // For an unmapped read, increment the counter for unmapped read
 	  if(record.getReadUnmappedFlag())
 	    unmappedReads++;

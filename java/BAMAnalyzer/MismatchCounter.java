@@ -86,4 +86,3 @@ public class MismatchCounter
     return numMismatches;
   }
 }
-

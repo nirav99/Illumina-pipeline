@@ -1,0 +1,30 @@
+Orientation/Strandness of NextGen data:
+
+  Illumina (Fragment / PE):
+
+       R1              
+    -------->         
+    5' --------------------- 3'
+    3' --------------------- 5'
+                    <-------
+                        R2
+
+  SOLiD (Fragment / PE):
+
+       R1                
+    --------->        
+    5' --------------------- 3'
+    3' --------------------- 5'
+                      <-----
+                        R2
+
+  SOLiD (MP):
+
+        R2             R1
+       ----->        ----->
+    5' ----------XXX----------- 3'
+    3' ----------XXX----------- 5'
+
+Also, you may want to read
+https://github.com/drio/drd.bio.toolbox/raw/master/bash/run_breakway.sh if
+your are interested on ways to confirm this informatically.

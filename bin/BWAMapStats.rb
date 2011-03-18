@@ -31,7 +31,7 @@ class BWAMapStats
   def process()
     statsJarPath = "/stornext/snfs5/next-gen/Illumina/ipipe/java/" +
                    "BAMAnalyzer.jar"
-    cmd = "java -Xmx8G -jar " + statsJarPath + " " + @bamFile + " > " +
+    cmd = "java -Xmx8G -jar " + statsJarPath + " I=" + @bamFile + " > " +
           @outputFile
     `#{cmd}`
 

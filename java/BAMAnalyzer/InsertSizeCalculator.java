@@ -45,7 +45,8 @@ public class InsertSizeCalculator
   private int totalMappedPairs = 0;        // Total pairs where both reads are
                                            // mapped
   private int totalPairs = 0;              // Total pairs, irrespective of
-                                           // whether mapping status of the reads  
+                                           // whether mapping status of the
+                                           // reads  
 
   /**
    * Class constructor
@@ -61,7 +62,7 @@ public class InsertSizeCalculator
    * Public method to process a record for insert size calculations
    * @param record - SAMRecord
    */
-  public void calculateInsertSize(SAMRecord record)
+  public void processRead(SAMRecord record)
   {
     // On encountering a paired read for the second read, increment
     // total number of pairs
@@ -75,7 +76,8 @@ public class InsertSizeCalculator
          record.getFirstOfPairFlag() ||
          record.getNotPrimaryAlignmentFlag() ||
          record.getDuplicateReadFlag() ||
-         record.getInferredInsertSize() == 0)
+  //       record.getInferredInsertSize() == 0 ||
+         !record.getMateReferenceName().equals(record.getReferenceName()))
       return;
     
     totalMappedPairs++;
@@ -105,10 +107,8 @@ public class InsertSizeCalculator
     System.out.println();
     System.out.println("Insert Size Calculations");
     System.out.println();
-    System.out.println("Total Read Pairs : " + totalPairs);
-    System.out.println();
-    System.out.println("Pairs with Both Reads Mapped   : " + totalMappedPairs);
-    System.out.format("%% Pairs with Both Reads Mapped : %.2f%%\n", 1.0 * totalMappedPairs / totalPairs * 100.0);
+    System.out.println("Pairs with Both Reads Mapped on same Chr  : " + totalMappedPairs);
+    System.out.format("%% Pairs with Both Reads Mapped on same Chr : %.2f%%\n", 1.0 * totalMappedPairs / totalPairs * 100.0);
     System.out.println();
 
     if(frMetrics.getTotalPairs()  > totalMappedPairs * 0.1)
@@ -148,7 +148,7 @@ public class InsertSizeCalculator
       System.out.println("Tandem (Both on forward or reverse strands)");
 
     System.out.println("Num. Read Pairs    : " + metrics.getTotalPairs());
-    System.out.format("%% Read Pairs       : %.2f %%\n", 1.0 * metrics.getTotalPairs() / totalPairs * 100.0); 
+    System.out.format("%% Read Pairs       : %.2f %%\n", 1.0 * metrics.getTotalPairs() / totalMappedPairs * 100.0); 
     System.out.println("Median Insert Size : " + metrics.getMedianInsertSize());
     System.out.println("Mode Insert Size   : " + metrics.getModeInsertSize());
     System.out.println();
