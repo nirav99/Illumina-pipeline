@@ -82,8 +82,17 @@ class ResultMailer
     @emailText << "File System Path : " + Dir.pwd.to_s
   end
 
+  # Find all png files in the directory. For now, don't discover a file named
+  # DistributionOfN.png. This might be changed in future.
   def findAttachmentFiles()
-    @attachments = Dir["*.png"]
+    @attachments = Array.new
+    pngFiles     = Dir["*.png"]
+  
+    pngFiles.each do |file|
+      if !file.match(/DistributionOfN.png/)
+        @attachments << file
+      end
+    end
   end
 end
 
