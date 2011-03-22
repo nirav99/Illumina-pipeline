@@ -1,4 +1,5 @@
 #!/usr/bin/ruby
+$:.unshift File.dirname(__FILE__)
 
 require 'fileutils'
 require 'PipelineHelper'
