@@ -9,16 +9,16 @@
  */
 public class FindBadReads
 {
-  private BadReadCount bCounter = null;   // Object to remember bad reads
+  private BadReadCount bCounter  = null;  // Object to remember bad reads
   private double badReadThreshold = 0.15; // 15% threshold for Ns in a read to
                                           // be classified as a bad read
  
   /**
    * Class constructor
    */
-  public FindBadReads()
+  public FindBadReads(int readLen)
   {
-    bCounter = new BadReadCount();
+    bCounter   = new BadReadCount(readLen);
   }
   
   /**
@@ -32,7 +32,7 @@ public class FindBadReads
     {
       bCounter.totalRead1++;
       
-      if(true == isReadBad(readSequence))
+      if(true == isReadBad(readSequence, 1))
       {
         bCounter.badReadsRead1++;
       }
@@ -42,7 +42,7 @@ public class FindBadReads
     {
       bCounter.totalRead2++;
       
-      if(true == isReadBad(readSequence))
+      if(true == isReadBad(readSequence, 2))
       {
         bCounter.badReadsRead2++;
       }
@@ -59,44 +59,32 @@ public class FindBadReads
   }
   
   /**
-   * Helper method to check if given read sequence is bad, i.e. having N
-   * beyond a certain threshold
-   * @param readSequence - A string representing read sequence
-   * @return - True if the read sequence is bad, false otherwise.
-   */
-/*
-  private boolean isReadBad(String readSequence)
-  {
-    boolean result = true;
-    
-    for(int i = 0; i < readSequence.length() && result == true; i++)
-    {
-      if(readSequence.charAt(i) != 'N' && readSequence.charAt(i) != 'n')
-        result = false;
-    }
-    return result;
-  }
-*/
-
-  /**
    * Helper method to check if a given read sequence is bad, i.e., having
    * "N" as the value of bases exceeding the specified threshold.
    */
-  private boolean isReadBad(String readSequence)
+  private boolean isReadBad(String readSequence, int readType)
   {
     int readLen = readSequence.length();
     int maxAllowedNs =  (int) (badReadThreshold * readLen);
-    int numNs = 0;
+    int numNs   = 0;
 
     for(int i = 0; i < readLen; i++)
     {
       if(readSequence.charAt(i) == 'N' || readSequence.charAt(i) == 'n')
       {
         numNs++;
-        if(numNs >= maxAllowedNs)
-          return true;
+        if(readType == 1)
+        {
+          bCounter.nDistRead1[i]++;
+        }
+        else
+        {
+          bCounter.nDistRead2[i]++;
+        }
       }
     }
+    if(numNs >= maxAllowedNs)
+      return true;
     return false;
   }
 }

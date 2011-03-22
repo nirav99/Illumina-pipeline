@@ -47,15 +47,6 @@ public class UniquenessCalc
     {
       calculateAdaptorSeq = true;
     }
-
-    badReadsFinder = new FindBadReads();
-/*
-    if(inputParams.adaptorFile != null)
-    {
-      calculateAdaptorSeq = true;
-      adapSeq = new FindAdaptorSequence(inputParams.adaptorFile);
-    }
-*/
   }
   
   /**
@@ -105,6 +96,10 @@ public class UniquenessCalc
             adapSeq.checkRead(line, 1);
           }
 
+          if(badReadsFinder == null)
+          {
+            badReadsFinder = new FindBadReads(line.length());
+          }
           badReadsFinder.checkRead(line, 1);
 
           lineToWrite = line.substring(0, seedLength - 1);
@@ -168,6 +163,10 @@ public class UniquenessCalc
             adapSeq.checkRead(line1, 1);
             adapSeq.checkRead(line2, 2);
           } 
+          if(badReadsFinder == null)
+          {
+            badReadsFinder = new FindBadReads(line1.length());
+          }
           badReadsFinder.checkRead(line1, 1);
           badReadsFinder.checkRead(line2, 2);
 

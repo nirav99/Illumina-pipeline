@@ -51,19 +51,11 @@ public class Driver
       if(args[i].toLowerCase().startsWith("sub"))
       {
         subject = getValue(args[i]);
-        if(subject == null || subject.isEmpty())
-        {
-          subject = "Email with attachments";
-        }
       }
       else
       if(args[i].toLowerCase().startsWith("body"))
       {
         body = getValue(args[i]);
-        if(body == null || body.isEmpty())
-        {
-          body = "See the attachments";
-        }
       }
       else
       if(args[i].toLowerCase().startsWith("dest"))
@@ -103,6 +95,14 @@ public class Driver
     }
     else
     {
+      if(subject == null || subject.isEmpty())
+      {
+        subject = "Email with attachments";
+      }
+      if(body == null || body.isEmpty())
+      {
+        body = "See the attachments";
+      }
       try
       {
         Email emailSender = new Email(attachments, dest, sender, subject, body);

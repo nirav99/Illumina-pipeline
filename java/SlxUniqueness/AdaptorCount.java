@@ -25,7 +25,9 @@ public class AdaptorCount
   public void addStartPoint(int startPoint) throws Exception
   {
     if(startPoint < 0 || startPoint >= startPoints.length)
+    {
       throw new Exception("Start point out of bounds");
+    }
     startPoints[startPoint] = startPoints[startPoint] + 1;
   }
   
@@ -45,17 +47,6 @@ public class AdaptorCount
       System.out.println("Adaptor Reads (Read 2) : " + adaptorRead2);
       System.out.format("%% Reads With Adaptor   : %.2f %%\r\n", adaptorRead2 * 100.0 / totalRead2);
     }
-
-    /*
-    System.out.println("");    
-    for(int i = 0; i < startPoints.length; i++)
-    {
-      if(startPoints[i] > 0)
-      {
-			System.out.println("Start Point : " + (i + 1) + " Number of Adaptor Reads : " + startPoints[i]);  
-      }
-    }
-    */
     createDistributionChart();
   }
 

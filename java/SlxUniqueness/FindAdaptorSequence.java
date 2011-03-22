@@ -78,9 +78,11 @@ public class FindAdaptorSequence
     for(int i = 0; i < adaptorSequences.length && result == false; i++)
     {
       startPoint = readSequence.indexOf(adaptorSequences[i]);
-      if(startPoint >= 0)
+
+      if(startPoint >= 0 && startPoint < readSequence.length())
       {
         result = true;
+
         try
         {
           adaptorCount.addStartPoint(startPoint);
@@ -88,10 +90,10 @@ public class FindAdaptorSequence
         catch(Exception e)
         {
           System.err.println(e.getMessage());
+          e.printStackTrace();
         }
       }
     }
     return result;
   }
 }
-
