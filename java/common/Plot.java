@@ -1,7 +1,8 @@
 import java.io.*;
 
 /**
- * Class to generate a plot using GNUPlot
+ * Class to generate a plot using GNUPlot.
+ * GNUPlot must be part of the user's PATH environment variable.
  */
 public class Plot
 {
@@ -32,7 +33,7 @@ public class Plot
   private double maxYScale  = 0;
 
   /**
-   * Class constructor for dual graphs
+   * Class constructor for to plot a graph with dual series
    */
   public Plot(String outputFile, String plotTitle, String xLabel, String yLabel,
               String series1Name, String series2Name, double xData[],
@@ -45,7 +46,7 @@ public class Plot
   }
 
   /**
-   * Class constructor
+   * Class constructor to plot a graph with one series
    */
   public Plot(String outputFile, String plotTitle, String xLabel,
               String yLabel, String seriesName, double xData[], double yData[])
@@ -77,8 +78,6 @@ public class Plot
     tempConfFile = new File(outputFile + ".tmp");
 
     configFile = tempConfFile.getName();
-//    writeGNUPlotDataFile();
-//    writeGNUPlotConfigFile();
   }
 
   public void setXScale(double minValue, double maxValue)

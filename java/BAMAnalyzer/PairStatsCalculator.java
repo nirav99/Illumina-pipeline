@@ -31,12 +31,14 @@ public class PairStatsCalculator
    */
   public void processRead(SAMRecord record)
   {
+    if(record.getReadPairedFlag() && !record.getFirstOfPairFlag())
+    {
+      // Since this is a second read in a pair, increment totalPairs
+      totalPairs++;
+    }
     // Don't consider fragment reads, first reads in a pair, or duplicate reads
     if(!record.getReadPairedFlag() || record.getFirstOfPairFlag() || record.getDuplicateReadFlag())
       return;
-    
-    // Since this is a second read in a pair, increment totalPairs
-    totalPairs++;
     
     // If both ends are unmapped, increment unmapped pair counter
     if(record.getReadUnmappedFlag() && record.getMateUnmappedFlag())
@@ -46,22 +48,27 @@ public class PairStatsCalculator
     else
     if(!record.getReadUnmappedFlag() && !record.getMateUnmappedFlag())
     {
+      // If both ends are mapped, increment mapped pair counter
       mappedPairs++;
       
       if(!record.getDuplicateReadFlag() &&
 			  record.getMateReferenceName().equals(record.getReferenceName()))
       {
+        // If both reads map on same chromosome, increment mapped pair same chr
+        // counter
         mappedPairSameChr++;
       }
     }
     else
     if(!record.getReadUnmappedFlag() && record.getMateUnmappedFlag())
     {
+      // If only read2 is mapped and read1 is not mapped, increment read2Mapped
       read2Mapped++;
     }
     else
     if(record.getReadUnmappedFlag() && !record.getMateUnmappedFlag())
     {
+      // If only read1 is mapped and read2 is not mapped, increment read1Mapped
       read1Mapped++;
     }
   }
