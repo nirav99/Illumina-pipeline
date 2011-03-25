@@ -47,22 +47,6 @@ END_OF_MESSAGE
     end
   end
 
-=begin
-  # Method to send email with a single attachment. Parameter "to" is an array
-  # of recepients
-  def sendEmailWithAttachment_old(from, to, subject, message, attachment)
-    jarPath = File.dirname(File.dirname(__FILE__)) + "/java/SlxResultSummaryMailer.jar"
-   
-    recepients = to.join(" ")
- 
-    cmd = "java -jar " + jarPath + " " + from + " \"" + subject + "\" " + attachment +
-          " \"" + message + "\" " + recepients 
-
-    puts cmd
-    `#{cmd}`
-  end
-=end
-
   # Method to send email with one or multiple attachments
   def sendEmailWithAttachment(from, to, subject, message, attachment)
     jarPath = File.dirname(File.dirname(__FILE__)) + "/java/AttachmentMailer.jar" 
