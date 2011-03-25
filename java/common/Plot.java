@@ -1,6 +1,15 @@
 import java.io.*;
 
 /**
+ * Two different plot styles, line and bars
+ */
+enum PlotStyle
+{
+  LINE,
+  BAR
+}
+
+/**
  * Class to generate a plot using GNUPlot.
  * GNUPlot must be part of the user's PATH environment variable.
  */
@@ -32,6 +41,9 @@ public class Plot
   private double minYScale  = 0;
   private double maxYScale  = 0;
 
+  // Default plot style is LINE
+  private static PlotStyle style = PlotStyle.LINE;
+
   /**
    * Class constructor for to plot a graph with dual series
    */
@@ -57,6 +69,14 @@ public class Plot
   }
 
   /**
+   * Method to set the plot style
+   */
+  public static void setPlotStyle(PlotStyle ps)
+  {
+    style = ps;
+  }
+
+  /**
    * Private helper method for the overloaded constructors
    */
   private void constructorHelper(String outputFile, String plotTitle,
@@ -78,6 +98,8 @@ public class Plot
     tempConfFile = new File(outputFile + ".tmp");
 
     configFile = tempConfFile.getName();
+
+    System.err.println("Plot Style : " + style.toString());
   }
 
   public void setXScale(double minValue, double maxValue)
@@ -111,16 +133,24 @@ public class Plot
     // Check if we need to use custom scale
     // TODO:
 
+    String ps = null;
+
+    if(style == PlotStyle.LINE)
+      ps = "line";
+    else
+    if(style == PlotStyle.BAR)
+      ps = "boxes";
+
     if(y2Data == null)
     {
       writer.write("plot \"" + dataFile + "\" using 1:2 title \'" + series1 +
-                   "\' with lines");
+                   "\' with " + ps);
     }
     else
     {
       writer.write("plot \"" + dataFile + "\" using 1:2 title \'" + series1 + 
-                   "\'  with lines, \"" + dataFile + "\" using 1:3 title \'" + 
-                   series2 + "\' with lines");
+                   "\'  with " + ps + ", \"" + dataFile + "\" using 1:3 title \'" + 
+                   series2 + "\' with " + ps);
     }
     writer.newLine();
     writer.close();
