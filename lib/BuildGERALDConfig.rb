@@ -95,7 +95,7 @@ class BuildGERALDConfig
       @webDirRoot     = "file:///stornext/snfs5"
       @emailServer    = "mail.hgsc.bcm.tmc.edu"
       @emailDomain    = "bcm.edu"
-      @emailList      = "niravs@bcm.edu dc12@bcm.edu"
+      @emailList      = "niravs@bcm.edu"
 
       # Select the appropriate post run based on whether mapping is to be
       # done using Eland or BWA
