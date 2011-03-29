@@ -25,6 +25,9 @@ class LaneResult
     #getUniquenessResult()
     getAlignmentResult(readNum)
 
+    currentTime = Time.new 
+    puts "Current Time = " + currentTime.strftime("%Y-%m-%d")
+
     result = " LANE_YIELD_KBASES " + @totalBases.to_s + " PERCENT_ERROR_RATE_PF " +
              @errorPercent.to_s +  " CLUSTERS_RAW " + @rawClusters.to_s +
              " CLUSTERS_PF " + @pfClusters.to_s + " FIRST_CYCLE_INT_PF " +
@@ -33,7 +36,8 @@ class LaneResult
              @perPFClusters.to_s + " PERCENT_ALIGN_PF " + @perAlignPF.to_s +
              " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + " PERCENT_PHASING " +
              @phasePercent.to_s + " PERCENT_PREPHASING " + @prePhasePercent.to_s +
-             " RESULTS_PATH " + FileUtils.pwd
+             " RESULTS_PATH " + FileUtils.pwd + " ANALYSIS_END_DATE " +
+             currentTime.strftime("%Y-%m-%d").to_s 
     if @foundUniquenessResult == true  #&& readNum == 1
       result = result + " UNIQUE_PERCENT " + @percentUnique.to_s
     end
