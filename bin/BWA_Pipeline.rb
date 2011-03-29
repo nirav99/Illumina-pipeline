@@ -188,7 +188,15 @@ class BWA_Pipeline
         end
 
         if chipDesignName != nil && !chipDesignName.empty?()
-          @bwaParams.setChipDesignName(chipDesignName.to_s)
+ 
+        # Note: This is a short-term workaround to set correct chip design when
+        # library name contains TREN and reference is hg19 until a permanent
+        # solution is determined.
+          if @referencePath.match(/hg19/) && libraryName.match(/TREN/)
+            @bwaParams.setChipDesignName("/users/p-illumina/ezexome2_hg19")
+          else
+            @bwaParams.setChipDesignName(chipDesignName.to_s)
+          end
         end
       rescue Exception => e
         puts "Error while obtaining information from LIMS : " + e.message

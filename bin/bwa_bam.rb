@@ -35,7 +35,7 @@ class BWA_BAM
     # that jobs requesting 6 cores easily find a node
     @maxMemory      = 28000  # Maximum memory available per node
     @lessMemory     = 28000  # Command requiring less than maximum memory
-    @priority       = "high" # Run with high priority (Run in high queue)
+    @priority       = "normal" # Two allowed values high / normal
   
     # List of required paths
     # Path to BWA executable

@@ -13,6 +13,8 @@ class QseqGenerator
     @scriptName = "/stornext/snfs5/next-gen/Illumina/GAPipeline/" +
                   "BclConverter-1.7.1/bin/setupBclToQseq.py"
     @fcName = flowcellName
+    @priority = "high" # Allowed values are normal / high for the scheduling
+                       # queue
 
     if @fcName == nil || @fcName.eql?("")
       raise "Flowcell name is null or empty"
@@ -50,7 +52,7 @@ class QseqGenerator
     s = Scheduler.new(@fcName + "_Generate_Qseq", "make -j8")
     s.setMemory(28000)
     s.setNodeCores(6)
-    s.setPriority("high")
+    s.setPriority(@priority)
     s.runCommand()
     @qseqGenerationJobName = s.getJobName()
     puts "Qseq Generation Job Name = " + @qseqGenerationJobName.to_s
@@ -59,6 +61,7 @@ class QseqGenerator
     # GERALD jobs and qseq generator jobs. To disable this functionality, please
     # comment out the line below.
     writeJobNameToBaseCallsDir()
+#    logAnalysisStartDate()
 
     # Added functionality to split qseq files
     splitQseqFiles()
@@ -79,6 +82,21 @@ class QseqGenerator
     end
   end
 
+  # Helper method to log analysis start date for tracking purposes
+  def logAnalysisStartDate()
+    fileName = @baseCallsDir + "/AnalysisStartDate"
+    file     = File.new(fileName, "w")
+
+    currentTime = Time.new
+    
+    if file
+       file.syswrite(currentTime.strftime("%Y-%m-%d").to_s)
+       file.close
+    else
+      puts "Unable to log Analysis Start Date"
+    end
+  end
+
   # For a multiplexed flowcell, the qseq files have to be split based on the
   # barcode information. This method achieves that through the supporting
   # script.
@@ -93,7 +111,7 @@ class QseqGenerator
     s = Scheduler.new(@fcName + "_Split_Qseq", splitCmd)
     s.setMemory(2000)
     s.setNodeCores(1)
-    s.setPriority("high")
+    s.setPriority(@priority)
     s.setDependency(@qseqGenerationJobName.to_s)
     s.runCommand()
     @splitQseqJobName = s.getJobName()

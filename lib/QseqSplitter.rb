@@ -12,6 +12,7 @@ class QseqSplitter
   def initialize(flowcellName)
     initializeDefaultValues()
     @fcName = flowcellName
+    @priority = "high" # Scheduling priority - normal or high
 
     getLaneBarcodes()
     puts "Found the following lane barcodes : "
@@ -188,10 +189,10 @@ class QseqSplitter
     currDir = Dir.pwd
     puts "Changing to output directory : " + @outputDir.to_s
     Dir.chdir(@outputDir)
-    s = Scheduler.new(@fcName + "_split_Qseq", "make -j6")
+    s = Scheduler.new(@fcName + "_split_Qseq", "make -j7")
     s.setMemory(28000)
-    s.setNodeCores(6)
-    s.setPriority("high")
+    s.setNodeCores(7)
+    s.setPriority(@priority)
     s.runCommand()
     @jobID = s.getJobID()
     puts "FOUND JOB ID = " + @jobID.to_s
