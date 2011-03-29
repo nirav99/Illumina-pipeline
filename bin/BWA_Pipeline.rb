@@ -22,7 +22,10 @@ class BWA_Pipeline
       @referencePath  = ""
       @bwaParams      = BWAParams.new
       @pipelineHelper = PipelineHelper.new
- 
+      
+      # Set Scheduling Queue. Allowed values are normal / high
+      @priority       = "normal" 
+
       if args.length == 5
         @numCycles  = Integer(args[2])
         if args[3].downcase.eql?("paired")
@@ -241,7 +244,7 @@ class BWA_Pipeline
       scheduler = Scheduler.new(@fcName + "_" + @laneBarcode, makeCmd)
       scheduler.setMemory(8000)
       scheduler.setNodeCores(numCores)
-      scheduler.setPriority("high")
+      scheduler.setPriority(@priority)
       
       if parentJob != nil
         scheduler.setDependency(parentJob)
