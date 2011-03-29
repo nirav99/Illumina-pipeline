@@ -36,8 +36,11 @@ class LaneResult
              @perPFClusters.to_s + " PERCENT_ALIGN_PF " + @perAlignPF.to_s +
              " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + " PERCENT_PHASING " +
              @phasePercent.to_s + " PERCENT_PREPHASING " + @prePhasePercent.to_s +
-             " RESULTS_PATH " + FileUtils.pwd + " ANALYSIS_END_DATE " +
-             currentTime.strftime("%Y-%m-%d").to_s 
+             " RESULTS_PATH " + FileUtils.pwd
+    # Uncomment the following two lines if we need to send this variable in the
+    # upload string
+             # + " ANALYSIS_END_DATE " +
+             #  currentTime.strftime("%Y-%m-%d").to_s 
     if @foundUniquenessResult == true  #&& readNum == 1
       result = result + " UNIQUE_PERCENT " + @percentUnique.to_s
     end
