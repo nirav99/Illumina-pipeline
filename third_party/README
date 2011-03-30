@@ -1,3 +1,6 @@
+This directory contains the set of scripts developed by third parties for
+interacting with LIMS etc
+
 Usage:
 
 perl getAnalysisPreData.pl 30C68AAXX-1
