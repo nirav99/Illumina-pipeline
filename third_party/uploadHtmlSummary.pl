@@ -38,7 +38,7 @@ foreach $wrestler (@raw_data)
 }
 
 my $ua = new LWP::UserAgent;
-my $uploadhtmlURL = "http://gen2.hgsc.bcm.tmc.edu/ngenlims/edu.bcm.hgsc.gwt.lims454.NGenLimsGwt/uploadHtml";
+my $uploadhtmlURL = "http://lims-1.hgsc.bcm.tmc.edu/ngenlims/edu.bcm.hgsc.gwt.lims454.NGenLimsGwt/uploadHtml";
 my $response = $ua ->post($uploadhtmlURL, {barcode => $ARGV[0],file_name => $ARGV[1] ,file_content => $file_content});
 
 if(not $response->is_success ) {print "Error: Cannot connect\n"; exit(-1);}

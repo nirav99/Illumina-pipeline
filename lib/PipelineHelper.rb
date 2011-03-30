@@ -49,6 +49,23 @@ class PipelineHelper
     return fcName
   end
 
+  # Method to take a complete fc name and return the portion used for
+  # interacting with LIMS
+  def formatFlowcellNameForLIMS(fcName)
+    limsFCName = fcName.slice(/([a-zA-Z0-9]+)$/)
+
+    if limsFCName.match(/^FC/)
+      limsFCName.slice!(2, temp.size)
+    end
+
+    # For HiSeqs, a flowcell is prefixed with letter "A" or "B".
+    # We remove this prefix from the reduced flowcell name, since
+    # a flowcell name is entered without the prefix letter in LIMS.
+    # For GA2, there is no change.
+    limsFCName.slice!(/^[a-zA-Z]/)
+    return limsFCName.to_s
+  end
+
   # This helper method searches for flowcell in list of volumes and returns
   # the path of the flowcell including it's directory.
   # If it does not find the path for flowcell, it aborts with an exception

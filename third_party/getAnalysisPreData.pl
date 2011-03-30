@@ -13,7 +13,8 @@ exit;
 }
 
 
-my $ncbiURL ="http://gen2.hgsc.bcm.tmc.edu/ngenlims/getAnalysisPreData.jsp?";
+#my $ncbiURL ="http://gen2.hgsc.bcm.tmc.edu/ngenlims/getAnalysisPreData.jsp?";
+my $ncbiURL ="http://lims-1.hgsc.bcm.tmc.edu/ngenlims/getAnalysisPreData.jsp?";
 my $paraStr = "lane_barcode=" . $ARGV[0];
 
 $ncbiURL="$ncbiURL$paraStr";

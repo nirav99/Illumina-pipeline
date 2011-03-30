@@ -2,18 +2,19 @@
 
 ##!/data/pipeline/code/production/bin/x86_64-linux/perl -w
 
-#EXAMPLE to Run: "perl ./getResultsPathFromLibraryName.pl IWG_LVAR.00_001pA"
+#EXAMPLE to Run: "perl ./setFlowCellAnalysisStartDate.pl FXXTESTPAIRED"
 
 use strict;
 use LWP;
 
 if( @ARGV % 1) {
-print "usage: $0 libraryName \n";
+print "usage: $0 flowcellBarcode \n";
 exit;
 }
 
-my $ncbiURL ="http://lims-1.hgsc.bcm.tmc.edu/ngenlims/getResultsPathFromLibraryName.jsp?";
-my $paraStr = "libraryName=" . $ARGV[0];
+my $ncbiURL
+="http://lims-1.hgsc.bcm.tmc.edu/ngenlims/setFlowCellAnalysisStartDate.jsp?";
+my $paraStr = "flowcellBarcode=" . $ARGV[0];
 
 $ncbiURL="$ncbiURL$paraStr";
 #print "$ncbiURL\n";

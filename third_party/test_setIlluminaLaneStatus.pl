@@ -34,7 +34,6 @@
 # - PERCENT_PHASING
 # - PERCENT_PREPHASING
 # - RESULTS_PATH
-# - UNIQUE_PERCENT
 
 use strict;
 use LWP;
@@ -45,7 +44,8 @@ exit;
 }
 
 #my $ncbiURL ="http://gen2.hgsc.bcm.tmc.edu/ngenlims/setIlluminaLaneStatus.jsp?";
-my $ncbiURL ="http://lims-1.hgsc.bcm.tmc.edu/ngenlims/setIlluminaLaneStatus.jsp?";
+my $ncbiURL ="http://test-gen2.hgsc.bcm.tmc.edu/ngenlims/setIlluminaLaneStatus.jsp?";
+
 my $paraStr = "lane_barcode=" . $ARGV[0]."&status=".$ARGV[1];
 
 my $i;
@@ -59,7 +59,7 @@ $ncbiURL="$ncbiURL$paraStr";
 
 my $ua = LWP::UserAgent->new;
 my $response=$ua->get($ncbiURL);
-
+print "$ncbiURL\n"
 if(not $response->is_success ) {print "Error: Cannot connect\n"; exit(-1);}
 
 my $textStr= $response->content;

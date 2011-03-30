@@ -20,8 +20,8 @@ class QseqGenerator
       raise "Flowcell name is null or empty"
     end
 
-    pHelper = PipelineHelper.new
-    @baseCallsDir = pHelper.findBaseCallsDir(@fcName)
+    @pHelper = PipelineHelper.new
+    @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
     @intensityDir = @baseCallsDir.gsub(/\/[a-zA-Z0-9_]+$/, "")
 
     cmd = @scriptName + " -i " + @baseCallsDir + " -p " + @intensityDir +
@@ -61,7 +61,7 @@ class QseqGenerator
     # GERALD jobs and qseq generator jobs. To disable this functionality, please
     # comment out the line below.
     writeJobNameToBaseCallsDir()
-#    logAnalysisStartDate()
+    uploadAnalysisStartDate()
 
     # Added functionality to split qseq files
     splitQseqFiles()
@@ -82,18 +82,19 @@ class QseqGenerator
     end
   end
 
-  # Helper method to log analysis start date for tracking purposes
-  def logAnalysisStartDate()
-    fileName = @baseCallsDir + "/AnalysisStartDate"
-    file     = File.new(fileName, "w")
+  # Helper method to upload analysis start date to LIMS for tracking purposes
+  def uploadAnalysisStartDate()
+    fcNameForLIMS = @pHelper.formatFlowcellNameForLIMS(@fcName)
 
-    currentTime = Time.new
-    
-    if file
-       file.syswrite(currentTime.strftime("%Y-%m-%d").to_s)
-       file.close
+    limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
+                 "setFlowCellAnalysisStartDate.pl"
+    uploadCmd = "perl " + limsScript + " " + fcNameForLIMS
+    output = `#{uploadCmd}`
+   
+    if output.match(/[Ee]rror/)
+      puts "Error in uploading Analysis Start Date to LIMS"
     else
-      puts "Unable to log Analysis Start Date"
+      puts "Successfully uploaded Analysis Start Date to LIMS"
     end
   end
 

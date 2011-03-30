@@ -44,8 +44,7 @@ print "usage: $0 lane_barcode status <name/value pairs>\n";
 exit;
 }
 
-#my $ncbiURL ="http://gen2.hgsc.bcm.tmc.edu/ngenlims/setIlluminaLaneStatus.jsp?";
-my $ncbiURL ="http://lims-1.hgsc.bcm.tmc.edu/ngenlims/setIlluminaLaneStatus.jsp?";
+my $ncbiURL ="http://test-gen2.hgsc.bcm.tmc.edu/ngenlims/setIlluminaLaneStatus.jsp?";
 my $paraStr = "lane_barcode=" . $ARGV[0]."&status=".$ARGV[1];
 
 my $i;
@@ -56,6 +55,8 @@ for($i=2; $i<@ARGV;$i +=2){
 }
 
 $ncbiURL="$ncbiURL$paraStr";
+
+print "$ncbiURL\n";
 
 my $ua = LWP::UserAgent->new;
 my $response=$ua->get($ncbiURL);
