@@ -21,6 +21,11 @@ puts "Deleting Temp Files"
 deleteTempFilesCmd = "rm *.sam *.sai *_sanger_sequence.txt"
 `#{deleteTempFilesCmd}`
 
+# Be careful here, delete only _sorted.bam
+puts "Deleting intermediate BAM file"
+deleteTempBAMFileCmd = "rm *_sorted.bam"
+`#{deleteTempBAMFileCmd}`
+
 puts "Deleting Temporary Directories"
 deleteTempDirCmd = "rm -rf ./Stats ./Temp ./Plots"
 `#{deleteTempDirCmd}`

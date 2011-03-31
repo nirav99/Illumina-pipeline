@@ -181,6 +181,7 @@ class BWA_Pipeline
         libraryName    = obj.getLibraryName()
         chipDesignName = obj.getChipDesignName()
         sampleName     = obj.getSampleName()
+        puField        = getPUField()
 
         if sampleName != nil && !sampleName.empty?()
           @bwaParams.setSampleName(sampleName.to_s)
@@ -189,6 +190,8 @@ class BWA_Pipeline
         if libraryName != nil && !libraryName.empty?()
           @bwaParams.setLibraryName(libraryName)
         end
+
+        @bwaParams.setRGPUField(puField)
 
         if chipDesignName != nil && !chipDesignName.empty?()
  
@@ -221,6 +224,23 @@ class BWA_Pipeline
 =end
       # Write the parameters to gerald directory
       @bwaParams.toFile(geraldDir)
+    end
+
+    # Method to obtain the PU (Platform Unit) field for the RG tag in BAMs. The
+    # format is machine-name_yyyymmdd_FC_Barcode
+    def getPUField()
+       puField    = nil
+       coreFCName = nil
+       begin
+         coreFCName = @pipelineHelper.formatFlowcellNameForLIMS(@fcName) 
+         runDate    = "20" + @fcName.slice(/^\d+/)
+         machName   = @fcName.gsub(/^\d+_/,"").slice(/[A-Za-z0-9-]+/).gsub(/SN/, "700")
+         puField    = machName.to_s + "_" + runDate.to_s + "_" + 
+                      coreFCName.to_s + "-" + @laneBarcode.to_s
+       rescue
+         puField = coreFCName + @laneBarcode.to_s 
+       end
+       return puField.to_s
     end
 
     # Helper method to run the GERALD makefile

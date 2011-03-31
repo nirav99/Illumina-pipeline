@@ -9,6 +9,7 @@ class BWAParams
     @chipDesign    = nil      # Name of chip design
     @sampleName    = nil      # Sample name
     @schedulingQ   = "normal" # Scheduler queue to use - high, normal
+    @rgPUField     = nil      # PU field of RG tag (rundate_machine-name_FCbarcode)
 
     # Name of config file
     @configFile = "BWAConfigParams.txt"
@@ -36,6 +37,10 @@ class BWAParams
 
   def getSchedulingQueue()
     return @schedulingQ
+  end
+
+  def getRGPUField()
+    return @rgPUField
   end
 
   def setReferencePath(value)
@@ -68,6 +73,10 @@ class BWAParams
     end
   end
 
+  def setRGPUField(value)
+    @rgPUField = value
+  end
+
   # Write the config parameters to a file
   def toFile(destDir)
     fileHandle = File.new(destDir + "/" + @configFile, "w")
@@ -98,6 +107,10 @@ class BWAParams
       fileHandle.puts("CHIP_DESIGN=" + @chipDesign.to_s)
     end
 
+    if @rgPUField != nil && !@rgPUField.empty?()
+      fileHandle.puts("RG_PU_FIELD=" + @rgPUField.to_s)
+    end
+
     if @schedulingQ != nil && !@schedulingQ.empty?()
       fileHandle.puts("SCHEDULER_QUEUE=" + @schedulingQ.to_s)
     end
@@ -112,6 +125,7 @@ class BWAParams
     @chipDesign    = nil
     @sampleName    = nil
     @schedulingQ   = "normal"
+    @rgPUField     = nil
 
     if File::exist?(@configFile)
       lines = IO.readlines(@configFile)
@@ -134,6 +148,9 @@ class BWAParams
         elsif line.match(/SCHEDULER_QUEUE=\S+/)
           @schedulingQ = line.gsub(/SCHEDULER_QUEUE=/, "")
           @schedulingQ.strip!
+        elsif line.match(/RG_PU_FIELD=\S+/)
+          @rgPUField = line.gsub(/RG_PU_FIELD=/, "")
+          @rgPUField.strip!
         end
       end
     end

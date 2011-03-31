@@ -5,6 +5,7 @@ $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 require 'Scheduler'
 require 'PipelineHelper'
 require 'BWAParams'
+require 'FCBarcodeFinder'
 
 class BWA_BAM
   def initialize()
@@ -17,6 +18,7 @@ class BWA_BAM
     @chipDesign  = bwaParams.getChipDesignName() # Chip design name for capture
                                                  # stats calculation
     @sampleName  = bwaParams.getSampleName()     # Sample name
+    @rgPUField   = bwaParams.getRGPUField()      # PU field for RG tag
 
     if @reference == nil || @reference.empty?()
       raise "Error : Reference path MUST be specified"
@@ -31,8 +33,8 @@ class BWA_BAM
     @minCpuCores    = 7      # Min CPU cores to use
     # Note: Maximum available CPU cores are 8. However, due to ardmore
     # idiosyncracies, jobs requesting 8 cores wait for more than a day to obtain
-    # a node. Thus, selected 6 as the max CPU cores based on the observation
-    # that jobs requesting 6 cores easily find a node
+    # a node. Thus, selected 7 as the max CPU cores based on the observation
+    # that jobs requesting 7 cores easily find a node
     @maxMemory      = 28000  # Maximum memory available per node
     @lessMemory     = 28000  # Command requiring less than maximum memory
     @priority       = "normal" # Two allowed values high / normal
@@ -51,7 +53,7 @@ class BWA_BAM
     # Number of records to hold in RAM
     @maxRecordsInRam = 3000000
     # Maximum Java heap size
-    @heapSize        = "-Xmx20G"
+    @heapSize        = "-Xmx22G"
 
     @sequenceFiles  = nil # Sequence files with Illumina qualities
 
@@ -68,6 +70,17 @@ class BWA_BAM
     @fcName        = @helper.findFCName()
     @laneNumber    = @helper.findAnalysisLaneNumbers()
     @fcAndLane     = @fcName + "-" + @laneNumber.to_s
+    @fcBarcode     = ""
+
+    begin
+      fcBcFinder   = FCBarcodeFinder.new
+      @fcBarcode   = fcBcFinder.getBarcodeForLIMS()
+    rescue
+      if @fcBarcode == nil || @fcBarcode.empty?()
+         @fcBarcode = @fcAndLane.to_s
+      end
+    end
+
     findSequenceFiles()
     generateSamFileName()
 
@@ -111,7 +124,6 @@ class BWA_BAM
                                    @sequenceFiles[1])
       obj3 = Scheduler.new(@fcAndLane + "_sampe", sampeCmd)
       obj3.setMemory(@lessMemory)
-#      obj3.setNodeCores(@cpuCores)
       obj3.setNodeCores(@minCpuCores)
       obj3.setPriority(@priority)
       obj3.setDependency(alnJobID1)
@@ -123,7 +135,6 @@ class BWA_BAM
       samseCmd = buildSamseCommand(outputFile1, @sequenceFiles[0])
       obj3 = Scheduler.new(@fcAndLane + "_samse", samseCmd)
       obj3.setMemory(@lessMemory)
-#      obj3.setNodeCores(@cpuCores)
       obj3.setNodeCores(@minCpuCores)
       obj3.setPriority(@priority)
       obj3.setDependency(alnJobID1)
@@ -308,10 +319,16 @@ class BWA_BAM
       rgString = rgString + "\\tLB:" + @libraryName.to_s
     end
 
-    if @fcName != nil && !@fcName.empty?() && @laneNumber != nil &&
-       !@laneNumber.to_s.empty?()
-       rgString = rgString + "\\tPU:" + @fcName.to_s + "-" + @laneNumber.to_s
+    # If PU field was already obtained from config params, use that. Build up a
+    # dummy PU field if it was not already available.
+    if @rgPUField != nil && !@rgPUField.empty?()
+       rgString = rgString + "\\tPU:" + @rgPUField.to_s
+    else
+      if @fcBarcode != nil && !@fcBarcode.empty?()
+         rgString = rgString + "\\tPU:" + @fcBarcode.to_s
+      end
     end
+
     rgString = rgString + "\\tCN:BCM\\tDT:" + currentTime.strftime("%Y-%m-%dT%H:%M:%S%z")
     rgString = rgString + "\\tPL:Illumina"
     rgString = rgString + "'"
