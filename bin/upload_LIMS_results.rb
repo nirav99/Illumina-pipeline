@@ -53,6 +53,7 @@ class LaneResult
   # select the right one based on lane number
   def getUniquenessResult()
     @foundUniquenessResult = false
+    @percentUnique = 0
     
     fileNames = Dir["Uniqueness_*.txt"]
 
@@ -110,10 +111,22 @@ class LaneResult
 
     if readNum == 1
       @perAlignPF   = mapPercent[0]
+      if @perAlignPF == nil || @perAlignPF.empty?()
+         @perAlignPF = 0
+      end
       @errorPercent = errPercent[0]
+      if @errorPercent == nil || @errorPercent.empty?()
+         @errorPercent = 0
+      end
     elsif readNum == 2 && mapPercent.size > 1
       @perAlignPF   = mapPercent[1]
+      if @perAlignPF == nil || @perAlignPF.empty?()
+         @perAlignPF = 0
+      end
       @errorPercent = errPercent[1]
+      if @errorPercent == nil || @errorPercent.empty?()
+         @errorPercent = 0
+      end
     elsif readNum == 2 && mapPercent.size <= 1
       puts "Did not find mapping information for read 2" 
     end
