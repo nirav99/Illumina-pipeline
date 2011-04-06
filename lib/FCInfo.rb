@@ -1,11 +1,18 @@
 #!/usr/bin/ruby
-$:.unshift File.join(File.dirname(__FILE__), ".", "..", "third_party")
 
-#Class to obtain flowcell information from LIMS
+$:.unshift File.join(File.dirname(__FILE__), ".", "..", "third_party")
+$:.unshift File.dirname(__FILE__)
+
+require 'PipelineHelper'
+
+# Class to obtain information about a specific lane barcode from LIMS
+# This information includes read length (number of cycles), paired / fragment,
+# sample ID, library name, reference path and chip design.
 class FCInfo
   def initialize(fc, laneBarcode)
     @limsScript  = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/getAnalysisPreData.pl"
-    @fcName      = extractFC(fc)
+    @pHelper     = PipelineHelper.new
+    @fcName      = @pHelper.formatFlowcellNameForLIMS(fc)
     @laneBarcode = laneBarcode
     @libraryName = nil
     @refPath     = nil
@@ -13,6 +20,7 @@ class FCInfo
     @paired      = false
     @chipDesign  = nil
     @sample      = nil
+    @pHelper     = PipelineHelper.new
     
     begin
       contactLIMS()
@@ -91,23 +99,6 @@ class FCInfo
           "Error from LIMS : " + msg
   end
 
-  # Helper method to reduce full flowcell name to FC name used in LIMS
-  def extractFC(fc)
-    flowCellName = nil
-    temp = fc.slice(/FC(.+)$/)
-    if temp == nil
-      flowCellName = fc.slice(/([a-zA-Z0-9]+)$/)
-    else
-      flowCellName = temp.slice(2, temp.size)
-    end
-    # With HiSeqs, a flowcell would have a prefix letter "A" or "B". 
-    # We remove that letter from the flowcell name since the flowcell
-    # is not entered with that prefix in LIMS.
-    # For GA2, this does not have any effect.
-    flowCellName.slice!(/^[a-zA-Z]/)
-    return flowCellName
-  end
-
   # Invoke the LIMS perl script and parse the output if LIMS could be contacted
   def contactLIMS()
     cmd = "perl " + @limsScript + " " + @fcName.to_s + "-" + @laneBarcode
@@ -132,6 +123,8 @@ class FCInfo
       elsif token.match(/ChipDesign=/)
          parseChipDesignName(token)
       elsif token.match(/NUMBER_OF_CYCLES_READ1=/)
+         findNumCycles(token)
+      elsif token.match(/NUMBER_OF_CYCLES_READ2=/)
          findNumCycles(token)
       elsif token.match(/BUILD_PATH=/)
          parseReferencePath(token)
@@ -166,12 +159,15 @@ class FCInfo
 
   # Get number of cycles for the flowcell
   def findNumCycles(output)
-    temp = output.slice(/NUMBER_OF_CYCLES_READ1=\d+/)
+    value = 0
+    temp = output.slice(/NUMBER_OF_CYCLES_READ[12]=\d+/)
     if temp != nil && !temp.eql?("")
-      @numCycles = Integer(temp.split("=")[1]) - 1
-    else
-      @numCycles = 0
+      value = Integer(temp.split("=")[1]) - 1
     end
+
+    if value > @numCycles
+      @numCycles = value
+    end 
   end
 
   # Determine if FC is paired-end or fragment
@@ -221,11 +217,18 @@ end
 
 __END__
 #To Test this class, comment the previous __END__ statement
-obj = FCInfo.new("15006043", "1")
+obj = FCInfo.new("70EMPAAXX", "5")
 puts "Library name = " + obj.getLibraryName()
 puts "Num cycles = " + obj.getNumCycles().to_s
 puts "Paired end : " + obj.paired?().to_s
-puts "Ref path = " + obj.getRefPath()
+refPath = obj.getRefPath()
+
+if refPath != nil && !refPath.empty?()
+  puts "Ref path = " + obj.getRefPath()
+else
+  puts "Did not find reference path"
+end
+
 chipDesign = obj.getChipDesignName()
 if chipDesign != nil
   puts "Chip Design = " + chipDesign.to_s
