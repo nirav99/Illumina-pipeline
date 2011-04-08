@@ -148,8 +148,7 @@ public class QualPerPosCalculator implements MetricsCalculator
         else
         {
           p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position",
-                       "Base Position", "Avg. Quality", "Read 1", xPosn,
-                       meanQualRead1);
+                  "Base Position", "Avg. Quality", "Read 1", xPosn, meanQualRead1);
         }
       }
       if(p != null)
@@ -222,18 +221,20 @@ public class QualPerPosCalculator implements MetricsCalculator
     {
       for(int i = 0; i < meanQualRead1.length; i++)
       {
-			if(minYValue > meanQualRead1[i])
-			  minYValue = meanQualRead1[i];
-			if(maxYValue < meanQualRead1[i])
-			  maxYValue = meanQualRead1[i];
+	    	if(minYValue > meanQualRead1[i])
+          minYValue = meanQualRead1[i];
+		    if(maxYValue < meanQualRead1[i])
+          maxYValue = meanQualRead1[i];
       }
     }
     
     if(minYValue > 0)
       minYValue = 0;
+
     ScaleRange yRange = new ScaleRange();
     yRange.minValue = minYValue;
     yRange.maxValue = maxYValue;
+
     return yRange;
   }
 }
