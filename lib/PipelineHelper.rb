@@ -52,10 +52,11 @@ class PipelineHelper
   # Method to take a complete fc name and return the portion used for
   # interacting with LIMS
   def formatFlowcellNameForLIMS(fcName)
+    puts "FOUND FC NAME = " + fcName.to_s
     limsFCName = fcName.slice(/([a-zA-Z0-9]+)$/)
 
     if limsFCName.match(/^FC/)
-      limsFCName.slice!(2, temp.size)
+      limsFCName.gsub!(/^FC/, "")
     end
 
     # For HiSeqs, a flowcell is prefixed with letter "A" or "B".
