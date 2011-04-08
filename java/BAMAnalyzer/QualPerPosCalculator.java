@@ -18,7 +18,8 @@ public class QualPerPosCalculator implements MetricsCalculator
   private double numRead2[]      = null; // Number of read2s
   private int readLen              = 0;  // Read length
   private int maxLen               = 0;  // Max read length seen so far
-
+  private final int QUAL_ADDEND    = 33; // Addition to phred base qualities
+  
   /**
    * Default class constructor
    */
@@ -102,10 +103,10 @@ public class QualPerPosCalculator implements MetricsCalculator
       {
         pos = i;
       }
-      qual = baseQual.charAt(i);
+      qual = baseQual.charAt(i) - QUAL_ADDEND;
       qualArray[pos] = (qualArray[pos] * (numReads[pos]) + qual) / 
                        (1.0 * (numReads[pos] + 1));
-      numReads[pos] = numReads[pos] + 1;
+      numReads[pos]  = numReads[pos] + 1;
     }
   }
   
@@ -132,13 +133,14 @@ public class QualPerPosCalculator implements MetricsCalculator
         if(meanQualRead2 != null && meanQualRead2.length > 0)
         {
           p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position", 
-              "Base Position", "Avg. Quality", "Read 1", "Read 2", xPosn, meanQualRead1, 
-              meanQualRead2);
+              "Base Position", "Avg. Base Quality - Phred Scale", "Read 1", "Read 2",
+              xPosn, meanQualRead1, meanQualRead2);
         }
         else
         {
           p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position",
-                       "Base Position", "Avg. Quality", "Read 1", xPosn, meanQualRead1);
+                       "Base Position", "Avg. Base Quality - Phred Scale", "Read 1",
+                       xPosn, meanQualRead1);
         }
       }
       if(p != null)
