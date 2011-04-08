@@ -145,9 +145,9 @@ public class InsertSizeMetrics
     }
     try
     {
-      Plot p = new Plot(outputFile, "Insert Size Distribution", "Insert Size",
-                        "Number of Reads", orientation.toString() + "_Distribution",
-                        xAxis, yAxis);
+    	Plot p = new Plot(outputFile, "Insert Size Distribution", "Insert Size", 
+    			          "Number of Reads", orientation.toString() + "_Distribution",
+    			          xAxis, yAxis);
       p.plotGraph();
     }
     catch(Exception e)

@@ -8,7 +8,7 @@ import net.sf.samtools.SAMRecord;
  * @author Nirav Shah niravs@bcm.edu
  *
  */
-public class PairStatsCalculator
+public class PairStatsCalculator implements MetricsCalculator
 {
   private long unmappedPairs     = 0; // Pairs where both reads are unmapped
   private long read1Mapped       = 0; // Pairs with only read 1 mapped
@@ -29,6 +29,7 @@ public class PairStatsCalculator
    * Calculate pair statistics for the current read
    * @param record
    */
+  @Override
   public void processRead(SAMRecord record)
   {
     if(record.getReadPairedFlag() && !record.getFirstOfPairFlag())
@@ -76,6 +77,7 @@ public class PairStatsCalculator
   /**
    * Public helper method to display the results
    */
+  @Override
   public void showResult()
   {
     if(totalPairs <= 0)

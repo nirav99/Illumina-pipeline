@@ -1,19 +1,11 @@
 /**
- * Class to calculate alignment and various metrics on a BAM.
+ * Class to calculate alignment and various metrics for a BAM.
  */
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.samtools.util.RuntimeIOException;
 import net.sf.picard.cmdline.*;
-/*
-import net.sf.picard.cmdline.Option;
-import net.sf.picard.cmdline.StandardOptionDefinitions;
-import net.sf.picard.cmdline.Usage;
-import net.sf.picard.cmdline.CommandLineProgram;
-*/
 import net.sf.picard.io.IoUtil;
-
-
 import java.io.File;
 import java.io.IOException;
 
@@ -42,14 +34,11 @@ public class BAMAnalyzer extends CommandLineProgram
   protected int doWork()
   {
     SAMFileReader reader          = null;  // To read a BAM file
-    MismatchCounter mmCounter     = null;  // Count number of mismatches in a read
-    AlignmentResults read1Results = null;  // Mapping results for read1
-    AlignmentResults read2Results = null;  // Mapping results for read2
-    AlignmentResults fragResults  = null;  // Mapping results for unpaired reads
     long totalReads               = 0;     // Total Reads in BAM file
     InsertSizeCalculator insCalc  = null;  // Class to calculate insert size
-    PairStatsCalculator pairCalc = null;   // Calculate information of read pairs
-    
+    PairStatsCalculator pairCalc  = null;  // Calculate information of read pairs
+    AlignmentCalculator alignCalc = null;  // Calculate alignment information
+    QualPerPosCalculator qualCalc = null;  // Calculate avg. base quality per base position
     try
     {
       IoUtil.assertFileIsReadable(INPUT);
@@ -57,13 +46,10 @@ public class BAMAnalyzer extends CommandLineProgram
       SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
       reader = new SAMFileReader(INPUT);
   
-      mmCounter = new MismatchCounter();
-      read1Results  = new AlignmentResults("Read1", mmCounter);
-      read2Results  = new AlignmentResults("Read2", mmCounter);
-      fragResults   = new AlignmentResults("Fragment", mmCounter);
-
-      insCalc  = new InsertSizeCalculator();
-      pairCalc = new PairStatsCalculator();
+      alignCalc = new AlignmentCalculator();
+      insCalc   = new InsertSizeCalculator();
+      pairCalc  = new PairStatsCalculator();
+      qualCalc  = new QualPerPosCalculator();
       
       long startTime = System.currentTimeMillis();
     
@@ -75,18 +61,11 @@ public class BAMAnalyzer extends CommandLineProgram
         {
           System.err.print("\r" + totalReads);
         }
-      
-        if(record.getReadPairedFlag() && record.getFirstOfPairFlag())
-          read1Results.processRead(record);
-        else
-        if(record.getReadPairedFlag() && record.getSecondOfPairFlag())
-          read2Results.processRead(record);
-        else
-        if(!record.getReadPairedFlag())
-          fragResults.processRead(record);
-      
+        
+        alignCalc.processRead(record);
         insCalc.processRead(record);
         pairCalc.processRead(record);
+        qualCalc.processRead(record);
       }
     
       long stopTime = System.currentTimeMillis();
@@ -95,11 +74,10 @@ public class BAMAnalyzer extends CommandLineProgram
   
       System.out.println();
       System.out.println("Total Reads in File : " + totalReads);
-      read1Results.showAlignmentResults();
-      read2Results.showAlignmentResults();
-      fragResults.showAlignmentResults();
+      alignCalc.showResult();
       insCalc.showResult();
       pairCalc.showResult();
+      qualCalc.showResult();
       System.out.format("%nComputation Time      : %.3f sec%n%n", (stopTime - startTime)/1000.0);
       return 0;
   }

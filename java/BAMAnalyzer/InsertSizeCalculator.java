@@ -34,7 +34,7 @@ import net.sf.picard.sam.*;
  * Class to calculate insert size. Insert size values are shown only for the 
  * orientation that is at least 10% of the total number of pairs.
  */
-public class InsertSizeCalculator
+public class InsertSizeCalculator implements MetricsCalculator
 {
   private InsertSizeMetrics frMetrics;     // Metrics for read pairs having f->r
                                            // orientation
@@ -62,6 +62,7 @@ public class InsertSizeCalculator
    * Public method to process a record for insert size calculations
    * @param record - SAMRecord
    */
+  @Override
   public void processRead(SAMRecord record)
   {
     // On encountering a paired read for the second read, increment
@@ -93,10 +94,11 @@ public class InsertSizeCalculator
     else
       tandemMetrics.addInsertSize(insertSize);
   }
-  
+ 
   /**
    * Method to display insert size metrics calculations
    */
+  @Override
   public void showResult()
   {
     if(totalMappedPairs <= 0)
