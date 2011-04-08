@@ -20,6 +20,13 @@ public class QualPerPosCalculator implements MetricsCalculator
   private int maxLen               = 0;  // Max read length seen so far
   private final int QUAL_ADDEND    = 33; // Addition to phred base qualities
   
+  // Create an inner class to determine range of plot
+  private class ScaleRange
+  {
+    double minValue = 0;
+    double maxValue = 0;
+  }
+  
   /**
    * Default class constructor
    */
@@ -49,8 +56,8 @@ public class QualPerPosCalculator implements MetricsCalculator
       numRead2      = Arrays.copyOf(numRead2, readLen);
     }
    // Read 1 or fragment
-   if(!record.getReadPairedFlag() || 
-      (record.getReadPairedFlag() && record.getFirstOfPairFlag()))
+   if(!record.getReadPairedFlag() ||
+     (record.getReadPairedFlag() && record.getFirstOfPairFlag()))
     {
       calculateBaseQuality(1, baseQualString, record.getReadNegativeStrandFlag());
     }
@@ -106,7 +113,7 @@ public class QualPerPosCalculator implements MetricsCalculator
       qual = baseQual.charAt(i) - QUAL_ADDEND;
       qualArray[pos] = (qualArray[pos] * (numReads[pos]) + qual) / 
                        (1.0 * (numReads[pos] + 1));
-      numReads[pos]  = numReads[pos] + 1;
+      numReads[pos] = numReads[pos] + 1;
     }
   }
   
@@ -127,7 +134,9 @@ public class QualPerPosCalculator implements MetricsCalculator
     }
     try
     {
+      ScaleRange yRange = findMinMaxRange();
       logQualScoreDistribution();
+      
       if(meanQualRead1 != null && meanQualRead1.length > 0)
       {
         if(meanQualRead2 != null && meanQualRead2.length > 0)
@@ -139,12 +148,13 @@ public class QualPerPosCalculator implements MetricsCalculator
         else
         {
           p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position",
-                       "Base Position", "Avg. Base Quality - Phred Scale", "Read 1",
-                       xPosn, meanQualRead1);
+                       "Base Position", "Avg. Quality", "Read 1", xPosn,
+                       meanQualRead1);
         }
       }
       if(p != null)
       {
+        p.setYScale(yRange.minValue, yRange.maxValue + 10);
         p.plotGraph();
       }
     }
@@ -161,7 +171,7 @@ public class QualPerPosCalculator implements MetricsCalculator
    */
   private void logQualScoreDistribution() throws IOException
   {
-    String logFileName = "AvgQualScoreDist.csv";
+    String logFileName = "AvgBaseQualScoreDist.csv";
     BufferedWriter writer = new BufferedWriter(new FileWriter(logFileName));
     StringBuffer record = null;
     String delimiter = ",";
@@ -189,5 +199,41 @@ public class QualPerPosCalculator implements MetricsCalculator
       record = null;
     }
     writer.close();
+  }
+ 
+  /**
+   * Set proper scale for Y-axis
+   * @return ScaleRange object
+   */
+  private ScaleRange findMinMaxRange()
+  {
+    double minYValue = 0;
+    double maxYValue = 0;
+	    
+    for(int i = 0; i < meanQualRead1.length; i++)
+    {
+      if(minYValue > meanQualRead1[i])
+        minYValue = meanQualRead1[i];
+      if(maxYValue < meanQualRead1[i])
+        maxYValue = meanQualRead1[i];
+    }
+    
+    if(meanQualRead2 != null && meanQualRead2.length > 0)
+    {
+      for(int i = 0; i < meanQualRead1.length; i++)
+      {
+			if(minYValue > meanQualRead1[i])
+			  minYValue = meanQualRead1[i];
+			if(maxYValue < meanQualRead1[i])
+			  maxYValue = meanQualRead1[i];
+      }
+    }
+    
+    if(minYValue > 0)
+      minYValue = 0;
+    ScaleRange yRange = new ScaleRange();
+    yRange.minValue = minYValue;
+    yRange.maxValue = maxYValue;
+    return yRange;
   }
 }
