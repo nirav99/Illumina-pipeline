@@ -87,11 +87,11 @@ class ResultMailer
   def findAttachmentFiles()
     @attachments = Array.new
     pngFiles     = Dir["*.png"]
-  
+
     pngFiles.each do |file|
-      if !file.match(/DistributionOfN.png/)
+#      if !file.match(/DistributionOfN.png/)
         @attachments << file
-      end
+#      end
     end
   end
 end
