@@ -20,6 +20,9 @@ class BWA_BAM
     @sampleName  = bwaParams.getSampleName()     # Sample name
     @rgPUField   = bwaParams.getRGPUField()      # PU field for RG tag
 
+    # Priority in scheduling queue
+    @priority    = bwaParams.getSchedulingQueue()
+
     if @reference == nil || @reference.empty?()
       raise "Error : Reference path MUST be specified"
     end
@@ -37,7 +40,7 @@ class BWA_BAM
     # that jobs requesting 7 cores easily find a node
     @maxMemory      = 28000  # Maximum memory available per node
     @lessMemory     = 28000  # Command requiring less than maximum memory
-    @priority       = "normal" # Two allowed values high / normal
+#    @priority       = "normal" # Two allowed values high / normal
   
     # List of required paths
     # Path to BWA executable
