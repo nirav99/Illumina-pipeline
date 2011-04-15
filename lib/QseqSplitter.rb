@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 $:.unshift File.join(File.dirname(__FILE__), ".", "..", "third_party")
+$:.unshift File.join(File.dirname(__FILE__), ".", "..", "bin")
 $:.unshift File.dirname(__FILE__)
 
 require 'fileutils'
@@ -39,6 +40,10 @@ class QseqSplitter
       writeSampleSheet()
       createDirectoryBins()
       runMake()
+    else
+      # The flowcell is not multiplexed. Start the analysis. 
+      puts "Starting GERALD analysis"
+      startLaneAnalysis()
     end
   end
 
@@ -199,6 +204,18 @@ class QseqSplitter
     @jobName = s.getJobName()
     puts "FOUND JOB NAME = " + @jobName
     Dir.chdir(currDir)
+  end
+
+  # Start individual lane analysis
+  def startLaneAnalysis()
+    cmdPrefix = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/BWA_Pipeline.rb " +
+                @fcName.to_s 
+
+    @laneBarcodes.each do |laneBarcode|
+      cmd = cmdPrefix + " " + laneBarcode.to_s 
+      puts "Running the command : " + cmd.to_s
+      output = `#{cmd}`
+   end
   end
 end
 
