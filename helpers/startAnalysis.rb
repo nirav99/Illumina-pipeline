@@ -120,7 +120,7 @@ private
 #    output = `#{cmd}`
 
 #    if output.match(/p-illumina/) && File::owned?(@instrDir + "/" + fcName)
-    if File::owned?(@instrDir + "/" + fcName)
+    if File::owned?(@instrDir + "/" + fcName) && File::exist?(@instrDir + "/" + fcName + "/.rsync_finished")
       puts "Flowcell " + fcName + " is ready for analysis"
       return true
     else
