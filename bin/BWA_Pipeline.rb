@@ -230,7 +230,7 @@ end
     # Note: This is a short-term workaround to set correct reference path for
     # TREN libraries. If library name matches TREN use hg19 reference or else use
     # the reference path provided. 
-    if @libraryName.match(/TREN/)
+    if @libraryName != nil && !@libraryName.empty?() && @libraryName.match(/TREN/)
       @bwaParams.setReferencePath("/stornext/snfs5/next-gen/Illumina/bwa_references/h/hg19/original/hg19.fa")
       puts "Setting reference path HG19 for BWA"
     else
@@ -243,10 +243,14 @@ end
 
       if @sampleName != nil && !@sampleName.empty?()
         @bwaParams.setSampleName(@sampleName.to_s)
+      else
+        puts "Sample name is null or empty, not setting in BWAConfigParams"
       end
 
       if @libraryName != nil && !@libraryName.empty?()
         @bwaParams.setLibraryName(@libraryName)
+      else
+        puts "Library name is null or empty, not setting in BWAConfigParams"
       end
 
      @bwaParams.setRGPUField(puField)
