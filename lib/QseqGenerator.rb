@@ -12,6 +12,10 @@ class QseqGenerator
   def initialize(flowcellName)
     @scriptName = "/stornext/snfs5/next-gen/Illumina/GAPipeline/" +
                   "BclConverter-1.7.1/bin/setupBclToQseq.py"
+
+    @newScriptName = "/stornext/snfs5/next-gen/niravs_scratch/code/" +
+                     "OLBTest/OLB1.9/OLB-1.9.0/bin/setupBclToQseq.py" 
+
     @fcName = flowcellName
     @priority = "high" # Allowed values are normal / high for the scheduling
                        # queue
@@ -24,8 +28,16 @@ class QseqGenerator
     @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
     @intensityDir = @baseCallsDir.gsub(/\/[a-zA-Z0-9_]+$/, "")
 
-    cmd = @scriptName + " -i " + @baseCallsDir + " -p " + @intensityDir +
-           " -o " + @baseCallsDir + " --in-place --overwrite"
+    # These 2 sequencers still have older version of RTA, so use old script. For
+    # the rest, use the new script.
+    if @fcName.match(/SN738/) || @fcName.match(/SN821/)
+      cmd = @scriptName + " -i " + @baseCallsDir + " -p " + @intensityDir +
+            " -o " + @baseCallsDir + " --in-place --overwrite"
+    else
+      cmd = @newScriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
+            " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats"
+    end
+
     puts "Executing command : "
     puts cmd.to_s
     
