@@ -101,8 +101,8 @@ class LaneResult
         temp.strip!
         temp.gsub!(/\%$/, "")
         mapPercent << temp
-      elsif line.match(/Mismatch Percentage/)
-        temp = line.gsub(/Mismatch Percentage\s+:\s+/, "")
+      elsif line.match(/\% Mismatch/)
+        temp = line.gsub(/\% Mismatch\s+:\s+/, "")
         temp.strip!
         temp.gsub!(/\%$/, "")
         errPercent << temp

@@ -215,7 +215,9 @@ public class InsertSizeMetrics
     int minValue = (int)(threshold * numModeElements);
     int val;
     LinkedList<Integer> binsToRemove = new LinkedList<Integer>();
-    
+   
+    System.err.println("List size before trimming : " + insertSizeList.size());
+ 
     /**
      * Keep all the insert size values lower than the modal value.
      * For the insert size value beyond the modal value, keep only the

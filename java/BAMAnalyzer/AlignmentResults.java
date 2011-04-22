@@ -2,6 +2,8 @@ import net.sf.samtools.*;
 import java.text.*;
 
 /**
+ * Class to encapsulate the alignment results and throughput metrics of a
+ * sequencing event.
  * @author Nirav Shah niravs@bcm.edu
  *
  */
@@ -12,8 +14,10 @@ public class AlignmentResults
   private long unmappedReads     = 0;  // Number of unmapped reads
   private long dupReads          = 0;  // Number of duplicate reads
   
-  private long totalMappedBases  = 0;  // Total number of mapped bases
-  private long totalBases        = 0;  // Total number of bases
+  private long totalValidBases   = 0;  // Total number of bases excluding Ns
+  private long totalBases        = 0;  // Total number of bases including Ns
+  private long totalMappedBases  = 0;  // Number of bases for reads that map
+                                       // (Partially or completely)
   private long totalMismatches   = 0;  // Total number of mismatches
   private long totalExactMatches = 0;  // Total number of reads with no mismatches
   
@@ -37,33 +41,39 @@ public class AlignmentResults
   public void processRead(SAMRecord record) throws Exception
   {
      int numMismatches = 0; // Number of mismatches in current read
+     int readLength = record.getReadLength();
      
-	 // We assume that the caller will check for the type of the
-     // read and invoke the function with the correct type of read.
+	  // We assume that the caller will check for the type of the
+    // read and invoke the function with the correct type of read.
 	  totalReads++;
 
 	  // For an unmapped read, increment the counter for unmapped read
-	  if(record.getReadUnmappedFlag())
-	    unmappedReads++;
-	  else
-	  {
-      if(record.getDuplicateReadFlag())
-        dupReads++;
-      
-      // For mapped read, increment the corresponding counter.
-      // Count the number of mapped bases as number of mapped read lengths.
-      // This could be improved by adding ONLY the number of bases that
-      // actually map.
-      mappedReads++;
-      totalMappedBases += record.getReadLength();
-      numMismatches = mCtr.countMismatches(record);
-      
-      if(numMismatches == 0)
+      if(record.getReadUnmappedFlag())
+        unmappedReads++;
+      else
       {
-        totalExactMatches++;
+			  mappedReads++;
+			
+        if(record.getDuplicateReadFlag())
+          dupReads++;
+
+        // Since the read is mapped, update total number of mapped bases.
+        // This is used to calculate the percentage of mismatches. This is 
+        // an approximate calculation since we don't look at each base to check
+        // if it mapped.
+        totalMappedBases += readLength;
+        
+        totalBases += readLength;
+        totalValidBases += countValidBases(record.getReadString());
+      
+        numMismatches = mCtr.countMismatches(record);
+      
+        if(numMismatches == 0)
+        {
+          totalExactMatches++;
+        }
+        totalMismatches += numMismatches;
       }
-      totalMismatches += numMismatches;
-	  }
   }
   
   /**
@@ -73,17 +83,21 @@ public class AlignmentResults
   {
     if(totalReads > 0)
     {
-      System.out.println();
-      System.out.println("Read Type : " + readName);
+      System.out.println("Alignment Results - Read Type : " + readName);
       System.out.println();
       System.out.println("Total Reads       : " + totalReads);
-      System.out.println("Mapped Reads      : " + mappedReads);
       System.out.println("Unmapped Reads    : " + unmappedReads);
-      
+      System.out.println("Mapped Reads      : " + mappedReads);
+
       if(mappedReads > 0)
         System.out.format("%% Mapped Reads    : %.2f%% %n", (1.0 * mappedReads / totalReads * 100));
       else
         System.out.println("% Mapped Reads  : 0%");
+      
+      if(totalBases > 0)
+        System.out.format("%% Mismatch        : %.2f%% %n", (1.0 * totalMismatches / totalMappedBases * 100.0));
+      else
+        System.out.println("%% Mismatch       : 100%");
       System.out.println();
       
       System.out.println("Duplicate Reads   : " + dupReads);
@@ -91,26 +105,18 @@ public class AlignmentResults
         System.out.format("%% Duplicate Reads : %.2f%% %n", (1.0 * dupReads / mappedReads * 100.0));
       else
         System.out.println("% Duplicate Reads  : 0%");
-      
       System.out.println();
 
       System.out.println("Exact Match Reads : " + totalExactMatches);
       if(mappedReads > 0)
-      {
         System.out.format("%% Exact Match Reads : %.2f%% %n", (1.0 * totalExactMatches / mappedReads * 100));
-      }
       else
-      {
         System.out.println("% Exact Match Reads : 0%");
-      }
       System.out.println();
       
-      System.out.println("Total Mapped Bases  : " + totalMappedBases);
-      System.out.println("Total Mismatches    : " + totalMismatches);
-      if(totalMappedBases > 0)
-        System.out.format("Mismatch Percentage : %.2f%% %n", (1.0 * totalMismatches / totalMappedBases * 100.0));
-      else
-        System.out.println("Mismatch Percentage : 100%");
+      System.out.println("Total Bases (including Ns)       : " + totalBases);
+      System.out.println("Total Valid Bases (excluding Ns) : " + totalValidBases);
+      System.out.println();
     }
   }  
 
@@ -135,5 +141,27 @@ public class AlignmentResults
   private String formatNumber(long l)
   {
 	  return formatNumber(l * 1.0); 
+  }
+  
+  /**
+   * Count the number of valid bases in a read. Valid bases are the ones without
+   * Ns
+   * @param baseString - readString
+   * @return - Sum of valid bases
+   */
+  private int countValidBases(String readString)
+  {
+    int numValidBases = 0;
+    
+    readString = readString.toUpperCase();
+    
+    for(int i = 0; i < readString.length(); i++)
+    {
+      if(readString.charAt(i) != 'N')
+      {
+        numValidBases++;
+      }
+    }
+    return numValidBases;
   }
 }

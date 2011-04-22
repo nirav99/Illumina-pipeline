@@ -22,6 +22,9 @@ public class BAMAnalyzer extends CommandLineProgram
     @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to process.")
     public File INPUT;
     
+    @Option(doc = "Stop after debugging N reads. Mainly for debugging. Default value: 0, which means process the whole file")
+    public int STOP_AFTER = 0;
+    
   /**
    * @param args
    */
@@ -39,6 +42,7 @@ public class BAMAnalyzer extends CommandLineProgram
     PairStatsCalculator pairCalc  = null;  // Calculate information of read pairs
     AlignmentCalculator alignCalc = null;  // Calculate alignment information
     QualPerPosCalculator qualCalc = null;  // Calculate avg. base quality per base position
+
     try
     {
       IoUtil.assertFileIsReadable(INPUT);
@@ -66,6 +70,9 @@ public class BAMAnalyzer extends CommandLineProgram
         insCalc.processRead(record);
         pairCalc.processRead(record);
         qualCalc.processRead(record);
+        
+        if(STOP_AFTER > 0 && totalReads > STOP_AFTER)
+          break;
       }
     
       long stopTime = System.currentTimeMillis();
@@ -77,8 +84,8 @@ public class BAMAnalyzer extends CommandLineProgram
       alignCalc.showResult();
       insCalc.showResult();
       pairCalc.showResult();
-      qualCalc.showResult();
       System.out.format("%nComputation Time      : %.3f sec%n%n", (stopTime - startTime)/1000.0);
+      qualCalc.showResult();
       return 0;
   }
   catch(Exception e)
