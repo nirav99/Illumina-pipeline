@@ -40,6 +40,7 @@ class QseqSplitter
       writeSampleSheet()
       createDirectoryBins()
       runMake()
+      startLaneAnalysisBarcodeFC()
     else
       # The flowcell is not multiplexed. Start the analysis. 
       puts "Starting GERALD analysis"
@@ -95,6 +96,12 @@ class QseqSplitter
         elsif line.match(/-[1-8]-ID[01][0-9]$/)
           laneBC = line.slice(/[1-8]-ID[01][0-9]$/)
           @laneBarcodes << laneBC.to_s
+        elsif line.match(/-[1-8]-IDMB\d$/)
+          laneBC = line.slice(/[1-8]-IDMB\d$/)
+          @laneBarcodes << laneBC.to_s
+        elsif line.match(/-[1-8]-IDMB\d\d$/)
+          laneBC = line.slice(/[1-8]-IDMB\d\d$/)
+          @laneBarcodes << laneBC.to_s
         end
       end
     end
@@ -108,6 +115,8 @@ class QseqSplitter
 
       @laneBarcodes.each do |laneBC|
         if laneBC.to_s.match(/[1-8]-ID[01]\d/)
+          return true
+        elsif laneBC.to_s.match(/[1-8]-IDMB/)
           return true
         end
       end
@@ -124,10 +133,12 @@ class QseqSplitter
       if file
         # Write to the file
         @laneBarcodes.each do |laneBC|
-          if laneBC.to_s.match(/[1-8]-ID[01]\d/)
+          if laneBC.to_s.match(/[1-8]-ID/)
             puts laneBC.to_s
-            laneNum = laneBC.gsub(/-ID\d\d/, "")
+            puts "Writing sample sheet for : " + laneBC.to_s
+            laneNum = laneBC.gsub(/-ID.+/, "")
             bcTag   = laneBC.gsub(/^[1-8]-/, "")
+            puts "Barcode tag = " + bcTag.to_s
             tagSequence = @pHelper.findBarcodeSequence(bcTag)
             line = @fcName + "," + laneNum.to_s + ",dummy_library,dummy_sample," +
                    tagSequence.to_s + "," + bcTag.to_s + ",n,r1,fiona\r\n"
@@ -142,6 +153,7 @@ class QseqSplitter
       end
     end
 
+=begin
     # Helper method to reduce full flowcell name to FC name used in LIMS
     def extractFCNameForLIMS(fc)
       flowCellName = nil
@@ -158,6 +170,12 @@ class QseqSplitter
       flowCellName.slice!(/^[a-zA-Z]/)
       return flowCellName
     end
+=end
+
+  # Helper method to reduce full flowcell name to FC name used in LIMS
+  def extractFCNameForLIMS(fc)
+    return @pHelper.formatFlowcellNameForLIMS(fc)
+  end
 
     # Method to run Illumina's demultiplex tool and create different directory
     # bins based on the tags specified in SampleSheet.csv
@@ -199,10 +217,10 @@ class QseqSplitter
     s.setNodeCores(7)
     s.setPriority(@priority)
     s.runCommand()
-    @jobID = s.getJobID()
-    puts "FOUND JOB ID = " + @jobID.to_s
-    @jobName = s.getJobName()
-    puts "FOUND JOB NAME = " + @jobName
+    @makeJobID = s.getJobID()
+    puts "FOUND JOB ID = " + @makeJobID.to_s
+    @makeJobName = s.getJobName()
+    puts "FOUND JOB NAME = " + @makeJobName
     Dir.chdir(currDir)
   end
 
@@ -217,6 +235,30 @@ class QseqSplitter
       output = `#{cmd}`
    end
   end
+
+    # Start analysis for a multiplexed flowcell
+  def startLaneAnalysisBarcodeFC()
+ 
+    if @makeJobName == nil || @makeJobName.empty?()
+      puts "ERROR : name of make job is null or empty"
+      exit -1
+    end
+
+    cmdPrefix = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/BWA_Pipeline.rb " +
+                @fcName.to_s
+
+    @laneBarcodes.each do |laneBarcode|
+      cmd = cmdPrefix + " " + laneBarcode.to_s
+      obj = Scheduler.new(@fcName + "-" + laneBarcode.to_s, cmd)
+      obj.setMemory(8000)
+      obj.setNodeCores(1)
+      obj.setPriority(@priority)
+      obj.setDependency(@makeJobName.to_s)
+      obj.runCommand()
+      jobName = obj.getJobName()
+      puts "Job for command : " + cmd + " : " + jobName.to_s
+   end
+ end
 end
 
 flowcell = ARGV[0]
