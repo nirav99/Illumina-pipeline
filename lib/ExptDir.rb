@@ -61,20 +61,19 @@ class ExptDir
         puts "Invalid lane barcode. Flowcell is not multiplexed"
         return false
       end
-      tagValue = lane.gsub(/^[1-8]-ID/, "") 
-   
-      if tagValue.to_i < 1 || tagValue.to_i > 12
-        puts "Error: Index ID should be between 1 and 12"
-        return false
+      
+      if lane.match(/^[1-8]-ID[01]\d/) || lane.match(/^[1-8]-IDMB\d\d/) ||
+         lane.match(/^[1-8]-IDMB\d/)
+         return true
       else
-        return true
+         return false
       end
     end 
   end
 
   # Return true if lane is indexed, false otherwise
   def laneIndexed?(lane)
-    if lane.to_s.match(/^[1-8]-ID\d\d$/)
+    if lane.to_s.match(/^[1-8]-ID/)
       return true
     else
       return false
@@ -84,9 +83,11 @@ class ExptDir
   # Return the index sequence for the lane barcode
   def getIndexSequence(laneBarcode)
     if !laneIndexed?(laneBarcode)
+      puts "LANE NOT INDEXED"
       return ""
     else
       tag = laneBarcode.gsub(/^[1-8]-ID/, "")
+      puts "TAG = " + tag
       return @pipelineHelper.findBarcodeSequence("ID" + tag.to_s) 
     end
   end
@@ -98,6 +99,9 @@ class ExptDir
     binValue    = nil
 
     indexSequence = getIndexSequence(laneBarcode)
+
+    puts "LANE BARCODE   = " + laneBarcode.to_s
+    puts "INDEX SEQUENCE = " + indexSequence.to_s
 
     if !File::exist?(binListFile)
       raise "Error : Did not find File : " + binListFile
@@ -171,10 +175,10 @@ end
 
 __END__
 begin
-obj = ExptDir.new("101112_SN166_0150_A8063PABXX")
+obj = ExptDir.new("110413_SN166_0177_BC0117ABXX")
 #obj = ExptDir.new("101109_SN166_0149_B806DTABXX")
 #obj.getExptDir("1-ID06")
-puts obj.getExptDir("3-ID06")
+puts obj.getExptDir("8-IDMB38")
 #obj.getExptDir("1-ID01")
 rescue Exception => e
   puts e.message
