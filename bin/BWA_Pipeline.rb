@@ -9,7 +9,7 @@ require 'Scheduler'
 require 'PipelineHelper'
 require 'BWAParams'
 
-class BWA_Pipeline2
+class BWA_Pipeline
   def initialize(args)
     initializeDefaultParams()
     processCommandLineParameters(args)
@@ -26,7 +26,8 @@ private
   def initializeDefaultParams()
 
     # Sequence event related members
-    @fcName      = nil  # Name of the flowcell
+    @fcName      = nil  # Name of the flowcell (Complete directory name)
+    @limsFCName  = nil  # Name of flowcell to query LIMS
     @laneBarcode = nil  # Lane barcode
     @readLength  = 0    # Read length
     @fcPaired    = nil  # If true paired end else fragment
@@ -51,6 +52,7 @@ private
     else
       @fcName      = args[0]
       @laneBarcode = args[1]
+      @limsFCName  = @pHelper.formatFlowcellNameForLIMS(@fcName)
     end
 
     if args.length == 5
@@ -254,6 +256,7 @@ end
       end
 
      @bwaParams.setRGPUField(puField)
+     @bwaParams.setFCBarcode(@limsFCName + "-" + @laneBarcode.to_s)
 
      if @chipName != nil && !@chipName.empty?()
       # Note: This is a short-term workaround to set correct chip design when
@@ -355,4 +358,4 @@ end
   end
 end
 
-obj = BWA_Pipeline2.new(ARGV)
+obj = BWA_Pipeline.new(ARGV)
