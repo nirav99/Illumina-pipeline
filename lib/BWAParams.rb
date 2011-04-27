@@ -10,6 +10,7 @@ class BWAParams
     @sampleName    = nil      # Sample name
     @schedulingQ   = "normal" # Scheduler queue to use - high, normal
     @rgPUField     = nil      # PU field of RG tag (rundate_machine-name_FCbarcode)
+    @fcBarcode     = nil      # Flowcell barcode
 
     # Name of config file
     @configFile = "BWAConfigParams.txt"
@@ -41,6 +42,10 @@ class BWAParams
 
   def getRGPUField()
     return @rgPUField
+  end
+
+  def getFCBarcode()
+    return @fcBarcode.to_s
   end
 
   def setReferencePath(value)
@@ -77,6 +82,10 @@ class BWAParams
     @rgPUField = value
   end
 
+  def setFCBarcode(value)
+    @fcBarcode = value
+  end
+
   # Write the config parameters to a file
   def toFile(destDir)
     fileHandle = File.new(destDir + "/" + @configFile, "w")
@@ -111,6 +120,10 @@ class BWAParams
       fileHandle.puts("RG_PU_FIELD=" + @rgPUField.to_s)
     end
 
+    if @fcBarcode != nil && !@fcBarcode.empty?()
+      fileHandle.puts("FC_BARCODE=" + @fcBarcode.to_s)
+    end
+
     if @schedulingQ != nil && !@schedulingQ.empty?()
       fileHandle.puts("SCHEDULER_QUEUE=" + @schedulingQ.to_s)
     end
@@ -126,6 +139,7 @@ class BWAParams
     @sampleName    = nil
     @schedulingQ   = "normal"
     @rgPUField     = nil
+    @fcBarcode     = nil
 
     if File::exist?(@configFile)
       lines = IO.readlines(@configFile)
@@ -151,6 +165,9 @@ class BWAParams
         elsif line.match(/RG_PU_FIELD=\S+/)
           @rgPUField = line.gsub(/RG_PU_FIELD=/, "")
           @rgPUField.strip!
+        elsif line.match(/FC_BARCODE=\S+/)
+          @fcBarcode = line.gsub(/FC_BARCODE=/, "")
+          @fcBarcode.strip!
         end
       end
     end
@@ -159,12 +176,13 @@ end
 __END__
 
 obj = BWAParams.new()
-=begin
+#=begin
 obj.setLibraryName("foofoo")
 obj.setReferencePath("/sdf/sdf/sdf/sdf/sdf/sdf.fa")
 obj.setPhixFilter(true)
-obj.toFile()
-=end
+obj.setFCBarcode("mybarcode")
+obj.toFile(".")
+#=end
 obj.loadFromFile()
 lib = obj.getLibraryName()
 if lib != nil && !lib.empty?()
@@ -179,3 +197,4 @@ else
 puts "Ref = " + path.to_s
 end
 puts "Phix_filter = " + obj.filterPhix?().to_s
+puts "FC Barcode = " + obj.getFCBarcode().to_s
