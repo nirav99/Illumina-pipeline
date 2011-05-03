@@ -28,6 +28,10 @@ class QseqGenerator
     @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
     @intensityDir = @baseCallsDir.gsub(/\/[a-zA-Z0-9_]+$/, "")
 
+    # Build the command to generate qseq files 
+    cmd = @newScriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
+          " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats"
+=begin
     # These 2 sequencers still have older version of RTA, so use old script. For
     # the rest, use the new script.
     if @fcName.match(/SN738/) || @fcName.match(/SN821/)
@@ -37,6 +41,7 @@ class QseqGenerator
       cmd = @newScriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
             " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats"
     end
+=end
 
     puts "Executing command : "
     puts cmd.to_s
