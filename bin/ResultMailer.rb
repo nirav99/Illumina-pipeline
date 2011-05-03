@@ -64,7 +64,6 @@ class ResultMailer
 
     uniquenessResult = Dir["Uniqueness_*"]
 
-    puts "UniquenessResult files : " + uniquenessResult.to_s
     if uniquenessResult != nil && uniquenessResult.length > 0
       uniqText = IO.readlines(uniquenessResult[0])
     end
