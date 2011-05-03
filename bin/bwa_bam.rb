@@ -20,6 +20,28 @@ class BWA_BAM
     @sampleName  = bwaParams.getSampleName()     # Sample name
     @rgPUField   = bwaParams.getRGPUField()      # PU field for RG tag
 
+    @fcBarcode   = bwaParams.getFCBarcode()      # Flowcell barcode
+   
+    # Retrieve Flowcell barcode either from the BWAParams file or from config files
+    # in the GERALD directory. 
+    if @fcBarcode == nil || @fcBarcode.empty?()
+
+      # Instantiate pipeline helper 
+      @helper       = PipelineHelper.new()
+      fcName        = @helper.findFCName()
+      laneNumber    = @helper.findAnalysisLaneNumbers()
+      @fcAndLane    = fcName + "-" + laneNumber.to_s
+
+      begin
+        fcBcFinder   = FCBarcodeFinder.new
+        @fcBarcode   = fcBcFinder.getBarcodeForLIMS()
+      rescue
+        if @fcBarcode == nil || @fcBarcode.empty?()
+           @fcBarcode = @fcAndLane.to_s
+        end
+      end
+    end
+
     # Priority in scheduling queue
     @priority    = bwaParams.getSchedulingQueue()
 
@@ -68,22 +90,6 @@ class BWA_BAM
     @sortedBam      = nil # Coordinate sorted BAM file
     @markedBam      = nil # Coordinate sorted BAM with duplicates marked
 
-    # Instantiate pipeline helper 
-    @helper        = PipelineHelper.new()
-    @fcName        = @helper.findFCName()
-    @laneNumber    = @helper.findAnalysisLaneNumbers()
-    @fcAndLane     = @fcName + "-" + @laneNumber.to_s
-    @fcBarcode     = ""
-
-    begin
-      fcBcFinder   = FCBarcodeFinder.new
-      @fcBarcode   = fcBcFinder.getBarcodeForLIMS()
-    rescue
-      if @fcBarcode == nil || @fcBarcode.empty?()
-         @fcBarcode = @fcAndLane.to_s
-      end
-    end
-
     findSequenceFiles()
     generateSamFileName()
 
@@ -105,7 +111,7 @@ class BWA_BAM
     outputFile1 = @sequenceFiles[0] + ".sai"
 
     alnCmd1 = buildAlignCommand(@sequenceFiles[0], outputFile1) 
-    obj1 = Scheduler.new(@fcAndLane + "_aln_Read1", alnCmd1)
+    obj1 = Scheduler.new(@fcBarcode + "_aln_Read1", alnCmd1)
     obj1.setMemory(@maxMemory)
     obj1.setNodeCores(@cpuCores)
     obj1.setPriority(@priority)
@@ -116,7 +122,7 @@ class BWA_BAM
     if @isFragment == false
       outputFile2 = @sequenceFiles[1] + ".sai"
       alnCmd2 = buildAlignCommand(@sequenceFiles[1], outputFile2)
-      obj2 = Scheduler.new(@fcAndLane + "_aln_Read2", alnCmd2)
+      obj2 = Scheduler.new(@fcBarcode + "_aln_Read2", alnCmd2)
       obj2.setMemory(@maxMemory)
       obj2.setNodeCores(@cpuCores)
       obj2.setPriority(@priority)
@@ -125,7 +131,7 @@ class BWA_BAM
 
       sampeCmd = buildSampeCommand(outputFile1, outputFile2, @sequenceFiles[0],
                                    @sequenceFiles[1])
-      obj3 = Scheduler.new(@fcAndLane + "_sampe", sampeCmd)
+      obj3 = Scheduler.new(@fcBarcode + "_sampe", sampeCmd)
       obj3.setMemory(@lessMemory)
       obj3.setNodeCores(@minCpuCores)
       obj3.setPriority(@priority)
@@ -136,7 +142,7 @@ class BWA_BAM
     else
       # Flowcell is fragment
       samseCmd = buildSamseCommand(outputFile1, @sequenceFiles[0])
-      obj3 = Scheduler.new(@fcAndLane + "_samse", samseCmd)
+      obj3 = Scheduler.new(@fcBarcode + "_samse", samseCmd)
       obj3.setMemory(@lessMemory)
       obj3.setNodeCores(@minCpuCores)
       obj3.setPriority(@priority)
@@ -147,7 +153,7 @@ class BWA_BAM
 
     # Sort a BAM
     sortBamCmd = sortBamCommand()
-    obj5 = Scheduler.new(@fcAndLane  + "_sortBam", sortBamCmd)
+    obj5 = Scheduler.new(@fcBarcode  + "_sortBam", sortBamCmd)
     obj5.setMemory(@lessMemory)
     obj5.setNodeCores(@minCpuCores)
     obj5.setPriority(@priority)
@@ -157,7 +163,7 @@ class BWA_BAM
 
     # Mark duplicates on BAM
     markedDupCmd = markDupCommand()
-    obj6 = Scheduler.new(@fcAndLane + "_markDupBam", markedDupCmd)
+    obj6 = Scheduler.new(@fcBarcode + "_markDupBam", markedDupCmd)
     obj6.setMemory(@lessMemory)
     obj6.setNodeCores(@minCpuCores)
     obj6.setPriority(@priority)
@@ -169,7 +175,7 @@ class BWA_BAM
     # Filter out phix reads
     if @filterPhix == true
       phixFilterCmd = filterPhixReadsCmd(@markedBam)
-      objX = Scheduler.new(@fcAndLane + "_phixFilter", phixFilterCmd)
+      objX = Scheduler.new(@fcBarcode + "_phixFilter", phixFilterCmd)
       objX.setMemory(@lessMemory)
       objX.setNodeCores(@minCpuCores)
       objX.setPriority(@priority)
@@ -182,7 +188,7 @@ class BWA_BAM
     # Fix mate information for paired end FC
     if @isFragment == false
       fixMateCmd = fixMateInfoCmd()
-      objY = Scheduler.new(@fcAndLane + "_fixMateInfo" + @markedBam, fixMateCmd)
+      objY = Scheduler.new(@fcBarcode + "_fixMateInfo" + @markedBam, fixMateCmd)
       objY.setMemory(@lessMemory)
       objY.setNodeCores(@minCpuCores)
       objY.setPriority(@priority)
@@ -197,7 +203,7 @@ class BWA_BAM
     # and mapping quality zero. This causes picard's validator to complain.
     # Hence, we fix that anomaly here.
     fixCIGARCmd = buildFixCIGARCmd(@markedBam)
-    fixCIGARObj = Scheduler.new(@fcAndLane + "_fixCIGAR" + @markedBam, fixCIGARCmd)
+    fixCIGARObj = Scheduler.new(@fcBarcode + "_fixCIGAR" + @markedBam, fixCIGARCmd)
     fixCIGARObj.setMemory(@lessMemory)
     fixCIGARObj.setNodeCores(@minCpuCores)
     fixCIGARObj.setPriority(@priority)
@@ -208,7 +214,7 @@ class BWA_BAM
 
     # Calculate Alignment Stats
     mappingStatsCmd = calculateMappingStats()
-    obj7 = Scheduler.new(@fcAndLane + "_AlignStats", mappingStatsCmd)
+    obj7 = Scheduler.new(@fcBarcode + "_AlignStats", mappingStatsCmd)
     obj7.setMemory(@lessMemory)
     obj7.setNodeCores(@minCpuCores)
     obj7.setPriority(@priority)
@@ -219,7 +225,7 @@ class BWA_BAM
 
     if @chipDesign != nil && !@chipDesign.empty?()
       captureStatsCmd = buildCaptureStatsCmd()
-      capStatsObj = Scheduler.new(@fcAndLane + "_CaptureStats", captureStatsCmd)
+      capStatsObj = Scheduler.new(@fcBarcode + "_CaptureStats", captureStatsCmd)
       capStatsObj.setMemory(@lessMemory)
       capStatsObj.setNodeCores(@minCpuCores)
       capStatsObj.setPriority(@priority)
@@ -303,17 +309,11 @@ class BWA_BAM
     currentTime = Time.new
 
     # If sample name was provided in the configuration parameters, use it.
-    # If not, use FC-lane as the sample name. If that also is not availble
-    # use the string "unknown" as the sampleID
+    # If not, use FC-barcode as the sample name. 
     if @sampleName != nil && !@sampleName.empty?()
        sampleID = @sampleName.to_s
-    elsif @fcName != nil && !@fcName.empty?()
-       sampleID = @fcName.to_s
-       if @laneNumber != nil && !@laneNumber.to_s.empty?()
-          sampleID = sampleID + "-" + @laneNumber.to_s
-       end
     else
-       sampleID = "unknown"
+       sampleID = @fcBarcode.to_s
     end
      
     rgString = "'@RG\\tID:0\\tSM:" + sampleID
@@ -396,7 +396,7 @@ class BWA_BAM
   # Command to run after BWA alignment is completed
   def runPostRunCmd(previousJobName)
     postRunCmd = "ruby " + File.dirname(__FILE__) + "/bwa_postrun.rb"
-    objPostRun = Scheduler.new(@fcAndLane + "_post_run", postRunCmd)
+    objPostRun = Scheduler.new(@fcBarcode + "_post_run", postRunCmd)
     objPostRun.setMemory(2000)
     objPostRun.setNodeCores(1)
     objPostRun.setPriority(@priority)
