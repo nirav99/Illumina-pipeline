@@ -61,7 +61,7 @@ private
       if args[3].downcase.eql?("paired")
         @fcPaired = true
       else
-        @fcPaird = false
+        @fcPaired = false
       end
       @refPath = args[4]
     end
