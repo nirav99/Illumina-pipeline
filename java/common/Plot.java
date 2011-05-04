@@ -40,6 +40,8 @@ public class Plot
   private double maxXScale  = 0;
   private double minYScale  = 0;
   private double maxYScale  = 0;
+  private boolean customYScale = false;
+  private boolean customXScale = false;
 
   // Default plot style is LINE
   private static PlotStyle style = PlotStyle.LINE;
@@ -106,12 +108,14 @@ public class Plot
   {
     minXScale = minValue;
     maxXScale = maxValue;
+    customXScale = true;
   }
 
   public void setYScale(double minValue, double maxValue)
   {
     minYScale = minValue;
     maxYScale = maxValue;
+    customYScale = true;
   }
 
   /**
@@ -140,6 +144,18 @@ public class Plot
     else
     if(style == PlotStyle.BAR)
       ps = "boxes";
+
+    if(customYScale == true)
+    {
+      System.err.println("Setting Y-Range : " + minYScale + " " + maxYScale);
+      writer.write("set yrange [" + minYScale + ":" + maxYScale + "]");
+      writer.newLine();
+    }
+    if(customXScale == true)
+    {
+      writer.write("set xrange [" + minXScale + ":" + maxXScale + "]");
+      writer.newLine();
+    }
 
     if(y2Data == null)
     {
