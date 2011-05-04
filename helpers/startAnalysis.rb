@@ -79,15 +79,17 @@ private
   def buildAnalyzedFCList()
     logFile = @instrDir + "/" + @completedFCLog
     puts logFile
-    lines = IO.readlines(logFile)
-
     @fcList = nil
     @fcList = Hash.new()
  
-    if lines != nil && lines.length > 0
-      lines.each do |line|
-        @fcList[line.strip] = "1"
-      end 
+    if File::exist?(logFile)
+      lines = IO.readlines(logFile)
+
+      if lines != nil && lines.length > 0
+        lines.each do |line|
+          @fcList[line.strip] = "1"
+        end 
+      end
     end
   end
 
