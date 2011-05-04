@@ -90,6 +90,11 @@ private
           @fcList[line.strip] = "1"
         end 
       end
+    else
+       # If this directory is newly created and it does not have the log of
+       # completed flowcells, create this file.
+       cmd = "touch " + logFile
+       `#{cmd}`
     end
   end
 
