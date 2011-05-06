@@ -233,6 +233,7 @@ class QseqSplitter
       cmd = cmdPrefix + " " + laneBarcode.to_s 
       puts "Running the command : " + cmd.to_s
       output = `#{cmd}`
+      sleep 5
    end
   end
 
@@ -257,6 +258,7 @@ class QseqSplitter
       obj.runCommand()
       jobName = obj.getJobName()
       puts "Job for command : " + cmd + " : " + jobName.to_s
+      sleep 5
    end
  end
 end
