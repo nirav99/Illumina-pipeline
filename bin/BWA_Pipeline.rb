@@ -230,9 +230,10 @@ end
     puts "Writing BWA configration parameters in GERALD directory"
 
     # Note: This is a short-term workaround to set correct reference path for
-    # TREN libraries. If library name matches TREN use hg19 reference or else use
+    # TREN or TLVR libraries. If library name matches these, use hg19 reference or else use
     # the reference path provided. 
-    if @libraryName != nil && !@libraryName.empty?() && @libraryName.match(/TREN/)
+    if @libraryName != nil && !@libraryName.empty?() && 
+       (@libraryName.match(/TREN/)  || (@libraryName.match(/TLVR/))
       @bwaParams.setReferencePath("/stornext/snfs5/next-gen/Illumina/bwa_references/h/hg19/original/hg19.fa")
       puts "Setting reference path HG19 for BWA"
     else
@@ -260,10 +261,10 @@ end
 
      if @chipName != nil && !@chipName.empty?()
       # Note: This is a short-term workaround to set correct chip design when
-      # library name contains TREN and reference is hg19 until a permanent
+      # library name contains TREN/TLVR and reference is hg19 until a permanent
       # solution is determined.
 #        if @refPath.match(/hg19/) && @libraryName.match(/TREN/)
-        if @libraryName.match(/TREN/)
+        if @libraryName.match(/TREN/) || @libraryName.match(/TLVR/)
           @bwaParams.setChipDesignName("/users/p-illumina/ezexome2_hg19")
           puts "Setting chip design name : /users/p-illumina/ezexome2_hg19" 
         else
