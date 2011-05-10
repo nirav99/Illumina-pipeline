@@ -264,9 +264,12 @@ end
       # library name contains TREN/TLVR and reference is hg19 until a permanent
       # solution is determined.
 #        if @refPath.match(/hg19/) && @libraryName.match(/TREN/)
-        if @libraryName.match(/TREN/) || @libraryName.match(/TLVR/)
+        if @libraryName.match(/TREN/)
           @bwaParams.setChipDesignName("/users/p-illumina/ezexome2_hg19")
           puts "Setting chip design name : /users/p-illumina/ezexome2_hg19" 
+        elsif @libraryName.match(/TLVR/)
+          @bwaParams.setChipDesignName("/users/p-illumina/vcrome2.1_hg19")
+          puts "Setting chip design name : /users/p-illumina/vcrome2.1_hg19"
         else
           @bwaParams.setChipDesignName(@chipName.to_s)
           puts "Setting chip design name : " + @chipName.to_s
