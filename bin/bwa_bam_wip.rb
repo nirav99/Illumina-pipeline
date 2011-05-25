@@ -109,8 +109,6 @@ class BWA_BAM
       exit 0
     end
 
-    outputFile1 = @sequenceFiles[0] + ".sai"
-
     if @seqFilesZipped == true
       unzipCmd1 = buildUnzipCommand()
       objUnzip1 = Scheduler.new(@fcBarcode + "_unzip_sequences", unzipCmd1)
@@ -124,13 +122,14 @@ class BWA_BAM
       # errors downstream
       idx = 0
       while idx < @sequenceFiles.length
-        puts idx.to_s
         @sequenceFiles[idx].gsub!(/\.bz2$/, "")
         idx = idx + 1
       end
     else
       unzipJobID1 = ""
     end
+
+    outputFile1 = @sequenceFiles[0] + ".sai"
 
     alnCmd1 = buildAlignCommand(@sequenceFiles[0], outputFile1) 
     obj1 = Scheduler.new(@fcBarcode + "_aln_Read1", alnCmd1)
@@ -274,7 +273,11 @@ class BWA_BAM
   # Method to find sequence file names in the GERALD directory
   def findSequenceFiles()
     # Assumption - 1 directory per lane
-    fileList = Dir["*_sequence.txt*"]
+    fileList = Dir["*_sequence.txt"]
+
+    if fileList == nil || fileList.size < 1
+      fileList = Dir["*_sequence.txt.bz2"]
+    end
 
     if fileList.size < 1
       raise "Could not find sequence files in directory " + Dir.pwd
