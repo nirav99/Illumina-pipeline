@@ -8,6 +8,7 @@ require 'BuildGERALDCommand.rb'
 require 'Scheduler'
 require 'PipelineHelper'
 require 'BWAParams'
+require 'EmailHelper'
 
 class BWA_Pipeline
   def initialize(args)
@@ -263,7 +264,6 @@ end
       # Note: This is a short-term workaround to set correct chip design when
       # library name contains TREN/TLVR and reference is hg19 until a permanent
       # solution is determined.
-#        if @refPath.match(/hg19/) && @libraryName.match(/TREN/)
         if @libraryName.match(/TREN/)
           @bwaParams.setChipDesignName("/users/p-illumina/ezexome2_hg19")
           puts "Setting chip design name : /users/p-illumina/ezexome2_hg19" 
@@ -357,8 +357,20 @@ end
   #TODO: Develop a better approach to handle errors
   def handleErrorAndAbort(msg)
     puts "Error encountered. Message : \r\n" + msg
+    emailErrorMessage(msg)
     puts "Aborting execution\r\n"
     exit -4
+  end
+
+  # Send email describing the error message to interested watchers
+  def emailErrorMessage(msg)
+    obj          = EmailHelper.new()
+    emailFrom    = "sol-pipe@bcm.edu"
+    emailTo      = obj.getErrorRecepientEmailList()
+    emailSubject = "Error in starting GERALD analysis for " + @fcName + "-" + @laneBarcode.to_s
+    emailText    = msg
+
+    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
   end
 end
 
