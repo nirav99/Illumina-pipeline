@@ -80,7 +80,8 @@ class BWA_BAM
     # Maximum Java heap size
     @heapSize        = "-Xmx22G"
 
-    @sequenceFiles  = nil # Sequence files with Illumina qualities
+    @sequenceFiles  = nil   # Sequence files 
+    @seqFilesZipped = false # Whether sequence files are zipped
 
     # Whether flowcell is paired-end or fragment
     @isFragment     = false
@@ -108,6 +109,26 @@ class BWA_BAM
       exit 0
     end
 
+    if @seqFilesZipped == true
+      unzipCmd1 = buildUnzipCommand()
+      objUnzip1 = Scheduler.new(@fcBarcode + "_unzip_sequences", unzipCmd1)
+      objUnzip1.setMemory(2000)
+      objUnzip1.setNodeCores(1)
+      objUnzip1.setPriority(@priority)
+      objUnzip1.runCommand()
+      unzipJobID1 = objUnzip1.getJobName()
+
+      # Remove the suffix .bz2 from the sequence file names to prevent any
+      # errors downstream
+      idx = 0
+      while idx < @sequenceFiles.length
+        @sequenceFiles[idx].gsub!(/\.bz2$/, "")
+        idx = idx + 1
+      end
+    else
+      unzipJobID1 = ""
+    end
+
     outputFile1 = @sequenceFiles[0] + ".sai"
 
     alnCmd1 = buildAlignCommand(@sequenceFiles[0], outputFile1) 
@@ -115,6 +136,10 @@ class BWA_BAM
     obj1.setMemory(@maxMemory)
     obj1.setNodeCores(@cpuCores)
     obj1.setPriority(@priority)
+
+    if !unzipJobID1.empty?()
+      obj1.setDependency(unzipJobID1)
+    end
     obj1.runCommand()
     alnJobID1 = obj1.getJobName()
 
@@ -126,6 +151,11 @@ class BWA_BAM
       obj2.setMemory(@maxMemory)
       obj2.setNodeCores(@cpuCores)
       obj2.setPriority(@priority)
+
+      if !unzipJobID1.empty?()
+        obj2.setDependency(unzipJobID1)
+      end
+
       obj2.runCommand()
       alnJobID2 = obj2.getJobName()
 
@@ -245,6 +275,10 @@ class BWA_BAM
     # Assumption - 1 directory per lane
     fileList = Dir["*_sequence.txt"]
 
+    if fileList == nil || fileList.size < 1
+      fileList = Dir["*_sequence.txt.bz2"]
+    end
+
     if fileList.size < 1
       raise "Could not find sequence files in directory " + Dir.pwd
     elsif fileList.size == 1
@@ -256,6 +290,23 @@ class BWA_BAM
     else
       raise "More than two sequence files detected, perhaps from different reads in directory " + Dir.pwd
     end
+     puts @sequenceFiles
+
+     @sequenceFiles.each do |seqFile|
+       if seqFile.match(/\.bz2$/)
+         puts "Zipped sequence file"
+         @seqFilesZipped = true
+       end
+     end
+  end
+
+  def buildUnzipCommand()
+    cmd = "bzip2 -d "
+
+    @sequenceFiles.each do |seqFile|
+      cmd = cmd + seqFile + " "
+    end
+    return cmd
   end
  
   # Method to generate names of various BAM and SAM files
