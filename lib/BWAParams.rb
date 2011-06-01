@@ -143,7 +143,6 @@ class BWAParams
 
     if File::exist?(@configFile)
       lines = IO.readlines(@configFile)
-
       lines.each do |line|
         if line.match(/LIBRARY_NAME=\S+/)
           @libraryName = line.gsub(/LIBRARY_NAME=/, "")
@@ -170,6 +169,8 @@ class BWAParams
           @fcBarcode.strip!
         end
       end
+    else
+      puts @configFile.to_s + " is not present"
     end
   end
 end
