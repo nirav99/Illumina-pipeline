@@ -7,6 +7,7 @@ require 'fileutils'
 require 'PipelineHelper'
 require 'FCBarcodeFinder'
 require 'EmailHelper'
+require 'BWAParams'
 
 # Class to parse GERALD analysis summary for specified lane for specified
 # read number (either read 1 or read 2).
@@ -36,7 +37,8 @@ class LaneResult
              @perPFClusters.to_s + " PERCENT_ALIGN_PF " + @perAlignPF.to_s +
              " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + " PERCENT_PHASING " +
              @phasePercent.to_s + " PERCENT_PREPHASING " + @prePhasePercent.to_s +
-             " RESULTS_PATH " + FileUtils.pwd
+             " RESULTS_PATH " + FileUtils.pwd +
+             " REFERENCE_PATH " + getReferencePath()
     # Uncomment the following two lines if we need to send this variable in the
     # upload string
              # + " ANALYSIS_END_DATE " +
@@ -73,6 +75,17 @@ class LaneResult
         @percentUnique = line.slice(/^[0-9\.]+/)
         return
       end
+    end
+  end
+
+  def getReferencePath()
+    bwaParams  = BWAParams.new()
+    bwaParams.loadFromFile()
+    reference  = bwaParams.getReferencePath()
+    if reference != nil && !reference.empty?()
+      return reference.to_s
+    else
+      return "none"
     end
   end
 
