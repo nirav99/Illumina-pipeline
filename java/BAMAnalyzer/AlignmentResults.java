@@ -1,9 +1,9 @@
 import net.sf.samtools.*;
 import java.text.*;
+import org.w3c.dom.*;
 
 /**
- * Class to encapsulate the alignment results and throughput metrics of a
- * sequencing event.
+ * Class to encapsulate the alignment results and throughput metrics of a sequencing event.
  * @author Nirav Shah niravs@bcm.edu
  *
  */
@@ -20,6 +20,11 @@ public class AlignmentResults
                                        // (Partially or completely)
   private long totalMismatches   = 0;  // Total number of mismatches
   private long totalExactMatches = 0;  // Total number of reads with no mismatches
+  
+  private double percentMapped     = 0;  // Percent of mapped reads
+  private double percentMismatch   = 0;  // Mismatch percentage (Error percentage)
+  private double percentDup        = 0;  // Percentage of duplicate reads
+  private double percentExactMatch = 0; // Percentage of matching reads with no variation
   
   private String readName = ""; // Read name - Read1 or Read2
   private MismatchCounter mCtr  = null; // To count the number of mismatches
@@ -43,8 +48,8 @@ public class AlignmentResults
      int numMismatches = 0; // Number of mismatches in current read
      int readLength = record.getReadLength();
      
-	  // We assume that the caller will check for the type of the
-    // read and invoke the function with the correct type of read.
+	 // We assume that the caller will check for the type of the
+     // read and invoke the function with the correct type of read.
 	  totalReads++;
 
 	  // For an unmapped read, increment the counter for unmapped read
@@ -52,8 +57,8 @@ public class AlignmentResults
         unmappedReads++;
       else
       {
-			  mappedReads++;
-			
+    	mappedReads++;
+    	
         if(record.getDuplicateReadFlag())
           dupReads++;
 
@@ -89,29 +94,44 @@ public class AlignmentResults
       System.out.println("Unmapped Reads    : " + unmappedReads);
       System.out.println("Mapped Reads      : " + mappedReads);
 
+      percentMapped   = 1.0 * mappedReads / totalReads * 100;
+      percentDup      = 1.0 * dupReads / mappedReads * 100.0;
+      
       if(mappedReads > 0)
-        System.out.format("%% Mapped Reads    : %.2f%% %n", (1.0 * mappedReads / totalReads * 100));
+        System.out.format("%% Mapped Reads    : %.2f%% %n", percentMapped);
       else
         System.out.println("% Mapped Reads  : 0%");
       
       if(totalBases > 0)
-        System.out.format("%% Mismatch        : %.2f%% %n", (1.0 * totalMismatches / totalMappedBases * 100.0));
+      {
+    	percentMismatch = 1.0 * totalMismatches / totalMappedBases * 100.0;
+        System.out.format("%% Mismatch        : %.2f%% %n", percentMismatch);
+      }
       else
+      {
         System.out.println("%% Mismatch       : 100%");
+        percentMismatch = 100;
+      }
       System.out.println();
       
       System.out.println("Duplicate Reads   : " + dupReads);
       if(mappedReads > 0)
-        System.out.format("%% Duplicate Reads : %.2f%% %n", (1.0 * dupReads / mappedReads * 100.0));
+        System.out.format("%% Duplicate Reads : %.2f%% %n", percentDup);
       else
         System.out.println("% Duplicate Reads  : 0%");
       System.out.println();
 
       System.out.println("Exact Match Reads : " + totalExactMatches);
       if(mappedReads > 0)
-        System.out.format("%% Exact Match Reads : %.2f%% %n", (1.0 * totalExactMatches / mappedReads * 100));
+      {
+    	percentExactMatch = 1.0 * totalExactMatches / mappedReads * 100;
+        System.out.format("%% Exact Match Reads : %.2f%% %n", percentExactMatch);
+      }
       else
+      {
+        percentExactMatch = 0;
         System.out.println("% Exact Match Reads : 0%");
+      }
       System.out.println();
       
       System.out.println("Total Bases (including Ns)       : " + totalBases);
@@ -144,8 +164,7 @@ public class AlignmentResults
   }
   
   /**
-   * Count the number of valid bases in a read. Valid bases are the ones without
-   * Ns
+   * Count the number of valid bases in a read. Valid bases are the ones without Ns
    * @param baseString - readString
    * @return - Sum of valid bases
    */
@@ -163,5 +182,29 @@ public class AlignmentResults
       }
     }
     return numValidBases;
+  }
+  
+  public Element toXML(Document doc)
+  {
+    if(totalReads <= 0)
+      return null;
+    
+    Element rootNode = doc.createElement("AlignmentResults");
+    rootNode.setAttribute("ReadType", readName);
+    
+    Element readInfo = doc.createElement("ReadInfo");
+    readInfo.setAttribute("TotalReads", String.valueOf(totalReads));
+    readInfo.setAttribute("MappedReads", String.valueOf(mappedReads));
+    readInfo.setAttribute("PercentMapped", String.valueOf(percentMapped));
+    readInfo.setAttribute("PercentMismatch", String.valueOf(percentMismatch));
+    readInfo.setAttribute("PercentDuplicate", String.valueOf(percentDup));
+    readInfo.setAttribute("PercentExactMatch", String.valueOf(percentExactMatch));
+    rootNode.appendChild(readInfo);
+    
+    Element yieldInfo = doc.createElement("YieldInfo");
+    yieldInfo.setAttribute("TotalBases", String.valueOf(totalBases));
+    yieldInfo.setAttribute("ValidBases", String.valueOf(totalValidBases));
+    rootNode.appendChild(yieldInfo);
+    return rootNode;
   }
 }

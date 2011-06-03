@@ -1,4 +1,5 @@
 import net.sf.samtools.SAMRecord;
+import org.w3c.dom.*;
 
 /**
  * Class to calculate pair-wise statistics information
@@ -17,6 +18,11 @@ public class PairStatsCalculator implements MetricsCalculator
   private long mappedPairSameChr = 0; // Pairs where both ends map to same chromosome
   private long totalPairs        = 0; // Total number of pairs
   
+  private double percentMappedPairs        = 0; // Percentage of mapped pairs
+  private double percentSameChrMappedPairs = 0; 
+  private double percentUnmappedpairs      = 0;
+  private double percentRead1Mapped        = 0;
+  private double percentRead2Mapped        = 0;
   /**
    * Class constructor
    */
@@ -83,20 +89,58 @@ public class PairStatsCalculator implements MetricsCalculator
     if(totalPairs <= 0)
       return;
     
+    percentMappedPairs = 1.0 * mappedPairs / totalPairs * 100.0;
+    percentSameChrMappedPairs = 1.0 * mappedPairSameChr / totalPairs * 100.0;
+    percentUnmappedpairs =  1.0 * unmappedPairs / totalPairs * 100.0;
+    percentRead1Mapped = 1.0 * read1Mapped / totalPairs * 100.0;
+    percentRead2Mapped = 1.0 * read2Mapped / totalPairs * 100.0;
+    
     System.out.println();
     System.out.println("Pair Statistics");
     System.out.println();
     System.out.println("Total Read Pairs        : " + totalPairs);
     System.out.println();
     System.out.println("Mapped Pairs            : " + mappedPairs);
-    System.out.format("%% Mapped Pairs          : %.2f%%\n", 1.0 * mappedPairs / totalPairs * 100.0);
+    System.out.format("%% Mapped Pairs          : %.2f%%\n", percentMappedPairs);
     System.out.println("Same Chr Mapped Pairs   : " + mappedPairSameChr);
-    System.out.format("%% Same Chr Mapped Pairs : %.2f%%\r\n", 1.0 * mappedPairSameChr / totalPairs * 100.0);
+    System.out.format("%% Same Chr Mapped Pairs : %.2f%%\r\n", percentSameChrMappedPairs);
     System.out.println("Unmapped Pairs          : " + unmappedPairs);
-    System.out.format("%% Unmapped Pairs        : %.2f%%\r\n", 1.0 * unmappedPairs / totalPairs * 100.0);
+    System.out.format("%% Unmapped Pairs        : %.2f%%\r\n", percentUnmappedpairs);
     System.out.println("Mapped First Read       : " + read1Mapped);
     System.out.format("%% Mapped First Read     : %.2f%%\r\n", 1.0 * read1Mapped / totalPairs * 100.0);
     System.out.println("Mapped Second Read      : " + read2Mapped);
     System.out.format("%% Mapped Second Read    : %.2f%%\r\n", 1.0 * read2Mapped / totalPairs * 100.0);
+  }
+
+  @Override
+  public Element toXML(Document doc)
+  {
+    Element pairInfo = doc.createElement("PairMetrics");
+    Element mappedPairElem = doc.createElement("MappedPairs");
+    mappedPairElem.setAttribute("NumReads", String.valueOf(mappedPairs));
+    mappedPairElem.setAttribute("PercentReads", String.valueOf(percentMappedPairs));
+    pairInfo.appendChild(mappedPairElem);
+    
+    Element sameChrMappedPairsElem = doc.createElement("SameChrMappedPairs");
+    sameChrMappedPairsElem.setAttribute("NumReads", String.valueOf(mappedPairSameChr));
+    sameChrMappedPairsElem.setAttribute("PercentReads", String.valueOf(percentSameChrMappedPairs));
+    pairInfo.appendChild(sameChrMappedPairsElem);
+
+    Element unmappedPairsElem = doc.createElement("UnmappedPairs");
+    unmappedPairsElem.setAttribute("NumReads", String.valueOf(unmappedPairs));
+    unmappedPairsElem.setAttribute("PercentReads", String.valueOf(percentUnmappedpairs));
+    pairInfo.appendChild(unmappedPairsElem);
+    
+    Element read1MappedElem = doc.createElement("Read1Mapped");
+    read1MappedElem.setAttribute("NumReads", String.valueOf(read1Mapped));
+    read1MappedElem.setAttribute("PercentReads", String.valueOf(percentRead1Mapped));
+    pairInfo.appendChild(read1MappedElem);
+    
+    Element read2MappedElem = doc.createElement("Read2Mapped");
+    read1MappedElem.setAttribute("NumReads", String.valueOf(read2Mapped));
+    read1MappedElem.setAttribute("PercentReads", String.valueOf(percentRead2Mapped));
+    pairInfo.appendChild(read2MappedElem);
+ 
+	return pairInfo;
   }
 }

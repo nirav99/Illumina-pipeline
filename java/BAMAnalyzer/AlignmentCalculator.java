@@ -1,3 +1,6 @@
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import net.sf.samtools.SAMRecord;
 
 /**
@@ -60,5 +63,25 @@ public class AlignmentCalculator implements MetricsCalculator
     read1Results.showAlignmentResults();
     read2Results.showAlignmentResults();
     fragResults.showAlignmentResults();
+  }
+
+  @Override
+  public Element toXML(Document doc)
+  {
+    Element rootNode = doc.createElement("AlignmentMetrics");
+    
+    Element read1InfoNode = read1Results.toXML(doc);
+    if(read1InfoNode != null)
+      rootNode.appendChild(read1InfoNode);
+    
+    Element read2InfoNode = read2Results.toXML(doc);
+    if(read2InfoNode != null)
+      rootNode.appendChild(read2InfoNode);
+    
+    Element fragInfoNode  = fragResults.toXML(doc);
+    if(fragInfoNode != null)
+      rootNode.appendChild(fragInfoNode);
+    
+	return rootNode;
   }
 }

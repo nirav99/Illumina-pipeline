@@ -3,11 +3,15 @@
  */
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
-import net.sf.samtools.util.RuntimeIOException;
 import net.sf.picard.cmdline.*;
 import net.sf.picard.io.IoUtil;
 import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.*;
+import javax.xml.transform.stream.*;
 
 /**
  * @author Nirav Shah niravs@bcm.edu
@@ -42,7 +46,7 @@ public class BAMAnalyzer extends CommandLineProgram
     PairStatsCalculator pairCalc  = null;  // Calculate information of read pairs
     AlignmentCalculator alignCalc = null;  // Calculate alignment information
     QualPerPosCalculator qualCalc = null;  // Calculate avg. base quality per base position
-
+    
     try
     {
       IoUtil.assertFileIsReadable(INPUT);
@@ -50,6 +54,11 @@ public class BAMAnalyzer extends CommandLineProgram
       SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
       reader = new SAMFileReader(INPUT);
   
+      DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
+      DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
+      Document doc = docBuilder.newDocument();
+      Element root = doc.createElement("AnalysisMetrics");
+      
       alignCalc = new AlignmentCalculator();
       insCalc   = new InsertSizeCalculator();
       pairCalc  = new PairStatsCalculator();
@@ -86,6 +95,25 @@ public class BAMAnalyzer extends CommandLineProgram
       pairCalc.showResult();
       System.out.format("%nComputation Time      : %.3f sec%n%n", (stopTime - startTime)/1000.0);
       qualCalc.showResult();
+      
+      root.appendChild(alignCalc.toXML(doc));
+      root.appendChild(insCalc.toXML(doc));
+      root.appendChild(pairCalc.toXML(doc));
+      doc.appendChild(root);
+      
+      TransformerFactory transfac = TransformerFactory.newInstance();
+      Transformer trans = transfac.newTransformer();
+      trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+      trans.setOutputProperty(OutputKeys.INDENT, "yes");
+      StringWriter sw = new StringWriter();
+      StreamResult result = new StreamResult(sw);
+      DOMSource source = new DOMSource(doc);
+      trans.transform(source, result);
+      String xmlString = sw.toString();
+      
+      BufferedWriter writer = new BufferedWriter(new FileWriter(new File("BAMAnalysisInfo.xml")));
+      writer.write(xmlString);
+      writer.close();
       return 0;
   }
   catch(Exception e)

@@ -2,6 +2,9 @@ import net.sf.samtools.SAMRecord;
 import java.util.Arrays;
 import java.io.*;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 /**
  * Class to calculate average base quality per position in the reads
  */
@@ -56,8 +59,8 @@ public class QualPerPosCalculator implements MetricsCalculator
       numRead2      = Arrays.copyOf(numRead2, readLen);
     }
    // Read 1 or fragment
-   if(!record.getReadPairedFlag() ||
-     (record.getReadPairedFlag() && record.getFirstOfPairFlag()))
+   if(!record.getReadPairedFlag() || 
+      (record.getReadPairedFlag() && record.getFirstOfPairFlag()))
     {
       calculateBaseQuality(1, baseQualString, record.getReadNegativeStrandFlag());
     }
@@ -112,14 +115,13 @@ public class QualPerPosCalculator implements MetricsCalculator
       }
       qual = baseQual.charAt(i) - QUAL_ADDEND;
       qualArray[pos] = (qualArray[pos] * (numReads[pos]) + qual) / 
-                       (1.0 * (numReads[pos] + 1));
+                     (1.0 * (numReads[pos] + 1));
       numReads[pos] = numReads[pos] + 1;
     }
   }
   
   /* 
-   * Display results - plot the distribution of mean base quality per base
-   * position
+   * Display results - plot the distribution of mean base quality per base position
    */
   @Override
   public void showResult()
@@ -142,13 +144,13 @@ public class QualPerPosCalculator implements MetricsCalculator
         if(meanQualRead2 != null && meanQualRead2.length > 0)
         {
           p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position", 
-              "Base Position", "Avg. Base Quality - Phred Scale", "Read 1", "Read 2",
-              xPosn, meanQualRead1, meanQualRead2);
+              "Base Position", "Avg. Base Quality - Phred Scale", "Read 1", "Read 2", xPosn, meanQualRead1, 
+              meanQualRead2);
         }
         else
         {
           p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position",
-                  "Base Position", "Avg. Quality", "Read 1", xPosn, meanQualRead1);
+                       "Base Position", "Avg. Quality", "Read 1", xPosn, meanQualRead1);
         }
       }
       if(p != null)
@@ -170,7 +172,7 @@ public class QualPerPosCalculator implements MetricsCalculator
    */
   private void logQualScoreDistribution() throws IOException
   {
-    String logFileName = "AvgBaseQualScoreDist.csv";
+    String logFileName = "AvgQualScoreDist.csv";
     BufferedWriter writer = new BufferedWriter(new FileWriter(logFileName));
     StringBuffer record = null;
     String delimiter = ",";
@@ -221,20 +223,24 @@ public class QualPerPosCalculator implements MetricsCalculator
     {
       for(int i = 0; i < meanQualRead1.length; i++)
       {
-	    	if(minYValue > meanQualRead1[i])
-          minYValue = meanQualRead1[i];
-		    if(maxYValue < meanQualRead1[i])
-          maxYValue = meanQualRead1[i];
+    	if(minYValue > meanQualRead1[i])
+    	  minYValue = meanQualRead1[i];
+    	if(maxYValue < meanQualRead1[i])
+    	  maxYValue = meanQualRead1[i];
       }
     }
     
     if(minYValue > 0)
       minYValue = 0;
-
     ScaleRange yRange = new ScaleRange();
     yRange.minValue = minYValue;
     yRange.maxValue = maxYValue;
-
     return yRange;
+  }
+
+  @Override
+  public Element toXML(Document doc)
+  {
+	return null;
   }
 }

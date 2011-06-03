@@ -25,6 +25,8 @@
 /**
  * Class to calculate insert size metrics
  */
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import net.sf.picard.sam.SamPairUtil.PairOrientation;
 import net.sf.samtools.*;
 import net.sf.picard.sam.*;
@@ -46,8 +48,10 @@ public class InsertSizeCalculator implements MetricsCalculator
                                            // mapped
   private int totalPairs = 0;              // Total pairs, irrespective of
                                            // whether mapping status of the
-                                           // reads  
-
+                                           // reads
+  private double percentReadPairs = 0;     // Percentage of read pairs of a specific
+                                           // insert size orientation
+  
   /**
    * Class constructor
    */
@@ -115,44 +119,39 @@ public class InsertSizeCalculator implements MetricsCalculator
 
     if(frMetrics.getTotalPairs()  > totalMappedPairs * 0.1)
     {
-      frMetrics.calculateResult();
-      showResult(frMetrics);
+      frMetrics.showResult(totalMappedPairs);
     }
     
     if(rfMetrics.getTotalPairs() > totalMappedPairs * 0.1)
     {
-      rfMetrics.calculateResult();
-      showResult(rfMetrics);
+      rfMetrics.showResult(totalMappedPairs);
     }
     
     if(tandemMetrics.getTotalPairs() > totalMappedPairs * 0.1)
     {
-      tandemMetrics.calculateResult();
-      showResult(tandemMetrics);
+      tandemMetrics.showResult(totalMappedPairs);
     }
   }
 
-  /**
-   * Display the result
-   */
-  private void showResult(InsertSizeMetrics metrics)
+  @Override
+  public Element toXML(Document doc)
   {
-    PairOrientation orientation = metrics.getPairOrientation();
-  
-    System.out.print("Pair Orientation   : ");
-
-    if(orientation.equals(PairOrientation.FR))
-      System.out.println("FR (5' --F-->     <--R-- 5')");
-    else
-    if(orientation.equals(PairOrientation.RF))
-      System.out.println("RF (<--R-- 5'     5' --F-->)");
-    else
-      System.out.println("Tandem (Both on forward or reverse strands)");
-
-    System.out.println("Num. Read Pairs    : " + metrics.getTotalPairs());
-    System.out.format("%% Read Pairs       : %.2f %%\n", 1.0 * metrics.getTotalPairs() / totalMappedPairs * 100.0); 
-    System.out.println("Median Insert Size : " + metrics.getMedianInsertSize());
-    System.out.println("Mode Insert Size   : " + metrics.getModeInsertSize());
-    System.out.println();
+    Element rootElem = doc.createElement("InsertSizeMetrics");
+     
+    if(frMetrics.getTotalPairs()  > totalMappedPairs * 0.1)
+    {
+      rootElem.appendChild(frMetrics.toXML(doc));
+    }
+    
+    if(rfMetrics.getTotalPairs() > totalMappedPairs * 0.1)
+    {
+      rootElem.appendChild(rfMetrics.toXML(doc));
+    }
+    
+    if(tandemMetrics.getTotalPairs() > totalMappedPairs * 0.1)
+    {
+      rootElem.appendChild(tandemMetrics.toXML(doc));
+    }
+	return rootElem;
   }
 }
