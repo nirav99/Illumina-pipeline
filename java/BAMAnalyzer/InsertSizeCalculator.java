@@ -38,11 +38,11 @@ import net.sf.picard.sam.*;
  */
 public class InsertSizeCalculator implements MetricsCalculator
 {
-  private InsertSizeMetrics frMetrics;     // Metrics for read pairs having f->r
+  private InsertSizeMetrics2 frMetrics;     // Metrics for read pairs having f->r
                                            // orientation
-  private InsertSizeMetrics rfMetrics;     // Metrics for read pairs having r->f
+  private InsertSizeMetrics2 rfMetrics;     // Metrics for read pairs having r->f
                                            // orientation
-  private InsertSizeMetrics tandemMetrics; // Metrics for read pairs having
+  private InsertSizeMetrics2 tandemMetrics; // Metrics for read pairs having
                                            // tandem orientation
   private int totalMappedPairs = 0;        // Total pairs where both reads are
                                            // mapped
@@ -57,9 +57,9 @@ public class InsertSizeCalculator implements MetricsCalculator
    */
   public InsertSizeCalculator()
   {
-    frMetrics     = new InsertSizeMetrics(PairOrientation.FR);
-    rfMetrics     = new InsertSizeMetrics(PairOrientation.RF);
-    tandemMetrics = new InsertSizeMetrics(PairOrientation.TANDEM);
+    frMetrics     = new InsertSizeMetrics2(PairOrientation.FR);
+    rfMetrics     = new InsertSizeMetrics2(PairOrientation.RF);
+    tandemMetrics = new InsertSizeMetrics2(PairOrientation.TANDEM);
   }
   
   /**
