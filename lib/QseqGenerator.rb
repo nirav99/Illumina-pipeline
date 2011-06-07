@@ -30,18 +30,15 @@ class QseqGenerator
 
     # Build the command to generate qseq files 
     cmd = @newScriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
-          " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats"
-=begin
-    # These 2 sequencers still have older version of RTA, so use old script. For
-    # the rest, use the new script.
-    if @fcName.match(/SN738/) || @fcName.match(/SN821/)
-      cmd = @scriptName + " -i " + @baseCallsDir + " -p " + @intensityDir +
-            " -o " + @baseCallsDir + " --in-place --overwrite"
-    else
-      cmd = @newScriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
-            " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats"
-    end
-=end
+          " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats" 
+
+
+   # Add -P .clocs only to the sequencers running RTA 1.12
+   if flowcellName.match(/SN142/) || flowcellName.match(/SN580/) ||
+      flowcellName.match(/SN820/) || flowcellName.match(/SN881/) ||
+      flowcellName.match(/SN896/)
+      cmd = cmd + " -P .clocs"
+   end
 
     puts "Executing command : "
     puts cmd.to_s
