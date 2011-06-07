@@ -82,61 +82,29 @@ public class AlignmentResults
   }
   
   /**
-   * Display alignment results
+   * Compute alignment results
    */
-  public void showAlignmentResults()
+  public void calculateAlignmentResults()
   {
     if(totalReads > 0)
     {
-      System.out.println("Alignment Results - Read Type : " + readName);
-      System.out.println();
-      System.out.println("Total Reads       : " + totalReads);
-      System.out.println("Unmapped Reads    : " + unmappedReads);
-      System.out.println("Mapped Reads      : " + mappedReads);
-
-      percentMapped   = 1.0 * mappedReads / totalReads * 100;
-      percentDup      = 1.0 * dupReads / mappedReads * 100.0;
+      percentMapped = 1.0 * mappedReads / totalReads * 100;
       
       if(mappedReads > 0)
-        System.out.format("%% Mapped Reads    : %.2f%% %n", percentMapped);
+      {
+        percentDup = 1.0 * dupReads / mappedReads * 100.0;
+        percentExactMatch = 1.0 * totalExactMatches / mappedReads * 100;
+      }
       else
-        System.out.println("% Mapped Reads  : 0%");
+      {
+        percentDup = 0;
+        percentExactMatch = 0;
+      }
       
       if(totalBases > 0)
-      {
     	percentMismatch = 1.0 * totalMismatches / totalMappedBases * 100.0;
-        System.out.format("%% Mismatch        : %.2f%% %n", percentMismatch);
-      }
       else
-      {
-        System.out.println("%% Mismatch       : 100%");
         percentMismatch = 100;
-      }
-      System.out.println();
-      
-      System.out.println("Duplicate Reads   : " + dupReads);
-      if(mappedReads > 0)
-        System.out.format("%% Duplicate Reads : %.2f%% %n", percentDup);
-      else
-        System.out.println("% Duplicate Reads  : 0%");
-      System.out.println();
-
-      System.out.println("Exact Match Reads : " + totalExactMatches);
-      if(mappedReads > 0)
-      {
-    	percentExactMatch = 1.0 * totalExactMatches / mappedReads * 100;
-        System.out.format("%% Exact Match Reads : %.2f%% %n", percentExactMatch);
-      }
-      else
-      {
-        percentExactMatch = 0;
-        System.out.println("% Exact Match Reads : 0%");
-      }
-      System.out.println();
-      
-      System.out.println("Total Bases (including Ns)       : " + totalBases);
-      System.out.println("Total Valid Bases (excluding Ns) : " + totalValidBases);
-      System.out.println();
     }
   }  
 
@@ -182,6 +150,37 @@ public class AlignmentResults
       }
     }
     return numValidBases;
+  }
+  
+  public String toString()
+  {
+    if(totalReads <= 0)
+      return "";
+    
+    String newLine = "\r\n";
+    StringBuilder resultString = new StringBuilder("Alignment Results - Read Type : " + readName);
+    resultString.append(newLine);
+    resultString.append(newLine);
+    resultString.append("Total Reads       : " + totalReads + newLine);
+    resultString.append("Unmapped Reads    : " + unmappedReads + newLine);
+    resultString.append("Mapped Reads      : " + mappedReads + newLine);
+    resultString.append("% Mapped Reads    : " + String.format("%.2f", percentMapped) + "%");
+    resultString.append(newLine);
+    resultString.append("% Mismatch        : " + String.format("%.2f", percentMismatch) + "%");
+    resultString.append(newLine);
+    resultString.append(newLine);
+    resultString.append("Duplicate Reads   : " + dupReads + newLine);
+    resultString.append("% Duplicate Reads : " + String.format("%.2f", percentDup) + "%");
+    resultString.append(newLine);
+    resultString.append(newLine);
+    resultString.append("Exact Match Reads : " + totalExactMatches + newLine);
+    resultString.append("% Exact Match Reads : " + String.format("%.2f", percentExactMatch) + "%");
+    resultString.append(newLine);
+    resultString.append(newLine);
+    resultString.append("Total Bases (including Ns)       : " + totalBases + newLine);
+    resultString.append("Total Valid Bases (excluding Ns) : " + totalValidBases + newLine);
+    resultString.append(newLine);
+    return resultString.toString();
   }
   
   public Element toXML(Document doc)

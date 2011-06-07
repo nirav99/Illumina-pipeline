@@ -149,9 +149,9 @@ public class InsertSizeMetrics
     }
     try
     {
-			Plot p = new Plot(outputFile, "Insert Size Distribution", "Insert Size", 
-					          "Number of Reads", orientation.toString() + "_Distribution",
-					          xAxis, yAxis);
+      Plot p = new Plot(outputFile, "Insert Size Distribution", "Insert Size", 
+                        "Number of Reads", orientation.toString() + "_Distribution",
+                        xAxis, yAxis);
       p.plotGraph();
     }
     catch(Exception e)
@@ -247,8 +247,9 @@ public class InsertSizeMetrics
   {
     if(getTotalPairs() <totalMappedPairs * 0.1)
       return;
-    calculateResult();
-    
+    calculateResult(totalMappedPairs);
+  
+    /*
     System.out.print("Pair Orientation   : ");
 
     if(orientation.equals(PairOrientation.FR))
@@ -259,18 +260,18 @@ public class InsertSizeMetrics
     else
       System.out.println("Tandem (Both on forward or reverse strands)");
     
-    percentReadPairs = 1.0 * getTotalPairs() / totalMappedPairs * 100.0;
-    
     System.out.println("Num. Read Pairs    : " + getTotalPairs());
     System.out.format("%% Read Pairs       : %.2f %%\n", percentReadPairs); 
     System.out.println("Median Insert Size : " + getMedianInsertSize());
     System.out.println("Mode Insert Size   : " + getModeInsertSize());
     System.out.println();
+    */
+//    System.out.println(toString());
   }
   /**
    * Display the insert size metrics
    */
-  public void calculateResult()
+  public void calculateResult(int totalMappedPairs)
   {
     System.err.println("Number of Elements in TreeMap : " + insertSizeList.size()); 
     calculateStats();
@@ -279,11 +280,35 @@ public class InsertSizeMetrics
     {
       logInsertSizeDistribution();
       createDistributionChart();
+      percentReadPairs = 1.0 * getTotalPairs() / totalMappedPairs * 100.0;
     }
     catch(Exception e)
     {
       System.err.println(e.getMessage());
     }
+  }
+  
+  public String toString()
+  {
+    String newLine = "\r\n";
+    StringBuffer resultString = new StringBuffer();
+    resultString.append("Pair Orientation   : ");
+
+    if(orientation.equals(PairOrientation.FR))
+      resultString.append("FR (5' --F-->     <--R-- 5')" + newLine);
+    else
+    if(orientation.equals(PairOrientation.RF))
+      resultString.append("RF (<--R-- 5'     5' --F-->)" + newLine);
+    else
+      resultString.append("Tandem (Both on forward or reverse strands)" + newLine);
+    resultString.append(newLine);
+    
+    resultString.append("Num. Read Pairs    : " + getTotalPairs() + newLine);
+    resultString.append("% Read Pairs       : " + String.format("%.2f",percentReadPairs) + "%" + newLine); 
+    resultString.append("Median Insert Size : " + getMedianInsertSize() + newLine);
+    resultString.append("Mode Insert Size   : " + getModeInsertSize() + newLine);
+    resultString.append(newLine);
+    return resultString.toString();
   }
   
   public Element toXML(Document doc)

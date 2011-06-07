@@ -60,11 +60,22 @@ public class AlignmentCalculator implements MetricsCalculator
   @Override
   public void showResult()
   {
-    read1Results.showAlignmentResults();
-    read2Results.showAlignmentResults();
-    fragResults.showAlignmentResults();
+    read1Results.calculateAlignmentResults();
+    read2Results.calculateAlignmentResults();
+    fragResults.calculateAlignmentResults();
+    System.out.println(toString());
   }
 
+  @Override
+  public String toString()
+  {
+    StringBuilder resultString = new StringBuilder();
+    resultString.append(read1Results.toString());
+    resultString.append(read2Results.toString());
+    resultString.append(fragResults.toString());
+    return resultString.toString();
+  }
+  
   @Override
   public Element toXML(Document doc)
   {

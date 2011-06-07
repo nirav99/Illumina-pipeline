@@ -94,7 +94,9 @@ public class PairStatsCalculator implements MetricsCalculator
     percentUnmappedpairs =  1.0 * unmappedPairs / totalPairs * 100.0;
     percentRead1Mapped = 1.0 * read1Mapped / totalPairs * 100.0;
     percentRead2Mapped = 1.0 * read2Mapped / totalPairs * 100.0;
-    
+ 
+    System.out.println(toString());
+/*
     System.out.println();
     System.out.println("Pair Statistics");
     System.out.println();
@@ -107,11 +109,34 @@ public class PairStatsCalculator implements MetricsCalculator
     System.out.println("Unmapped Pairs          : " + unmappedPairs);
     System.out.format("%% Unmapped Pairs        : %.2f%%\r\n", percentUnmappedpairs);
     System.out.println("Mapped First Read       : " + read1Mapped);
-    System.out.format("%% Mapped First Read     : %.2f%%\r\n", 1.0 * read1Mapped / totalPairs * 100.0);
+    System.out.format("%% Mapped First Read     : %.2f%%\r\n", percentRead1Mapped);
     System.out.println("Mapped Second Read      : " + read2Mapped);
-    System.out.format("%% Mapped Second Read    : %.2f%%\r\n", 1.0 * read2Mapped / totalPairs * 100.0);
+    System.out.format("%% Mapped Second Read    : %.2f%%\r\n", percentRead2Mapped);
+ */
   }
 
+  @Override
+  public String toString()
+  {
+	String newLine = "\r\n";
+	
+    StringBuffer resultString = new StringBuffer();
+    resultString.append("Pair Statistics" + newLine + newLine);
+    resultString.append("Total Read Pairs        : " + totalPairs + newLine);
+    resultString.append(newLine);
+    resultString.append("Mapped Pairs            : " + mappedPairs + newLine);
+    resultString.append("% Mapped Pairs          : " + String.format("%.2f", percentMappedPairs) + "%" + newLine);
+    resultString.append("Same Chr Mapped Pairs   : " + mappedPairSameChr + newLine);
+    resultString.append("% Same Chr Mapped Pairs : " + String.format("%.2f", percentSameChrMappedPairs) + "%" + newLine);
+    resultString.append("Unmapped Pairs          : " + unmappedPairs + newLine);
+    resultString.append("% Unmapped Pairs        : " + String.format("%.2f", percentUnmappedpairs) + "%" + newLine);
+    resultString.append("Mapped First Read       : " + read1Mapped + newLine);
+    resultString.append("% Mapped First Read     : " + String.format("%.2f", percentRead1Mapped) + "%" + newLine);
+    resultString.append("Mapped Second Read      : " + read2Mapped + newLine);
+    resultString.append("% Mapped Second Read    : " + String.format("%.2f", percentRead2Mapped) + "%" + newLine);
+    return resultString.toString();
+  }
+  
   @Override
   public Element toXML(Document doc)
   {
@@ -137,8 +162,8 @@ public class PairStatsCalculator implements MetricsCalculator
     pairInfo.appendChild(read1MappedElem);
     
     Element read2MappedElem = doc.createElement("Read2Mapped");
-    read1MappedElem.setAttribute("NumReads", String.valueOf(read2Mapped));
-    read1MappedElem.setAttribute("PercentReads", String.valueOf(percentRead2Mapped));
+    read2MappedElem.setAttribute("NumReads", String.valueOf(read2Mapped));
+    read2MappedElem.setAttribute("PercentReads", String.valueOf(percentRead2Mapped));
     pairInfo.appendChild(read2MappedElem);
  
 	return pairInfo;

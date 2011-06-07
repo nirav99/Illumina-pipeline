@@ -29,6 +29,9 @@ public class BAMAnalyzer extends CommandLineProgram
     @Option(doc = "Stop after debugging N reads. Mainly for debugging. Default value: 0, which means process the whole file")
     public int STOP_AFTER = 0;
     
+    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output text file to write results in txt format", optional=true)
+    public File OUTPUT;
+    
   /**
    * @param args
    */
@@ -53,7 +56,10 @@ public class BAMAnalyzer extends CommandLineProgram
     
       SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
       reader = new SAMFileReader(INPUT);
-  
+
+      if(OUTPUT != null)
+        IoUtil.assertFileIsWritable(OUTPUT);
+      
       DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
       DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
       Document doc = docBuilder.newDocument();
@@ -114,6 +120,15 @@ public class BAMAnalyzer extends CommandLineProgram
       BufferedWriter writer = new BufferedWriter(new FileWriter(new File("BAMAnalysisInfo.xml")));
       writer.write(xmlString);
       writer.close();
+      
+      if(OUTPUT != null)
+      {
+        BufferedWriter logWriter = new BufferedWriter(new FileWriter(OUTPUT));
+        logWriter.write(alignCalc.toString());
+        logWriter.write(insCalc.toString());
+        logWriter.write(pairCalc.toString());
+        logWriter.close();
+      }
       return 0;
   }
   catch(Exception e)
