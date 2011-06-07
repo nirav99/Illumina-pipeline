@@ -153,25 +153,6 @@ class QseqSplitter
       end
     end
 
-=begin
-    # Helper method to reduce full flowcell name to FC name used in LIMS
-    def extractFCNameForLIMS(fc)
-      flowCellName = nil
-      temp = fc.slice(/FC(.+)$/)
-      if temp == nil
-        flowCellName = fc.slice(/([a-zA-Z0-9]+)$/)
-      else
-        flowCellName = temp.slice(2, temp.size)
-      end
-      # With HiSeqs, a flowcell would have a prefix letter "A" or "B".
-      # We remove that letter from the flowcell name since the flowcell
-      # is not entered with that prefix in LIMS.
-      # For GA2, this does not have any effect.
-      flowCellName.slice!(/^[a-zA-Z]/)
-      return flowCellName
-    end
-=end
-
   # Helper method to reduce full flowcell name to FC name used in LIMS
   def extractFCNameForLIMS(fc)
     return @pHelper.formatFlowcellNameForLIMS(fc)
@@ -239,27 +220,37 @@ class QseqSplitter
 
     # Start analysis for a multiplexed flowcell
   def startLaneAnalysisBarcodeFC()
- 
+
     if @makeJobName == nil || @makeJobName.empty?()
       puts "ERROR : name of make job is null or empty"
       exit -1
     end
+
+    outputFileName = @outputDir + "/barcodes.sh" 
+
+    outFile = File.open(outputFileName, "w")
+
+    outFile.puts "#!/bin/bash"
 
     cmdPrefix = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/BWA_Pipeline.rb " +
                 @fcName.to_s
 
     @laneBarcodes.each do |laneBarcode|
       cmd = cmdPrefix + " " + laneBarcode.to_s
-      obj = Scheduler.new(@fcName + "-" + laneBarcode.to_s, cmd)
-      obj.setMemory(8000)
-      obj.setNodeCores(1)
-      obj.setPriority(@priority)
-      obj.setDependency(@makeJobName.to_s)
-      obj.runCommand()
-      jobName = obj.getJobName()
-      puts "Job for command : " + cmd + " : " + jobName.to_s
-      sleep 5
-   end
+      outFile.puts cmd
+    end
+
+    outFile.close
+
+    cmd = "sh " + outputFileName
+    obj = Scheduler.new(@fcName + "-LaneBarcodes", cmd)
+    obj.setMemory(8000)
+    obj.setNodeCores(1)
+    obj.setPriority(@priority)
+    obj.setDependency(@makeJobName.to_s)
+    obj.runCommand()
+    jobName = obj.getJobName()
+    puts "Job for command : " + cmd + " : " + jobName.to_s
  end
 end
 
