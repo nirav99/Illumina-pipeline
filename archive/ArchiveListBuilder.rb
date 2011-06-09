@@ -4,8 +4,8 @@ $:.unshift File.join(File.dirname(__FILE__), ".", "..", "third_party")
 $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 
 # This script queries LIMS to find the list of all the results paths uploaded to
-# LIMS on the previous day. It appends a list of these directories to a log file
-# which can be periodically archived.
+# LIMS for a specific day. Current delay is 2 days. It appends a list of these 
+# directories to a log file which can be periodically archived.
 
 # Class to build a list of directories to archive
 class ArchiveListBuilder
@@ -15,17 +15,17 @@ class ArchiveListBuilder
 
     @archiveLogFileName = File.dirname(__FILE__) + "/archive_request_list.txt"
 
-    @dateOfInterest = getYesterdaysDate()
+    @dateOfInterest = getPreviousDate()
     runLIMSQuery()
   end
 
 private 
   # Using the current time, obtain the date for the previous day
-  def getYesterdaysDate()
+  def getPreviousDate()
     time = Time.new
     
-    #Substract 86400 from time to get yesterday's time
-    time = time - 86400
+    #Substract 172800 from time to get date 2 days ago
+    time = time - 172800 
     ascTime = time.strftime("%Y-%m-%d")
     return ascTime
   end
