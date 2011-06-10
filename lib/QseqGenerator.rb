@@ -32,11 +32,10 @@ class QseqGenerator
     cmd = @newScriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
           " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats" 
 
-
+    
    # Add -P .clocs only to the sequencers running RTA 1.12
-   if flowcellName.match(/SN142/) || flowcellName.match(/SN580/) ||
-      flowcellName.match(/SN820/) || flowcellName.match(/SN881/) ||
-      flowcellName.match(/SN896/)
+   if !flowcellName.match(/SN601/) && !flowcellName.match(/SN733/) &&
+      !flowcellName.match(/SN898/) && !flowcellName.match(/SN166/)
       cmd = cmd + " -P .clocs"
    end
 
