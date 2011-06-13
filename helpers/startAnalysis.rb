@@ -140,9 +140,15 @@ private
 
   # Accurate as of 13th June 2011
   # Every flowcell that is copied directly to ardmore, will have marker file
-  # RTAComplete.txt written at the end. When we find this file, we wait for 1
-  # hour and then flag this flowcell has ready to be analyzed.
+  # RTAComplete.txt written at the end. When we find this file, we add the old
+  # marker file .rsync_finished and then let it pick up the next time the
+  # cronjob runs. This is to allow flowcells being written directly and from the
+  # dumps. To be changed immediately when all flowcells are written directly.
   def fcReady?(fcName)
+    if File::exist?(@instrDir + "/" + fcName + "/.rsync_finished")
+      return true
+    end
+   
     if fcName.match(/SN580/) || fcName.match(/SN166/) || fcName.match(/SN601/) ||
        fcName.match(/SN733/) || fcName.match(/SN898/)
        puts "Flowcell " + fcName + " is not configured for automatic analysis"
@@ -150,22 +156,12 @@ private
     end
 
     # If the marker file RTAComplete.txt was written more than 1 hour ago, then
-    # this flowcell is ready for the analysis, otherwise it is not.
+    # add the new marked file and return.
     if File::exist?(@instrDir + "/" + fcName + "/RTAComplete.txt")
-      modificationTime = File::mtime(@instrDir + "/" + fcName + "/RTAComplete.txt")
-      timeNow = Time.now
-      timeDiff = timeNow - modificationTime
-
-      if timeDiff >= 3600
-        puts "Flowcell " + fcName + " is ready for analysis"
-        return true
-      else
-        puts "Holding off the analysis for flowcell " + fcName.to_s + " till the next hour"
-        return false
-      end
-    else
-      return false
+      cmd = "touch " + @instrDir + "/" + fcName + "/.rsync_finished"
+      `#{cmd}`
     end
+    return false
   end
 
   # Add the entry of the flowcell to "done" list so that it won't be processed
