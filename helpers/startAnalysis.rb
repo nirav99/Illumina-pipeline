@@ -115,6 +115,7 @@ private
     end      
   end
 
+=begin
   # Is flowcell ready to start the analysis ?, if yes return true else false
   # Current setup is that when a flowcell has copied over completely, the owner
   # of that flowcell is changed from nobody to p-illumina. Thus, if we find
@@ -131,6 +132,37 @@ private
     if File::exist?(@instrDir + "/" + fcName + "/.rsync_finished")
       puts "Flowcell " + fcName + " is ready for analysis"
       return true
+    else
+      return false
+    end
+  end
+=end
+
+  # Accurate as of 13th June 2011
+  # Every flowcell that is copied directly to ardmore, will have marker file
+  # RTAComplete.txt written at the end. When we find this file, we wait for 1
+  # hour and then flag this flowcell has ready to be analyzed.
+  def fcReady?(fcName)
+    if fcName.match(/SN580/) || fcName.match(/SN166/) || fcName.match(/SN601/) ||
+       fcName.match(/SN733/) || fcName.match(/SN898/)
+       puts "Flowcell " + fcName + " is not configured for automatic analysis"
+       return false
+    end
+
+    # If the marker file RTAComplete.txt was written more than 1 hour ago, then
+    # this flowcell is ready for the analysis, otherwise it is not.
+    if File::exist?(@instrDir + "/" + fcName + "/RTAComplete.txt")
+      modificationTime = File::mtime(@instrDir + "/" + fcName + "/RTAComplete.txt")
+      timeNow = Time.now
+      timeDiff = timeNow - modificationTime
+
+      if timeDiff >= 3600
+        puts "Flowcell " + fcName + " is ready for analysis"
+        return true
+      else
+        puts "Holding off the analysis for flowcell " + fcName.to_s + " till the next hour"
+        return false
+      end
     else
       return false
     end
