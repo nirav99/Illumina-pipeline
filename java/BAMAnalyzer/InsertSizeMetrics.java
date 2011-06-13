@@ -248,26 +248,8 @@ public class InsertSizeMetrics
     if(getTotalPairs() <totalMappedPairs * 0.1)
       return;
     calculateResult(totalMappedPairs);
-  
-    /*
-    System.out.print("Pair Orientation   : ");
-
-    if(orientation.equals(PairOrientation.FR))
-      System.out.println("FR (5' --F-->     <--R-- 5')");
-    else
-    if(orientation.equals(PairOrientation.RF))
-      System.out.println("RF (<--R-- 5'     5' --F-->)");
-    else
-      System.out.println("Tandem (Both on forward or reverse strands)");
-    
-    System.out.println("Num. Read Pairs    : " + getTotalPairs());
-    System.out.format("%% Read Pairs       : %.2f %%\n", percentReadPairs); 
-    System.out.println("Median Insert Size : " + getMedianInsertSize());
-    System.out.println("Mode Insert Size   : " + getModeInsertSize());
-    System.out.println();
-    */
-//    System.out.println(toString());
   }
+
   /**
    * Display the insert size metrics
    */

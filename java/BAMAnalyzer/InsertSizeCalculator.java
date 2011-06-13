@@ -122,30 +122,6 @@ public class InsertSizeCalculator implements MetricsCalculator
       tandemMetrics.showResult(totalMappedPairs);
     
     System.out.println(toString());
-    /*
-      System.out.println("Insert Size Calculations");
-      System.out.println();
-      System.out.println("Pairs with Both Reads Mapped on same Chr  : "
-				+ totalMappedPairs);
-      System.out.format("%% Pairs with Both Reads Mapped on same Chr : %.2f%%\n", 1.0
-						* totalMappedPairs / totalPairs * 100.0);
-      System.out.println();
-
-     if(frMetrics.getTotalPairs() > totalMappedPairs * 0.1)
-     {
-       frMetrics.showResult(totalMappedPairs);
-     }
-
-     if(rfMetrics.getTotalPairs() > totalMappedPairs * 0.1)
-     {
-       rfMetrics.showResult(totalMappedPairs);
-     }
-
-     if(tandemMetrics.getTotalPairs() > totalMappedPairs * 0.1)
-     {
-       tandemMetrics.showResult(totalMappedPairs);
-     }
-     */
   }
 
   @Override

@@ -96,23 +96,6 @@ public class PairStatsCalculator implements MetricsCalculator
     percentRead2Mapped = 1.0 * read2Mapped / totalPairs * 100.0;
  
     System.out.println(toString());
-/*
-    System.out.println();
-    System.out.println("Pair Statistics");
-    System.out.println();
-    System.out.println("Total Read Pairs        : " + totalPairs);
-    System.out.println();
-    System.out.println("Mapped Pairs            : " + mappedPairs);
-    System.out.format("%% Mapped Pairs          : %.2f%%\n", percentMappedPairs);
-    System.out.println("Same Chr Mapped Pairs   : " + mappedPairSameChr);
-    System.out.format("%% Same Chr Mapped Pairs : %.2f%%\r\n", percentSameChrMappedPairs);
-    System.out.println("Unmapped Pairs          : " + unmappedPairs);
-    System.out.format("%% Unmapped Pairs        : %.2f%%\r\n", percentUnmappedpairs);
-    System.out.println("Mapped First Read       : " + read1Mapped);
-    System.out.format("%% Mapped First Read     : %.2f%%\r\n", percentRead1Mapped);
-    System.out.println("Mapped Second Read      : " + read2Mapped);
-    System.out.format("%% Mapped Second Read    : %.2f%%\r\n", percentRead2Mapped);
- */
   }
 
   @Override
