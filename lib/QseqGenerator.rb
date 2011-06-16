@@ -10,11 +10,8 @@ class QseqGenerator
 
   # Class constructor - to prepare base calls directory to generate qseq
   def initialize(flowcellName)
-    @scriptName = "/stornext/snfs5/next-gen/Illumina/GAPipeline/" +
-                  "BclConverter-1.7.1/bin/setupBclToQseq.py"
-
-    @newScriptName = "/stornext/snfs5/next-gen/niravs_scratch/code/" +
-                     "OLBTest/OLB1.9/OLB-1.9.0/bin/setupBclToQseq.py" 
+    @scriptName = "/stornext/snfs5/next-gen/Illumina/OLB1.9/OLB1.9/" +
+                  "OLB-1.9.0/bin/setupBclToQseq.py"
 
     @fcName = flowcellName
     @priority = "high" # Allowed values are normal / high for the scheduling
@@ -29,7 +26,7 @@ class QseqGenerator
     @intensityDir = @baseCallsDir.gsub(/\/[a-zA-Z0-9_]+$/, "")
 
     # Build the command to generate qseq files 
-    cmd = @newScriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
+    cmd = @scriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
           " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats" 
 
     
