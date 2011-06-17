@@ -75,7 +75,7 @@ private
     obj          = EmailHelper.new()
     emailFrom    = "sol-pipe@bcm.edu"
     emailTo      = obj.getErrorRecepientEmailList()
-    emailSubject = "Archive Script : Error encountered in obtaining directory paths for date : " + 
+    emailSubject = "Archive Script : Error encountered in appending directory paths for date : " + 
                    @dateOfInterest.to_s
     emailText    = msg
 
