@@ -3,9 +3,12 @@
 $:.unshift File.join(File.dirname(__FILE__), ".", "..", "third_party")
 $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 
+require 'EmailHelper'
+
 # This script queries LIMS to find the list of all the results paths uploaded to
 # LIMS for a specific day. Current delay is 2 days. It appends a list of these 
 # directories to a log file which can be periodically archived.
+# Author : Nirav Shah niravs@bcm.edu
 
 # Class to build a list of directories to archive
 class ArchiveListBuilder
@@ -45,15 +48,21 @@ private
 
   # Append the list of result paths to the log file
   def buildArchiveList(limsOutput)
-    fileHandle = File.open(@archiveLogFileName, "a")
+    begin
+      fileHandle = File.open(@archiveLogFileName, "a")
 
-    limsOutput.each do |record|
-      record.strip!
-      tokens       = record.split(";")
-      dirToArchive = tokens[1].to_s  
-      fileHandle.puts dirToArchive.to_s
+      limsOutput.each do |record|
+        record.strip!
+        tokens       = record.split(";")
+        dirToArchive = tokens[1].to_s  
+        fileHandle.puts dirToArchive.to_s
+      end
+      fileHandle.close()
+    rescue Exception => e
+      errorMessage = e.message + " " + e.backtrace.inspect
+      puts "Error : " + errorMessage.to_s
+      handleError(errorMessage)
     end
-    fileHandle.close()
   end  
 
   # Handling error - for now email the error message
@@ -66,7 +75,7 @@ private
     obj          = EmailHelper.new()
     emailFrom    = "sol-pipe@bcm.edu"
     emailTo      = obj.getErrorRecepientEmailList()
-    emailSubject = "Error encountered in obtaining directory paths for date : " + 
+    emailSubject = "Archive Script : Error encountered in obtaining directory paths for date : " + 
                    @dateOfInterest.to_s
     emailText    = msg
 
