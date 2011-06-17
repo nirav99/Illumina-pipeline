@@ -43,7 +43,8 @@ class CaptureStats
     rescue Exception => e
       puts e.message
       puts e.backtrace.inspect
-      exit -1
+#      exit -1
+      exit 0
     end
     exit 0
   end

@@ -26,12 +26,14 @@ class Scheduler
     @numCores = numCores.to_i
   end
 
-  # If priority is set to high, send to high queue
-  # else schedule in normal queue
+  # Schedule the job in the user specified queue
   def setPriority(priority)
-    if priority.downcase.eql?("high")
-     @priority = "high"
+    if priority != nil && !priority.empty?()
+      @priority = priority
     end
+#    if priority.downcase.eql?("high")
+#     @priority = "high"
+#    end
   end
 
   # Get the name of the job to run

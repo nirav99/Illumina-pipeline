@@ -54,8 +54,8 @@ class BWA_BAM
     end
 
     # Computing cluster specific members
-    @cpuCores       = 7      # Max CPU cores to use
-    @minCpuCores    = 7      # Min CPU cores to use
+    @cpuCores       = 8      # Max CPU cores to use
+    @minCpuCores    = 8      # Min CPU cores to use
     # Note: Maximum available CPU cores are 8. However, due to ardmore
     # idiosyncracies, jobs requesting 8 cores wait for more than a day to obtain
     # a node. Thus, selected 7 as the max CPU cores based on the observation

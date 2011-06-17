@@ -234,7 +234,7 @@ end
     # TREN or TLVR libraries. If library name matches these, use hg19 reference or else use
     # the reference path provided. 
     if @libraryName != nil && !@libraryName.empty?() && 
-       (@libraryName.match(/TREN/)  || @libraryName.match(/TLVR/))
+       (@libraryName.match(/TREN/) || @libraryName.match(/TLVR/))
       @bwaParams.setReferencePath("/stornext/snfs5/next-gen/Illumina/bwa_references/h/hg19/original/hg19.fa")
       puts "Setting reference path HG19 for BWA"
     else
@@ -274,7 +274,7 @@ end
           @bwaParams.setChipDesignName(@chipName.to_s)
           puts "Setting chip design name : " + @chipName.to_s
         end
-      end
+     end
     rescue Exception => e
       puts e.message
       puts e.backtrace.inspect
