@@ -7,6 +7,10 @@ require 'PipelineHelper'
 require 'BWAParams'
 require 'FCBarcodeFinder'
 
+# Class to perform alignment on Illumina sequence files and generate a BAM using
+# BWA.
+# Author Nirav Shah niravs@bcm.edu
+
 class BWA_BAM
   def initialize()
     # Open BWAConfigParams.txt file and read configuration parameters for BWA
@@ -56,13 +60,8 @@ class BWA_BAM
     # Computing cluster specific members
     @cpuCores       = 8      # Max CPU cores to use
     @minCpuCores    = 8      # Min CPU cores to use
-    # Note: Maximum available CPU cores are 8. However, due to ardmore
-    # idiosyncracies, jobs requesting 8 cores wait for more than a day to obtain
-    # a node. Thus, selected 7 as the max CPU cores based on the observation
-    # that jobs requesting 7 cores easily find a node
     @maxMemory      = 28000  # Maximum memory available per node
     @lessMemory     = 28000  # Command requiring less than maximum memory
-#    @priority       = "normal" # Two allowed values high / normal
   
     # List of required paths
     # Path to BWA executable
@@ -152,6 +151,7 @@ class BWA_BAM
       obj2.setNodeCores(@cpuCores)
       obj2.setPriority(@priority)
 
+      puts "ALN FOR READ2"
       if !unzipJobID1.empty?()
         obj2.setDependency(unzipJobID1)
       end
@@ -181,77 +181,15 @@ class BWA_BAM
       makeSamJobName = obj3.getJobName()
     end
 
-    # Sort a BAM
-    sortBamCmd = sortBamCommand()
-    obj5 = Scheduler.new(@fcBarcode  + "_sortBam", sortBamCmd)
-    obj5.setMemory(@lessMemory)
-    obj5.setNodeCores(@minCpuCores)
-    obj5.setPriority(@priority)
-    obj5.setDependency(makeSamJobName)
-    obj5.runCommand()
-    sortBamJobName = obj5.getJobName() 
-
-    # Mark duplicates on BAM
-    markedDupCmd = markDupCommand()
-    obj6 = Scheduler.new(@fcBarcode + "_markDupBam", markedDupCmd)
-    obj6.setMemory(@lessMemory)
-    obj6.setNodeCores(@minCpuCores)
-    obj6.setPriority(@priority)
-    obj6.setDependency(sortBamJobName)
-    obj6.runCommand()
-    markedDupJobName = obj6.getJobName()
-    prevCmd = markedDupJobName
-
-    # Filter out phix reads
-    if @filterPhix == true
-      phixFilterCmd = filterPhixReadsCmd(@markedBam)
-      objX = Scheduler.new(@fcBarcode + "_phixFilter", phixFilterCmd)
-      objX.setMemory(@lessMemory)
-      objX.setNodeCores(@minCpuCores)
-      objX.setPriority(@priority)
-      objX.setDependency(prevCmd)
-      objX.runCommand()
-      phixFilterJobName = objX.getJobName()
-      prevCmd = phixFilterJobName
-    end
-
-    # Fix mate information for paired end FC
-    if @isFragment == false
-      fixMateCmd = fixMateInfoCmd()
-      objY = Scheduler.new(@fcBarcode + "_fixMateInfo" + @markedBam, fixMateCmd)
-      objY.setMemory(@lessMemory)
-      objY.setNodeCores(@minCpuCores)
-      objY.setPriority(@priority)
-      objY.setDependency(prevCmd)
-      objY.runCommand()
-      fixMateJobName = objY.getJobName()
-      prevCmd = fixMateJobName
-    end
-
-    # Fix unmapped reads. When a read aligns over the boundary of two
-    # chromosomes, BWA marks this read as unmapped but does not reset CIGAR to *
-    # and mapping quality zero. This causes picard's validator to complain.
-    # Hence, we fix that anomaly here.
-    fixCIGARCmd = buildFixCIGARCmd(@markedBam)
-    fixCIGARObj = Scheduler.new(@fcBarcode + "_fixCIGAR" + @markedBam, fixCIGARCmd)
-    fixCIGARObj.setMemory(@lessMemory)
-    fixCIGARObj.setNodeCores(@minCpuCores)
-    fixCIGARObj.setPriority(@priority)
-    fixCIGARObj.setDependency(prevCmd)
-    fixCIGARObj.runCommand()
-    fixCIGARJobName = fixCIGARObj.getJobName()
-    prevCmd = fixCIGARJobName
-
-    # Calculate Alignment Stats
-    mappingStatsCmd = calculateMappingStats()
-    obj7 = Scheduler.new(@fcBarcode + "_AlignStats", mappingStatsCmd)
-    obj7.setMemory(@lessMemory)
-    obj7.setNodeCores(@minCpuCores)
-    obj7.setPriority(@priority)
-    obj7.setDependency(prevCmd)
-    obj7.runCommand()
-    runStatsJobName = obj7.getJobName()
-    prevCmd = runStatsJobName
+    # Generate a BAM, sort it, mark dups on it and calculate mapping stats
+    bamProcessCmd = buildBAMProcessingCmd()
+    obj4 = Scheduler.new(@fcBarcode + "_processBam", bamProcessCmd)
+    obj4.setMemory(@lessMemory)
+    obj4.setNodeCores(@minCpuCores)
+    obj4.setPriority(@priority)
+    obj4.setDependency(makeSamJobName)
+    obj4.runCommand()
+    previousJobName = obj4.getJobName() 
 
     if @chipDesign != nil && !@chipDesign.empty?()
       captureStatsCmd = buildCaptureStatsCmd()
@@ -259,14 +197,14 @@ class BWA_BAM
       capStatsObj.setMemory(@lessMemory)
       capStatsObj.setNodeCores(@minCpuCores)
       capStatsObj.setPriority(@priority)
-      capStatsObj.setDependency(prevCmd)
+      capStatsObj.setDependency(previousJobName)
       capStatsObj.runCommand()
       capStatsJobName = capStatsObj.getJobName()
-      prevCmd = capStatsJobName
+      previousJobName = capStatsJobName
     end
 
     # Hook to run code after final BAM is generated
-    runPostRunCmd(prevCmd)
+    runPostRunCmd(previousJobName)
   end
 
   private
@@ -390,49 +328,12 @@ class BWA_BAM
     return rgString.to_s
   end
 
-  # Sort the BAM by mapping coordinates
-  def sortBamCommand()
-    cmd = "time java " + @heapSize + " -jar " + @picardPath + "/SortSam.jar I=" + @samFileName +
-    " O=" + @sortedBam + " SO=coordinate " + @picardTempDir + " " +
-    " MAX_RECORDS_IN_RAM=" + @maxRecordsInRam.to_s + " " + @picardValStr
-    return cmd
-  end
-
-  # Mark duplicates on a sorted BAM
-  def markDupCommand()
-    cmd = "time java " + @heapSize + " -jar " + @picardPath + "/MarkDuplicates.jar I=" +
-          @sortedBam + " O=" + @markedBam + " " + @picardTempDir + " " +
-          "MAX_RECORDS_IN_RAM=" + @maxRecordsInRam.to_s + " AS=true M=metrics.foo " +
-          @picardValStr 
-    return cmd
-  end
-
-  # Method to build command to calculate mapping stats
-  def calculateMappingStats()
-    cmd = "ruby " + File.dirname(__FILE__) +  "/BWAMapStats.rb " + @markedBam
-    puts "Command to generate Mapping Stats : " + cmd
-    return cmd
-  end
-
-  # Filter reads mapping to phix and phix contig from the BAM header
-  def filterPhixReadsCmd(bamFile)
-    jarName = @javaDir + "/PhixFilterFromBAM.jar"
-    cmd = "time java " + @heapSize + " -jar " + jarName + " I=" + bamFile
-    return cmd
-  end
- 
-  # Correct the flag describing the strand of the mate
-  def fixMateInfoCmd()
-    cmd = "time java " + @heapSize + " -jar " + @picardPath + "/FixMateInformation.jar I=" +
-           @markedBam.to_s + " " + @picardTempDir +
-           " MAX_RECORDS_IN_RAM=" + @maxRecordsInRam.to_s + " " + @picardValStr
-    return cmd
-  end
-
-  # Correct the unmapped reads. Reset CIGAR to * and mapping quality to zero.
-  def buildFixCIGARCmd(bamFile)
-    jarName = @javaDir + "/FixCIGAR.jar"
-    cmd = "time java " + @heapSize + " -jar " + jarName + " I=" + bamFile
+  # Run the script to sort a bam, mark dups, fix mate info, fix CIGAR and
+  # calculate mapping stats etc
+  def buildBAMProcessingCmd()
+    cmd = "ruby " + File.dirname(__FILE__) + "/BAMProcessor.rb " +
+          @isFragment.to_s + " " + @filterPhix.to_s + " " + @samFileName + 
+          " " + @sortedBam + " " + @markedBam
     return cmd
   end
 

@@ -9,6 +9,12 @@ $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 # Author Nirav Shah niravs@bcm.edu
 
 class BAMProcessor
+  # Constructor 
+  # isPairedEnd   - true if flowcell is paired end, false otherwise
+  # phixFilter    - true if phix reads should be filtered, false otherwise
+  # samFileName   - Name of the sam file
+  # sortedBAMName - Name of the bam that is coordinate sorted
+  # finalBAMName  - Name of the final BAM file
   def initialize(isPairedEnd, phixFilter, samFileName, sortedBAMName,
                  finalBAMName)
 
@@ -36,6 +42,7 @@ class BAMProcessor
     @heapSize        = "-Xmx22G"
   end
 
+  # Apply the series of command to generate a final BAM
   def process()
     puts "Obtaining node characteristics"
     displayNodeCharacteristics()
@@ -43,61 +50,31 @@ class BAMProcessor
     # Command to sort a SAM file into a BAM
     puts "Sorting BAM"
     cmd = sortBamCommand()
-    `#{cmd}`
-    returnValue = $?
-
-    if returnValue != 0
-      handleError("sortBam")
-    end
+    runCommand(cmd, "sortBam")
 
     puts "Marking Duplicates"
     cmd = markDupCommand()
-    `#{cmd}`
-    returnValue = $?
-
-    if returnValue != 0
-      handleError("markBam")
-    end
+    runCommand(cmd, "markDups")
 
     if @filterPhix == true
        puts "Filtering out phix reads"
        cmd = filterPhixReadsCmd(@markedBam)
-       `#{cmd}`
-       returnValue = $?
-    
-      if returnValue != 0
-        handleError("filterPhix")
-      end
+       runCommand(cmd, "filterPhix")
     end    
 
    if @isFragment == false
       puts "Fixing mate information"
       cmd = fixMateInfoCmd()
-      `#{cmd}`
-      returnValue = $?
-
-      if returnValue != 0
-        handleError("fixMateInfo")
-      end
+      runCommand(cmd, "fixMateInformation")
    end
  
    puts "Fixing CIGAR for unmapped reads"
    cmd = fixCIGARCmd(@markedBam) 
-   `#{cmd}`
-   returnValue = $?
-
-   if returnValue != 0
-     handleError("fixCIGAR")
-   end
+   runCommand(cmd, "fixCIGAR")
 
    puts "Calculating mapping stats"
    cmd = mappingStatsCmd()
-   `#{cmd}`
-   returnValue = $?
-
-   if returnValue != 0
-     handleError("bamAnalyzer")
-   end
+   runCommand(cmd, "mappingStats")
   end 
 
   private
@@ -167,10 +144,10 @@ class BAMProcessor
     # Get execution hostname
     cmd = "hostname"
     output = `#{cmd}`
-    result = result + " Execution hostname : " + output.to_s
+    result = result + "\r\nExecution hostname : " + output.to_s
     cmd = "df -h /space1/tmp"
     output = `#{cmd}`
-    result = result + " Free space on /space1/tmp = " + output.to_s
+    result = result + "\r\nFree space on /space1/tmp = " + output.to_s
     return result
   end
 
@@ -180,13 +157,31 @@ class BAMProcessor
     puts result.to_s
   end
 
+  # Method to run the specified command
+  def runCommand(cmd, cmdName)
+    startTime = Time.now
+    `#{cmd}`
+    endTime   = Time.now
+    returnValue = $?
+    displayExecutionTime(startTime, endTime)
+
+    if returnValue != 0
+      handleError(cmdName)
+    end
+  end
+
+  # Display execution time as the difference between start time and end time
+  def displayExecutionTime(startTime, endTime)
+    timeDiff = (endTime - startTime) / 3600
+    puts "Execution time : " + timeDiff.to_s + " hours"
+  end
+
   @isFragment    = false # Is read fragment, default is paired (true)
   @samFileName   = nil   # Name of SAM file to generate using BWA
   @sortedBam     = nil   # Name of sorted BAM
   @markedBam     = nil   # Name of BAM with duplicates marked
   @picardPath    = nil   # Picard path
 end 
-
 
 fcPairedEnd     = ARGV[0]
 filterPhixReads = ARGV[1]
