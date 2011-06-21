@@ -48,16 +48,19 @@ public class AlignmentResults
      int numMismatches = 0; // Number of mismatches in current read
      int readLength = record.getReadLength();
      
-	 // We assume that the caller will check for the type of the
+     // We assume that the caller will check for the type of the
      // read and invoke the function with the correct type of read.
-	  totalReads++;
+	   totalReads++;
 
-	  // For an unmapped read, increment the counter for unmapped read
-      if(record.getReadUnmappedFlag())
-        unmappedReads++;
-      else
-      {
-    	mappedReads++;
+     totalBases += readLength;
+     totalValidBases += countValidBases(record.getReadString());
+
+     // For an unmapped read, increment the counter for unmapped read
+     if(record.getReadUnmappedFlag())
+       unmappedReads++;
+     else
+     {
+        mappedReads++;
     	
         if(record.getDuplicateReadFlag())
           dupReads++;
@@ -68,9 +71,6 @@ public class AlignmentResults
         // if it mapped.
         totalMappedBases += readLength;
         
-        totalBases += readLength;
-        totalValidBases += countValidBases(record.getReadString());
-      
         numMismatches = mCtr.countMismatches(record);
       
         if(numMismatches == 0)
@@ -78,7 +78,7 @@ public class AlignmentResults
           totalExactMatches++;
         }
         totalMismatches += numMismatches;
-      }
+     }
   }
   
   /**
@@ -101,8 +101,8 @@ public class AlignmentResults
         percentExactMatch = 0;
       }
       
-      if(totalBases > 0)
-    	percentMismatch = 1.0 * totalMismatches / totalMappedBases * 100.0;
+      if(totalMappedBases > 0)
+        percentMismatch = 1.0 * totalMismatches / totalMappedBases * 100.0;
       else
         percentMismatch = 100;
     }
