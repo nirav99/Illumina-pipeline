@@ -20,9 +20,6 @@ class CaptureStats
     @limsScript     = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
                       "setIlluminaCaptureResults.pl"
 
-    if !chipDesignPath.match(/p-illumina/)
-      chipDesignPath = "/users/p-illumina/" + chipDesignPath.to_s
-    end
     begin
       if inputFile == nil || inputFile.empty?()
         raise "BAM File name must be specified"
@@ -30,8 +27,16 @@ class CaptureStats
         raise "Specified file : " + inputFile.to_s + " can not be read"
       elsif chipDesignPath == nil || chipDesignPath.empty?()
         raise "Chip Design Name must be specified"
+
+      # If the chipDesignPath is a valid absolute file path, use it. If not,
+      # check if this file exists in directory /users/p-illumina, and update
+      # chipDesignPath accordingly. If the file exists check fails again,
+      # raise exception and abort.
       elsif !File::exist?(chipDesignPath)
-        raise "Chip Design Path : " + chipDesignPath + " does not exist"
+        chipDesignPath = "/users/p-illumina/" + chipDesignPath.to_s
+        if !File::exist?(chipDesignPath)
+          raise "Chip Design Path : " + chipDesignPath + " does not exist"
+        end
       end
       puts "Chip Design Path : " + chipDesignPath.to_s
 
@@ -242,33 +247,6 @@ class CaptureStatsResults
      "Bases with 40+ Coverage = " + @numBases40Coverage.to_s + " (" + @perBases40Coverage.to_s + ")%\r\n"
      return output
   end
-
-=begin
-  # Method to create a result string to upload to LIMS
-  def formatForLIMSUpload_old()
-    result = "BUFFER_ALIGNED_READS " + @numBufferAlignedReads.to_s +
-    " PERCENT_BUFFER_ALIGNED_READS " + @perBufferAlignedReads.to_s +
-    " TARGET_ALIGNED_READS " + @numTargetAlignedReads.to_s +
-    " PERCENT_TARGET_ALIGNED_READS " + @perTargetAlignedReads.to_s +
-    " TARGETS_HIT " + @numTargetsHit.to_s + " PERCENT_TARGETS_HIT " + @perTargetsHit.to_s +
-    " TARGET_BUFFERS_HIT " + @numTargetBuffersHit.to_s +
-    " PER_TARGET_BUFFERS_HITS " + @perTargetBuffersHit.to_s +
-    " TOTAL_TARGETS " + @numTotalTargets.to_s +
-    " HIGH_COVERAGE_NON_TARGET_HITS " + @numNonTarget.to_s +
-    " BASES_ON_TARGET " + @numTargetedBases.to_s + " BASES_ON_BUFFER " + @numBufferBases.to_s +
-    " ONE_COVERAGE_BASES " + @numBases1Coverage.to_s + 
-    " PER_ONE_COVERAGE_BASES " + @perBases1Coverage.to_s +
-    " FOUR_COVERAGE_BASES " + @numBases4Coverage.to_s + 
-    " PER_FOUR_COVERAGE_BASES " + @perBases4Coverage.to_s +
-    " TEN_COVERAGE_BASES " + @numBases10Coverage.to_s + 
-    " PER_TEN_COVERAGE_BASES " + @perBases10Coverage.to_s +
-    " TWENTY_COVERAGE_BASES " + @numBases20Coverage.to_s + 
-    " PER_TWENTY_COVERAGE_BASES " + @perBases20Coverage.to_s +
-    " FORTY_COVERAGE_BASES " + @numBases40Coverage.to_s + 
-    " PER_FORTY_COVERAGE_BASES " + @perBases40Coverage.to_s
-    return result
-  end
-=end
 
   # Method to create a result string to upload to LIMS
   def formatForLIMSUpload()
