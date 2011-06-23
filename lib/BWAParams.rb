@@ -73,8 +73,8 @@ class BWAParams
   end
 
   def setschedulingQ(value)
-    if value.eql?("high")
-      @schedulingQ = "high"
+    if value != nil && !value.empty?()
+      @schedulingQ = value.to_s
     end
   end
 
