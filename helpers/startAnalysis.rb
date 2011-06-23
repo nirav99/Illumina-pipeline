@@ -149,8 +149,8 @@ private
       return true
     end
    
-    if fcName.match(/SN580/) || fcName.match(/SN166/) || fcName.match(/SN601/) ||
-       fcName.match(/SN733/) || fcName.match(/SN898/)
+    if fcName.match(/SN580/) || fcName.match(/SN166/) || 
+       fcName.match(/SN601/) 
        puts "Flowcell " + fcName + " is not configured for automatic analysis"
        return false
     end

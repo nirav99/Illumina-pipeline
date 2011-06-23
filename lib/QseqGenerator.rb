@@ -31,8 +31,7 @@ class QseqGenerator
 
     
    # Add -P .clocs only to the sequencers running RTA 1.12
-   if !flowcellName.match(/SN601/) && !flowcellName.match(/SN733/) &&
-      !flowcellName.match(/SN898/) && !flowcellName.match(/SN166/)
+   if !flowcellName.match(/SN166/)
       cmd = cmd + " -P .clocs"
    end
 
