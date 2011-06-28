@@ -37,7 +37,11 @@ class BuildGERALDConfig
       fileHandle.write("ELAND_GENOME " + @referencePath + "\n")
     end
     writeAnalysisLines(fileHandle)
-    fileHandle.write("USE_BASES Y"   + @numCycles.to_s   + "\n")
+#    fileHandle.write("USE_BASES Y"   + @numCycles.to_s   + "\n")
+    # Instead of using the number of cycles, use Y*n which automatically
+    # determines the number of bases to use from the config.xml in the Basecalls
+    # directory. The "n" at the end represents ignoring the last base.
+    fileHandle.write("USE_BASES Y*n" + "\n")
     fileHandle.write("FLOW_CELL "    + @fcVersion.to_s   + "\n")
     fileHandle.write("WITH_SEQUENCE true\n")
 

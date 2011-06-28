@@ -6,6 +6,7 @@ require 'hpricot'
 require 'fileutils'
 require 'net/smtp'
 require 'PipelineHelper'
+require 'BWAParams'
 
 # Class to find the barcode for the GERALD directory
 # For non-multiplexed lanes, it returns empty string as the barcode.
@@ -13,15 +14,41 @@ class FCBarcodeFinder
 
   # Class constructor
   def initialize()
-    @barcode = ""
     @pipelineHelper = PipelineHelper.new
-    @analysisLane = @pipelineHelper.findAnalysisLaneNumbers()
-    @fcName       = @pipelineHelper.findFCName()
-    puts @analysisLane.to_s
   end
 
-  # Find the barcode for the current GERALD directory.
-  # If no barcode, return an empty string
+  # Return the flowcell barcode to use for uploading data to LIMS
+  # In all the new GERALD directories, this information is logged in a config
+  # called BWAConfigParams.txt in the result directory (GERALD directory). So,
+  # simply, read its value and return.
+  # However, for older directories, this might not be available in the config
+  # file. In these cases, it would be necessary to read the Summary.xml or/and
+  # the SamplesDirectories.csv to find the correct sequence used for the barcode
+  # and then build the actual LIMS barcode.
+  def getBarcodeForLIMS()
+    bwaParams = BWAParams.new()
+    bwaParams.loadFromFile()
+    limsBarcode = bwaParams.getFCBarcode()
+
+    # BWAconfig params file did not have the barcode information, now try to
+    # find it from Summary.xml or SampleSheet.csv and SamplesDirectories.csv
+    if limsBarcode == nil || limsBarcode.empty?()
+
+      # Find flowcell name from Summary.xml
+      fcName       = @pipelineHelper.findFCName()
+      analysisLane = @pipelineHelper.findAnalysisLaneNumbers()
+      limsBarcode = fcName + "-" + analysisLane.to_s 
+      barcode = findBarcode()
+
+      if barcode != nil && !barcode.empty?()
+        limsBarcode = limsBarcode + "-" + 
+                      @pipelineHelper.findBarcodeTagID(barcode.to_s)
+      end
+    end
+    return limsBarcode.to_s
+  end
+
+  private
 
   # If the current GERALD directory lies under a numbered directory such as
   # 001, 002 etc, the barcode information is present in the Summary.xml file
@@ -32,27 +59,14 @@ class FCBarcodeFinder
   # If the lane is not multiplexed, return an empty string to indicate missing
   # barcode.
   def findBarcode()
-    @barcode = findBarcodeInSummary()
+    barcode = findBarcodeInSummary()
 
-    if @barcode == nil || @barcode.empty?()
-      @barcode = findBarcodeFromCSV()
+    if barcode == nil || barcode.empty?()
+      barcode = findBarcodeFromCSV()
     end 
-      return @barcode.to_s
+      return barcode.to_s
   end
 
-  # Return the flowcell barcode for upload to LIMS
-  def getBarcodeForLIMS()
-    limsBarcode = @fcName + "-" + @analysisLane.to_s 
-    findBarcode()
-
-    if @barcode != nil && !@barcode.empty?()
-      limsBarcode = limsBarcode + "-" + 
-                    @pipelineHelper.findBarcodeTagID(@barcode.to_s)
-    end
-    return limsBarcode.to_s
-  end
-
-  private
   # Helper method to find the barcode tag from the Summary.xml file. Barcode
   # tag is present in the summary files whose GERALD directories are not
   # under the "unknown" directory, i.e. directories 001, 002 ...
