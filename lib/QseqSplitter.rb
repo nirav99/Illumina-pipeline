@@ -6,6 +6,7 @@ $:.unshift File.dirname(__FILE__)
 require 'fileutils'
 require 'PipelineHelper'
 require 'Scheduler'
+require 'BarcodeDefinitionBuilder'
 
 # Class to create SampleSheet.csv in the basecalls directory
 # and split the reads into directory bins based on the barcodes
@@ -36,7 +37,8 @@ class QseqSplitter
       end
 
       @outputDir = @baseCallsDir + "/Demultiplexed"
- 
+
+      writeBarcodeDefinition() 
       writeSampleSheet()
       createDirectoryBins()
       runMake()
@@ -157,6 +159,12 @@ class QseqSplitter
   def extractFCNameForLIMS(fc)
     return @pHelper.formatFlowcellNameForLIMS(fc)
   end
+
+    # Write a file in the basecalls directory of the flowcell that contains the
+    # tag names and their sequences.
+    def writeBarcodeDefinition()
+      obj = BarcodeDefinitionBuilder.new(@baseCallsDir.to_s, @laneBarcodes)
+    end
 
     # Method to run Illumina's demultiplex tool and create different directory
     # bins based on the tags specified in SampleSheet.csv
