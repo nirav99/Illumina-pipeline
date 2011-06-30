@@ -163,7 +163,8 @@ class QseqSplitter
     # Write a file in the basecalls directory of the flowcell that contains the
     # tag names and their sequences.
     def writeBarcodeDefinition()
-      obj = BarcodeDefinitionBuilder.new(@baseCallsDir.to_s, @laneBarcodes)
+      obj = BarcodeDefinitionBuilder.new
+      obj.writeBarcodeMapFile(@baseCallsDir.to_s, @laneBarcodes)
     end
 
     # Method to run Illumina's demultiplex tool and create different directory

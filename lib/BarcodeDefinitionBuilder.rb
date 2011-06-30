@@ -5,11 +5,9 @@
 # Author Nirav Shah niravs@bcm.edu
 
 class  BarcodeDefinitionBuilder
-  def initialize(outputDirectory, barcodeTagList)
-    writeBarcodeMapFile(outputDirectory, barcodeTagList)
+  def initialize()
   end
 
-  private
   # Write a list of barcode names and the sequences in the specified output
   # directory, (usually the basecalls directory of the given flowcell).
   # This is to allow different sets of sequences to be written for different
@@ -49,6 +47,7 @@ class  BarcodeDefinitionBuilder
     outputFile.close
   end
 
+  private
   # Return the filename where the barcode tag, sequence mapping information
   # should be stored.
   def getBarcodeDefinitionFileName(outputDirectory)
