@@ -23,6 +23,7 @@ public class PairStatsCalculator implements MetricsCalculator
   private double percentUnmappedpairs      = 0;
   private double percentRead1Mapped        = 0;
   private double percentRead2Mapped        = 0;
+
   /**
    * Class constructor
    */
@@ -107,16 +108,20 @@ public class PairStatsCalculator implements MetricsCalculator
     resultString.append("Pair Statistics" + newLine + newLine);
     resultString.append("Total Read Pairs        : " + totalPairs + newLine);
     resultString.append(newLine);
-    resultString.append("Mapped Pairs            : " + mappedPairs + newLine);
-    resultString.append("% Mapped Pairs          : " + String.format("%.2f", percentMappedPairs) + "%" + newLine);
-    resultString.append("Same Chr Mapped Pairs   : " + mappedPairSameChr + newLine);
-    resultString.append("% Same Chr Mapped Pairs : " + String.format("%.2f", percentSameChrMappedPairs) + "%" + newLine);
-    resultString.append("Unmapped Pairs          : " + unmappedPairs + newLine);
-    resultString.append("% Unmapped Pairs        : " + String.format("%.2f", percentUnmappedpairs) + "%" + newLine);
-    resultString.append("Mapped First Read       : " + read1Mapped + newLine);
-    resultString.append("% Mapped First Read     : " + String.format("%.2f", percentRead1Mapped) + "%" + newLine);
-    resultString.append("Mapped Second Read      : " + read2Mapped + newLine);
-    resultString.append("% Mapped Second Read    : " + String.format("%.2f", percentRead2Mapped) + "%" + newLine);
+
+    if(totalPairs > 0)
+    {
+      resultString.append("Mapped Pairs            : " + mappedPairs + newLine);
+      resultString.append("% Mapped Pairs          : " + String.format("%.2f", percentMappedPairs) + "%" + newLine);
+      resultString.append("Same Chr Mapped Pairs   : " + mappedPairSameChr + newLine);
+      resultString.append("% Same Chr Mapped Pairs : " + String.format("%.2f", percentSameChrMappedPairs) + "%" + newLine);
+      resultString.append("Unmapped Pairs          : " + unmappedPairs + newLine);
+      resultString.append("% Unmapped Pairs        : " + String.format("%.2f", percentUnmappedpairs) + "%" + newLine);
+      resultString.append("Mapped First Read       : " + read1Mapped + newLine);
+      resultString.append("% Mapped First Read     : " + String.format("%.2f", percentRead1Mapped) + "%" + newLine);
+      resultString.append("Mapped Second Read      : " + read2Mapped + newLine);
+      resultString.append("% Mapped Second Read    : " + String.format("%.2f", percentRead2Mapped) + "%" + newLine);
+    }
     return resultString.toString();
   }
   
@@ -124,31 +129,34 @@ public class PairStatsCalculator implements MetricsCalculator
   public Element toXML(Document doc)
   {
     Element pairInfo = doc.createElement("PairMetrics");
-    Element mappedPairElem = doc.createElement("MappedPairs");
-    mappedPairElem.setAttribute("NumReads", String.valueOf(mappedPairs));
-    mappedPairElem.setAttribute("PercentReads", String.valueOf(percentMappedPairs));
-    pairInfo.appendChild(mappedPairElem);
-    
-    Element sameChrMappedPairsElem = doc.createElement("SameChrMappedPairs");
-    sameChrMappedPairsElem.setAttribute("NumReads", String.valueOf(mappedPairSameChr));
-    sameChrMappedPairsElem.setAttribute("PercentReads", String.valueOf(percentSameChrMappedPairs));
-    pairInfo.appendChild(sameChrMappedPairsElem);
 
-    Element unmappedPairsElem = doc.createElement("UnmappedPairs");
-    unmappedPairsElem.setAttribute("NumReads", String.valueOf(unmappedPairs));
-    unmappedPairsElem.setAttribute("PercentReads", String.valueOf(percentUnmappedpairs));
-    pairInfo.appendChild(unmappedPairsElem);
+    if(totalPairs > 0)
+    {
+      Element mappedPairElem = doc.createElement("MappedPairs");
+      mappedPairElem.setAttribute("NumReads", String.valueOf(mappedPairs));
+      mappedPairElem.setAttribute("PercentReads", String.valueOf(percentMappedPairs));
+      pairInfo.appendChild(mappedPairElem);
     
-    Element read1MappedElem = doc.createElement("Read1Mapped");
-    read1MappedElem.setAttribute("NumReads", String.valueOf(read1Mapped));
-    read1MappedElem.setAttribute("PercentReads", String.valueOf(percentRead1Mapped));
-    pairInfo.appendChild(read1MappedElem);
+      Element sameChrMappedPairsElem = doc.createElement("SameChrMappedPairs");
+      sameChrMappedPairsElem.setAttribute("NumReads", String.valueOf(mappedPairSameChr));
+      sameChrMappedPairsElem.setAttribute("PercentReads", String.valueOf(percentSameChrMappedPairs));
+      pairInfo.appendChild(sameChrMappedPairsElem);
+
+      Element unmappedPairsElem = doc.createElement("UnmappedPairs");
+      unmappedPairsElem.setAttribute("NumReads", String.valueOf(unmappedPairs));
+      unmappedPairsElem.setAttribute("PercentReads", String.valueOf(percentUnmappedpairs));
+      pairInfo.appendChild(unmappedPairsElem);
     
-    Element read2MappedElem = doc.createElement("Read2Mapped");
-    read2MappedElem.setAttribute("NumReads", String.valueOf(read2Mapped));
-    read2MappedElem.setAttribute("PercentReads", String.valueOf(percentRead2Mapped));
-    pairInfo.appendChild(read2MappedElem);
- 
-	return pairInfo;
+      Element read1MappedElem = doc.createElement("Read1Mapped");
+      read1MappedElem.setAttribute("NumReads", String.valueOf(read1Mapped));
+      read1MappedElem.setAttribute("PercentReads", String.valueOf(percentRead1Mapped));
+      pairInfo.appendChild(read1MappedElem);
+    
+      Element read2MappedElem = doc.createElement("Read2Mapped");
+      read2MappedElem.setAttribute("NumReads", String.valueOf(read2Mapped));
+      read2MappedElem.setAttribute("PercentReads", String.valueOf(percentRead2Mapped));
+      pairInfo.appendChild(read2MappedElem);
+    } 
+    return pairInfo;
   }
 }

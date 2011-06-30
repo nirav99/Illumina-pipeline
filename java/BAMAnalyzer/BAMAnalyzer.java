@@ -23,14 +23,14 @@ public class BAMAnalyzer extends CommandLineProgram
   public String USAGE = getStandardUsagePreamble() +
   "Read SAM / BAM and calculate alignment and insert size metrics.\r\n";
 
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to process.")
-    public File INPUT;
+  @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to process.")
+  public File INPUT;
     
-    @Option(doc = "Stop after debugging N reads. Mainly for debugging. Default value: 0, which means process the whole file")
-    public int STOP_AFTER = 0;
+  @Option(doc = "Stop after debugging N reads. Mainly for debugging. Default value: 0, which means process the whole file")
+  public int STOP_AFTER = 0;
     
-    @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output text file to write results in txt format", optional=true)
-    public File OUTPUT;
+  @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output text file to write results in txt format", optional=true)
+  public File OUTPUT;
     
   /**
    * @param args
@@ -103,8 +103,15 @@ public class BAMAnalyzer extends CommandLineProgram
       qualCalc.showResult();
       
       root.appendChild(alignCalc.toXML(doc));
-      root.appendChild(insCalc.toXML(doc));
-      root.appendChild(pairCalc.toXML(doc));
+
+      Element xmlElement = insCalc.toXML(doc);
+      if(xmlElement != null)
+        root.appendChild(xmlElement);
+
+      xmlElement = pairCalc.toXML(doc);
+      if(xmlElement != null)
+        root.appendChild(xmlElement);
+
       doc.appendChild(root);
       
       TransformerFactory transfac = TransformerFactory.newInstance();
