@@ -12,19 +12,23 @@ class  BarcodeDefinitionBuilder
   # directory, (usually the basecalls directory of the given flowcell).
   # This is to allow different sets of sequences to be written for different
   # flowcells to let mix and match of barcodes with different lengths. 
-  # TODO: Add code to fix the short sequences to become longer sequences
+  # Shorter sequences are padded with additional characters to make all the
+  # sequence lengths consistent.
   def writeBarcodeMapFile(outputDirectory, barcodeTagList)
+    # To check if barcodes of different lengths are mixed
+    minSeqLength = 10000000
+    maxSeqLength = 0
+    padding      = ""
+
     outputFileName = getBarcodeDefinitionFileName(outputDirectory)
     outputFile = File.open(outputFileName, "w")
-
-    barcodeSequences = Array.new
-
+    
     barcodeTagMap = Hash.new
 
     barcodeTagList.each do |barcodeTagName|
       if barcodeTagName.match(/ID/)
          bTag = barcodeTagName.gsub(/^\d-/, "")
-         barcodeTagMap[bTag] = bTag
+         barcodeTagMap[bTag] = nil
       end
     end
 
@@ -40,9 +44,31 @@ class  BarcodeDefinitionBuilder
     lines.each do |line|
       tokens = line.split(",")
       barcodeLabel = tokens[0].strip
+      barcodeSeq   = tokens[1].strip
       if barcodeTagMap.has_key?(barcodeLabel)
-         outputFile.puts tokens[0].strip + "," + tokens[1].strip
+         barcodeTagMap[barcodeLabel] = barcodeSeq
+
+         if barcodeSeq.length.to_i < minSeqLength.to_i
+            minSeqLength = barcodeSeq.length
+         end
+
+         if barcodeSeq.length.to_i > maxSeqLength.to_i
+            maxSeqLength = barcodeSeq.length
+         end
       end
+    end
+
+    if (maxSeqLength - minSeqLength) == 3
+       padding = "CTC"
+    end
+
+    # Write all the tag name, sequence pairs to the output file
+    barcodeTagMap.each do |key, value|
+      result = key.strip + "," + value.strip
+      if value.length == minSeqLength
+         result = result + padding
+      end 
+      outputFile.puts result
     end
     outputFile.close
   end
