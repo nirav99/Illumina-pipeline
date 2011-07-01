@@ -20,7 +20,7 @@ import java.util.ListIterator;
  */
 public class FixBAMHeader extends CommandLineProgram
 {
-	  @Usage
+    @Usage
     public String USAGE = getStandardUsagePreamble() + "Read a SAM/BAM file and fix existing header fields." +
                           " It can add/modify sample, library and PU fields in an existing RG tag. If the file" +
                           " does not have RG tag, it creates a new RG tag with ID zero, adds specified attributes" +
@@ -28,7 +28,7 @@ public class FixBAMHeader extends CommandLineProgram
                           " in the header. RG field attributes cannot be added or modified when the input file" +
                           " has more than one RG tags.";
 	
-	  @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to be cleaned.")
+    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to be cleaned.")
     public File INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true,
