@@ -20,7 +20,7 @@ import java.util.ListIterator;
  */
 public class FixBAMHeader extends CommandLineProgram
 {
-    @Usage
+	  @Usage
     public String USAGE = getStandardUsagePreamble() + "Read a SAM/BAM file and fix existing header fields." +
                           " It can add/modify sample, library and PU fields in an existing RG tag. If the file" +
                           " does not have RG tag, it creates a new RG tag with ID zero, adds specified attributes" +
@@ -28,7 +28,7 @@ public class FixBAMHeader extends CommandLineProgram
                           " in the header. RG field attributes cannot be added or modified when the input file" +
                           " has more than one RG tags.";
 	
-    @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to be cleaned.")
+	  @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to be cleaned.")
     public File INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true,
@@ -41,12 +41,21 @@ public class FixBAMHeader extends CommandLineProgram
     @Option(shortName = "L", optional=true, doc = "Library name under RG tag")
     public String LIBRARY;
     
-    @Option(shortName = "PU", optional=true, doc = "Platform unit (PU) tag")
+    @Option(shortName = "PU", optional=true, doc = "Platform unit (PU) field under RG tag")
     public String PLATFORMUNIT;
+    
+    @Option(shortName = "PL", optional=true, doc= "Platform (PL) field under RG tag")
+    public String PLATFORM;
+    
+    @Option(shortName = "CN", optional=true, doc = "Center name (CN) field under RG tag")
+    public String CENTERNAME;
     
     @Option(shortName = "R", optional=true, 
             doc = "Reference path. Sets the specified reference path as UR field in SQ tags. No validation is currently done.")
     public String REFERENCEPATH;
+    
+    @Option(shortName = "AS", optional=true, doc = "Genome assembly identifier (AS) field in SQ tags")
+    public String GENOMEASSEMBLY;
     
     private boolean rgTagAdded = false; // Whether RG tag was added
     private String rgID = "0";          // Default RG tag ID
@@ -132,9 +141,10 @@ public class FixBAMHeader extends CommandLineProgram
   {
     List<SAMReadGroupRecord> rgList = header.getReadGroups();
     
-    if((SAMPLE != null || LIBRARY != null || PLATFORMUNIT != null) && rgList.size() > 1)
+    if((SAMPLE != null || LIBRARY != null || PLATFORMUNIT != null || CENTERNAME != null || PLATFORM != null)
+        && rgList.size() > 1)
     {
-      System.err.println("RG tag fields(SAMPLE, LIBRARY, PLATFORMUNIT) can only be set for a SAM/BAM file with 1 RG tag");
+      System.err.println("Error : RG tag fields cannot be set for a SAM/BAM file with more than one RG tag");
       System.exit(-1);
     }
     else
@@ -149,9 +159,9 @@ public class FixBAMHeader extends CommandLineProgram
         rgTagAdded = true;
       }
       else
-      if(LIBRARY != null || PLATFORMUNIT != null)
+      if(LIBRARY != null || PLATFORMUNIT != null || CENTERNAME != null || PLATFORM != null)
       {
-        System.err.println("SAMPLE MUST be specified because this file does not have any RG tag");
+        System.err.println("Error: SAMPLE MUST be specified because the input file does not have any RG tag");
         System.exit(-1);
       }
     }
@@ -162,9 +172,14 @@ public class FixBAMHeader extends CommandLineProgram
       rgList.get(0).setLibrary(LIBRARY);
     if(PLATFORMUNIT != null)
       rgList.get(0).setPlatformUnit(PLATFORMUNIT);
+    if(CENTERNAME != null)
+      rgList.get(0).setSequencingCenter(CENTERNAME);
+    if(PLATFORM != null)
+      rgList.get(0).setPlatform(PLATFORM);
+    
     header.setReadGroups(rgList);
     
-    if(REFERENCEPATH != null)
+    if(REFERENCEPATH != null || GENOMEASSEMBLY != null)
     {
       SAMSequenceDictionary seqDict        = header.getSequenceDictionary();
       List<SAMSequenceRecord> seqList      = seqDict.getSequences();
@@ -173,7 +188,11 @@ public class FixBAMHeader extends CommandLineProgram
       while(iter.hasNext())
       {
         SAMSequenceRecord rec = iter.next();
-        rec.setAttribute("UR", REFERENCEPATH);
+        
+        if(REFERENCEPATH != null)
+          rec.setAttribute("UR", REFERENCEPATH);
+        if(GENOMEASSEMBLY != null)
+          rec.setAssembly(GENOMEASSEMBLY);
       }
     }
     return header;
