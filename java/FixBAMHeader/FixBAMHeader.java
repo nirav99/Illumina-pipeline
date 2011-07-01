@@ -13,30 +13,43 @@ import net.sf.samtools.util.RuntimeIOException;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.ListIterator;
 /**
  * @author Nirav Shah niravs@bcm.edu
  *
  */
 public class FixBAMHeader extends CommandLineProgram
 {
-	@Usage
-    public String USAGE = getStandardUsagePreamble() + "Read a SAM/BAM file and fix existing header fields";
+	  @Usage
+    public String USAGE = getStandardUsagePreamble() + "Read a SAM/BAM file and fix existing header fields." +
+                          " It can add/modify sample, library and PU fields in an existing RG tag. If the file" +
+                          " does not have RG tag, it creates a new RG tag with ID zero, adds specified attributes" +
+                          " to it, and adds RG field to each read. It can add reference name attribute to SQ tags" +
+                          " in the header. RG field attributes cannot be added or modified when the input file" +
+                          " has more than one RG tags.";
 	
-	@Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to be cleaned.")
+	  @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to be cleaned.")
     public File INPUT;
 
     @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, optional=true,
-            doc = "Where to write cleaned SAM/BAM. If not specified, replace original input file.")
+            doc = "Where to write cleaned SAM/BAM. If not specified, replaces original input file.")
     public File OUTPUT;
     
-    @Option(shortName = "S", optional=true, doc = "Sample Name under RG tag")
+    @Option(shortName = "S", optional=true, doc = "Sample name under RG tag")
     public String SAMPLE;
     
-    @Option(shortName = "L", optional=true, doc = "Sample Name under RG tag")
+    @Option(shortName = "L", optional=true, doc = "Library name under RG tag")
     public String LIBRARY;
     
     @Option(shortName = "PU", optional=true, doc = "Platform unit (PU) tag")
     public String PLATFORMUNIT;
+    
+    @Option(shortName = "R", optional=true, 
+            doc = "Reference path. Sets the specified reference path as UR field in SQ tags. No validation is currently done.")
+    public String REFERENCEPATH;
+    
+    private boolean rgTagAdded = false; // Whether RG tag was added
+    private String rgID = "0";          // Default RG tag ID
   
   /**
    * @param args
@@ -49,17 +62,16 @@ public class FixBAMHeader extends CommandLineProgram
   @Override
   protected int doWork()
   {
-	IoUtil.assertFileIsReadable(INPUT);
-	long numReadsProcessed = 0;
+	  IoUtil.assertFileIsReadable(INPUT);
+	  long numReadsProcessed = 0;
 	
     if(OUTPUT != null) OUTPUT = OUTPUT.getAbsoluteFile();
     final boolean differentOutputFile = OUTPUT != null;
     
-    if(differentOutputFile) IoUtil.assertFileIsWritable(OUTPUT);
+    if(differentOutputFile) 
+      IoUtil.assertFileIsWritable(OUTPUT);
     else
-    {
       createTempFile();
-    }
     
     SAMFileReader.setDefaultValidationStringency(SAMFileReader.ValidationStringency.SILENT);
     SAMFileReader reader = new SAMFileReader(INPUT);
@@ -69,7 +81,7 @@ public class FixBAMHeader extends CommandLineProgram
     SAMFileWriter writer = new SAMFileWriterFactory().makeSAMOrBAMWriter(header, true, OUTPUT);
     
     SAMRecordIterator iter = reader.iterator();
-    
+    SAMRecord record = null;
     while(iter.hasNext())
     {
       numReadsProcessed++;
@@ -77,7 +89,13 @@ public class FixBAMHeader extends CommandLineProgram
       {
         System.err.print("Processed : " + numReadsProcessed + " reads\r");
       }
-      writer.addAlignment(iter.next());
+      record = iter.next();
+      
+      if(rgTagAdded)
+        record.setAttribute("RG", rgID);
+      
+      writer.addAlignment(record);
+      record = null;
     }
     writer.close();
     reader.close();
@@ -114,12 +132,30 @@ public class FixBAMHeader extends CommandLineProgram
   {
     List<SAMReadGroupRecord> rgList = header.getReadGroups();
     
-    if(rgList.size() != 1)
+    if((SAMPLE != null || LIBRARY != null || PLATFORMUNIT != null) && rgList.size() > 1)
     {
-      System.err.println("FixHeader works only for BAMs with one RG tag");
+      System.err.println("RG tag fields(SAMPLE, LIBRARY, PLATFORMUNIT) can only be set for a SAM/BAM file with 1 RG tag");
       System.exit(-1);
     }
-     
+    else
+    if(rgList.size() == 0)
+    {
+      if(SAMPLE != null)
+      {
+        SAMReadGroupRecord rgRecord = new SAMReadGroupRecord(rgID);
+        rgRecord.setSample(SAMPLE);
+        header.addReadGroup(rgRecord);
+        rgList = header.getReadGroups();
+        rgTagAdded = true;
+      }
+      else
+      if(LIBRARY != null || PLATFORMUNIT != null)
+      {
+        System.err.println("SAMPLE MUST be specified because this file does not have any RG tag");
+        System.exit(-1);
+      }
+    }
+ 
     if(SAMPLE != null)
       rgList.get(0).setSample(SAMPLE);
     if(LIBRARY != null)
@@ -127,6 +163,19 @@ public class FixBAMHeader extends CommandLineProgram
     if(PLATFORMUNIT != null)
       rgList.get(0).setPlatformUnit(PLATFORMUNIT);
     header.setReadGroups(rgList);
+    
+    if(REFERENCEPATH != null)
+    {
+      SAMSequenceDictionary seqDict        = header.getSequenceDictionary();
+      List<SAMSequenceRecord> seqList      = seqDict.getSequences();
+      ListIterator<SAMSequenceRecord> iter = seqList.listIterator();
+      
+      while(iter.hasNext())
+      {
+        SAMSequenceRecord rec = iter.next();
+        rec.setAttribute("UR", REFERENCEPATH);
+      }
+    }
     return header;
   }
   
