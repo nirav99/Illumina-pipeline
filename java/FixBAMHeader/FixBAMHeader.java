@@ -57,6 +57,9 @@ public class FixBAMHeader extends CommandLineProgram
     @Option(shortName = "AS", optional=true, doc = "Genome assembly identifier (AS) field in SQ tags")
     public String GENOMEASSEMBLY;
     
+    @Option(shortName = "SP", optional=true, doc = "Species (SP) field in SQ tags")
+    public String SPECIES;
+    
     private boolean rgTagAdded = false; // Whether RG tag was added
     private String rgID = "0";          // Default RG tag ID
   
@@ -179,7 +182,7 @@ public class FixBAMHeader extends CommandLineProgram
     
     header.setReadGroups(rgList);
     
-    if(REFERENCEPATH != null || GENOMEASSEMBLY != null)
+    if(REFERENCEPATH != null || GENOMEASSEMBLY != null || SPECIES != null)
     {
       SAMSequenceDictionary seqDict        = header.getSequenceDictionary();
       List<SAMSequenceRecord> seqList      = seqDict.getSequences();
@@ -193,6 +196,8 @@ public class FixBAMHeader extends CommandLineProgram
           rec.setAttribute("UR", REFERENCEPATH);
         if(GENOMEASSEMBLY != null)
           rec.setAssembly(GENOMEASSEMBLY);
+        if(SPECIES != null)
+          rec.setSpecies(SPECIES);
       }
     }
     return header;
