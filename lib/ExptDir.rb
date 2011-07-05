@@ -5,33 +5,35 @@ require 'PipelineHelper'
 
 # Class that encapsulates the experiment directory - where corresponding
 # GERALD directory(ies) are created.
+# Author - Nirav Shah niravs@bcm.edu
 class ExptDir
   def initialize(fcName)
     @fcName         = fcName
     @pipelineHelper = PipelineHelper.new
     @baseCallsDir   = @pipelineHelper.findBaseCallsDir(@fcName)
-    @isFCMuxed      = FCMultiplexed?() # If FC is multiplexed (bar-coded)
-    @barcodeSeq     = ""               # Barcode sequence
+    @isFCMuxed      = FCMultiplexed?() # If FC is multiplexed (barcoded)
   end
 
   # Method to retrieve experiment directory based on lane barcode of the FC
   def getExptDir(laneBarcode)
+    # Validate that the lane barcode is syntactically valid
     if !laneBarcodeSyntaxValid?(laneBarcode)
       raise "Exception : Invalid barcode " + laneBarcode.to_s + " specified"
     end
 
-    # if the Flowcell is not multiplexed, return the basecalls dir as expt dir
+    # Since the lane barcode is valid, and the flowcell is not multiplexed,
+    # return the basecalls directory as the experiement directory
     if !@isFCMuxed
       return @baseCallsDir.to_s
     end
    
-    # Flowcell is multiplexed
-    @barcodeSeq = getIndexSequence(laneBarcode)
-
+    # Since the flowcell is multiplexed, validate that the lane barcode is
+    # consistent with the information in SampleSheet.csv
     if !laneBarcodeValidInSamplesCSV?(laneBarcode)
       raise "Exception : Lane Barcode " + laneBarcode + " is inconsistent with CSV"
     end
 
+    # All is valid, return the directory bin for the given lane barcode 
     return getDirectoryBin(laneBarcode)
   end
  
@@ -49,46 +51,20 @@ class ExptDir
 
   # Method to check if lane barcode has valid syntax
   # If yes, return true, else return false
-  def laneBarcodeSyntaxValid?(lane)
-    if !laneIndexed?(lane)
-      if lane.to_s.match(/^[1-8]$/)
-         return true
-      else
-         return false
-      end
-    else
-      if !@isFCMuxed # Lane is indexed, but FC is not multiplexed => invalid
-        puts "Invalid lane barcode. Flowcell is not multiplexed"
-        return false
-      end
-      
-      if lane.match(/^[1-8]-ID[01]\d/) || lane.match(/^[1-8]-IDMB\d\d/) ||
-         lane.match(/^[1-8]-IDMB\d/)
-         return true
-      else
-         return false
-      end
-    end 
-  end
-
-  # Return true if lane is indexed, false otherwise
-  def laneIndexed?(lane)
-    if lane.to_s.match(/^[1-8]-ID/)
-      return true
+  def laneBarcodeSyntaxValid?(laneBarcode)
+    # If the flowcell is not multiplexed, lane barcode should be just the lane
+    # number from 1 through 8. If that is not so, return false to indicate the
+    # error
+    if !@isFCMuxed && !laneBarcode.match(/^[1-8]$/) 
+       return false
+    # If the flowcell is multiplexed, the lane barcode can have one of the
+    # following formats, just lane number (non-multiplexed lane), X-IDYY 
+    # or X-IDMBY or X-IDMBYY
+    elsif laneBarcode.match(/^[1-8]$/) || laneBarcode.match(/^[1-8]-ID[01]\d$/) ||
+          laneBarcode.match(/^[1-8]-IDMB\d$/) || laneBarcode.match(/^[1-8]-IDMB\d\d$/)
+       return true
     else
       return false
-    end
-  end
-
-  # Return the index sequence for the lane barcode
-  def getIndexSequence(laneBarcode)
-    if !laneIndexed?(laneBarcode)
-      puts "LANE NOT INDEXED"
-      return ""
-    else
-      tag = laneBarcode.gsub(/^[1-8]-ID/, "")
-      puts "TAG = " + tag
-      return @pipelineHelper.findBarcodeSequence("ID" + tag.to_s) 
     end
   end
 
@@ -98,22 +74,19 @@ class ExptDir
     resultPath  = @baseCallsDir + "/Demultiplexed/"
     binValue    = nil
 
-    indexSequence = getIndexSequence(laneBarcode)
-
-    puts "LANE BARCODE   = " + laneBarcode.to_s
-    puts "INDEX SEQUENCE = " + indexSequence.to_s
-
     if !File::exist?(binListFile)
       raise "Error : Did not find File : " + binListFile
     end
   
     laneNumber = laneBarcode.slice(0).chr.to_s
+    barcodeTag = laneBarcode.gsub(/^\d-/, "")
+
     lines = IO.readlines(binListFile)
      
     lines.each do |line|
       tokens = line.split(",")  
 
-      if tokens[1].to_s.eql?(laneNumber.to_s) && tokens[4].eql?(indexSequence)
+      if tokens[1].to_s.eql?(laneNumber.to_s) && tokens[5].eql?(barcodeTag)
         binValue = tokens[9]
         break
       end
@@ -134,41 +107,48 @@ class ExptDir
 
   # Check if the lane barcode is valid as per the information in SampleSheet.csv
   # If yes, return true, else false
-  def laneBarcodeValidInSamplesCSV?(lane)
+  def laneBarcodeValidInSamplesCSV?(laneBarcode)
+    laneNumber = laneBarcode.slice(0).chr.to_s
+    barcodeTag = ""
+
+    if laneBarcode.match(/-ID/)
+      barcodeTag = laneBarcode.gsub(/\d-/, "")
+    end
+
     sampleSheet       = "SampleSheet.csv"
     laneFoundInCSV    = false
     barcodeFoundInCSV = false
 
-    if !@isFCMuxed
-      return true
-    end
-
+    # This flowcell is multiplexed, so it must have a SampleSheet.csv file in
+    # its basecalls directory. Validate that this file exists
     if !File::exist?(@baseCallsDir + "/" + sampleSheet)
       raise "Error : Did not find Sample Sheet : " + sampleSheet + " in " + @baseCallsDir
     end
 
-    laneNumber = lane.slice(0).chr.to_s
-    lines = IO.readlines(@baseCallsDir + "/" + sampleSheet) 
-   
+    # Read the SampleSheet.csv
+    lines = IO.readlines(@baseCallsDir + "/" + sampleSheet)
+
     lines.each do |line|
       tokens = line.split(",")
+
       if tokens[1].to_s.eql?(laneNumber.to_s)
         laneFoundInCSV = true
-      end
-      if @barcodeSeq != nil && !@barcodeSeq.empty?() && tokens[4].to_s.eql?(@barcodeSeq)
-        barcodeFoundInCSV = true
+        if tokens[5].to_s.eql?(barcodeTag)
+           # Both the lane and the barcode tag are found in SampleSheet.csv, so
+           # laneBarcode is valid. Return true.
+           return true
+        end
       end
     end
 
-    if laneFoundInCSV && !barcodeFoundInCSV
-      puts "Error : Invalid Lane barcode " + lane
-      puts " Lane Number present in CSV but barcode " + @barcodeSeq + " is absent from CSV"
-      return false
-    elsif barcodeFoundInCSV && !laneFoundInCSV
-      puts "Error : Lane " + laneNumber.to_s + " is not multiplexed as per CSV"
-      return false
-    else
+    if barcodeTag.empty?() && !laneFoundInCSV
+      # This lane was not multiplexed, so barcodeTag is empty, and the lane does
+      # not have an entry in SampleSheet.csv. Hence, return true to indicate
+      # valid lane barcode.
       return true
+    else
+      # Return false. The specified lane barcode is not valid.
+      return false
     end
   end
 end
@@ -176,9 +156,7 @@ end
 __END__
 begin
 obj = ExptDir.new("110413_SN166_0177_BC0117ABXX")
-#obj = ExptDir.new("101109_SN166_0149_B806DTABXX")
-#obj.getExptDir("1-ID06")
-puts obj.getExptDir("8-IDMB38")
+puts obj.getExptDir("7-IDMB44")
 #obj.getExptDir("1-ID01")
 rescue Exception => e
   puts e.message
