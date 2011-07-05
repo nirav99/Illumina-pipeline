@@ -73,6 +73,32 @@ class  BarcodeDefinitionBuilder
     outputFile.close
   end
 
+  # Given a valid barcode tag, return the sequence for this barcode
+  def findBarcodeSequence(outputDirectory, barcodeTag)
+    barcode = ""
+    if barcodeTag == nil || barcodeTag.empty?()
+      return ""
+    end
+
+    barcodeLabelFile = getBarcodeDefinitionFileName(outputDirectory)
+    puts "Looking for barcode labels in : " + barcodeLabelFile
+
+    lines = IO.readlines(barcodeLabelFile)
+
+    lines.each do |line|
+      tokens = line.split(",")
+      if tokens[0].strip.eql?(barcodeTag)
+         barcode = tokens[1].strip
+      end
+    end
+
+    if barcode.empty?()
+      raise "Invalid barcode tag specified"
+    else
+      return barcode
+    end
+  end
+
   private
   # Return the filename where the barcode tag, sequence mapping information
   # should be stored.
