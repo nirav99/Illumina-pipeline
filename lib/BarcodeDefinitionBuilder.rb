@@ -74,6 +74,8 @@ class  BarcodeDefinitionBuilder
   end
 
   # Given a valid barcode tag, return the sequence for this barcode
+  # Read the barcode definition from the config file specified in the output
+  # directory (usually the basecalls directory) of the current flowcell.
   def findBarcodeSequence(outputDirectory, barcodeTag)
     barcode = ""
     if barcodeTag == nil || barcodeTag.empty?()
