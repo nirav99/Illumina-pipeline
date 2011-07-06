@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Date;
+
 /**
  * @author Nirav Shah niravs@bcm.edu
  *
@@ -74,8 +76,8 @@ public class BAMHeaderFixer extends CommandLineProgram
   @Override
   protected int doWork()
   {
-	  IoUtil.assertFileIsReadable(INPUT);
-	  long numReadsProcessed = 0;
+    IoUtil.assertFileIsReadable(INPUT);
+    long numReadsProcessed = 0;
 	
     if(OUTPUT != null) OUTPUT = OUTPUT.getAbsoluteFile();
     final boolean differentOutputFile = OUTPUT != null;
@@ -94,6 +96,7 @@ public class BAMHeaderFixer extends CommandLineProgram
     
     SAMRecordIterator iter = reader.iterator();
     SAMRecord record = null;
+
     while(iter.hasNext())
     {
       numReadsProcessed++;
@@ -157,6 +160,7 @@ public class BAMHeaderFixer extends CommandLineProgram
       {
         SAMReadGroupRecord rgRecord = new SAMReadGroupRecord(rgID);
         rgRecord.setSample(SAMPLE);
+        rgRecord.setRunDate(new Date());
         header.addReadGroup(rgRecord);
         rgList = header.getReadGroups();
         rgTagAdded = true;
