@@ -44,8 +44,8 @@ public class PairStatsCalculator implements MetricsCalculator
       // Since this is a second read in a pair, increment totalPairs
       totalPairs++;
     }
-    // Don't consider fragment reads, first reads in a pair, or duplicate reads
-    if(!record.getReadPairedFlag() || record.getFirstOfPairFlag() || record.getDuplicateReadFlag())
+    // Don't consider fragment reads, first reads in a pair
+    if(!record.getReadPairedFlag() || record.getFirstOfPairFlag())
       return;
     
     // If both ends are unmapped, increment unmapped pair counter
@@ -59,8 +59,7 @@ public class PairStatsCalculator implements MetricsCalculator
       // If both ends are mapped, increment mapped pair counter
       mappedPairs++;
       
-      if(!record.getDuplicateReadFlag() &&
-			  record.getMateReferenceName().equals(record.getReferenceName()))
+      if(record.getMateReferenceName().equals(record.getReferenceName()))
       {
         // If both reads map on same chromosome, increment mapped pair same chr
         // counter
