@@ -60,6 +60,7 @@ class QseqSplitter
       @laneBarcodes = Array.new
       @baseCallsDir = nil
       @outputDir    = nil
+      @barcodeDefn  = BarcodeDefinitionBuilder.new()
     end
 
     # Read lane barcodes from a text file right now. When LIMS script is
@@ -141,7 +142,7 @@ class QseqSplitter
             laneNum = laneBC.gsub(/-ID.+/, "")
             bcTag   = laneBC.gsub(/^[1-8]-/, "")
             puts "Barcode tag = " + bcTag.to_s
-            tagSequence = @pHelper.findBarcodeSequence(bcTag)
+            tagSequence = @barcodeDefn.findBarcodeSequence(@baseCallsDir.to_s,bcTag)
             line = @fcName + "," + laneNum.to_s + ",dummy_library,dummy_sample," +
                    tagSequence.to_s + "," + bcTag.to_s + ",n,r1,fiona\r\n"
             file.syswrite(line)
@@ -163,8 +164,8 @@ class QseqSplitter
     # Write a file in the basecalls directory of the flowcell that contains the
     # tag names and their sequences.
     def writeBarcodeDefinition()
-      obj = BarcodeDefinitionBuilder.new
-      obj.writeBarcodeMapFile(@baseCallsDir.to_s, @laneBarcodes)
+#      @barcodeDefn = BarcodeDefinitionBuilder.new
+      @barcodeDefn.writeBarcodeMapFile(@baseCallsDir.to_s, @laneBarcodes)
     end
 
     # Method to run Illumina's demultiplex tool and create different directory
