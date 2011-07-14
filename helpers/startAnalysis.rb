@@ -115,29 +115,6 @@ private
     end      
   end
 
-=begin
-  # Is flowcell ready to start the analysis ?, if yes return true else false
-  # Current setup is that when a flowcell has copied over completely, the owner
-  # of that flowcell is changed from nobody to p-illumina. Thus, if we find
-  # p-illumina in long directory listing of that FC, it is ready to begin
-  # analysis.
-  # TODO: THIS MUST BE IMPROVED WHEN MORE INFORMATION IS AVAILABLE.
-  def fcReady?(fcName)
-    cmd = "ls -ld " + @instrDir + "/" + fcName
-
-#    output = `#{cmd}`
-
-#    if output.match(/p-illumina/) && File::owned?(@instrDir + "/" + fcName)
-#    if File::owned?(@instrDir + "/" + fcName) && File::exist?(@instrDir + "/" + fcName + "/.rsync_finished")
-    if File::exist?(@instrDir + "/" + fcName + "/.rsync_finished")
-      puts "Flowcell " + fcName + " is ready for analysis"
-      return true
-    else
-      return false
-    end
-  end
-=end
-
   # Accurate as of 13th June 2011
   # Every flowcell that is copied directly to ardmore, will have marker file
   # RTAComplete.txt written at the end. When we find this file, we add the old
@@ -149,8 +126,7 @@ private
       return true
     end
    
-    if fcName.match(/SN580/) || fcName.match(/SN166/) || 
-       fcName.match(/SN601/) 
+    if fcName.match(/SN601/) || fcName.match(/SN166/) 
        puts "Flowcell " + fcName + " is not configured for automatic analysis"
        return false
     end
