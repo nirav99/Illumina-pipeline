@@ -1,21 +1,22 @@
 #!/usr/bin/ruby
 
-# Cleans the unwanted and large position files from the intensity directories
-# and qseq files from the # base calls directory.
-# THIS MUST BE PERFORMED ONLY AFTER ALL THE ANALYSIS IS COMPLETED
+# Tool to delete intermediate files from flowcells.
+# It deletes the position files form the ./Data/Intensities directory, qseq
+# files from the basecalls directory and the bin directories from within the
+# Demultiplexed directories
+# Author Nirav Shah niravs@bcm.edu
+
 class CleanFlowcell
-  def initialize(baseDir)
-    puts "Cleaning Flowcells in Dir : " + baseDir.to_s
-
-    flowcells = Dir.entries(baseDir)
-
-    flowcells.each do |fcName|
-      puts fcName
-      if File.directory?(baseDir + "/" + fcName) && !fcName.eql?(".") &&
-         !fcName.eql?("..")
+  def initialize(fcName)
+      puts "To Clean : " + fcName
+ #     if File.directory?(fcName) && !fcName.eql?(".") &&
+ #        !fcName.eql?("..")
         pwd = Dir.pwd
-  
-        Dir.chdir(baseDir + "/" + fcName)
+        puts "PWD = " + pwd.to_s
+ 
+        Dir.chdir(fcName)
+
+        puts "Dir now : " + Dir.pwd
 
         if File.exists?("./Data")
           puts "Found data directory. Time to remove unwanted files"
@@ -24,14 +25,24 @@ class CleanFlowcell
         else
           puts fcName + " does not have data directory"
         end
+
+        if File.exists?("./Thumbnail_Images")
+          puts "Cleaning Thumbnail images"
+          cleanThumbnailDir()
+        end
         puts "Completed cleaning " + fcName
         puts ""
         Dir.chdir(pwd)
-      end
-    end
+ #     end
   end
 
   private
+
+  def cleanThumbnailDir()
+    cmd = "rm -rf Thumbnail_Images"
+    `#{cmd}`
+  end
+
   def cleanIntensityDir()
     puts "Cleaning intensity directory"
     rmintensityFilesCmd = "rm ./Data/Intensities/*_pos.txt"
@@ -57,6 +68,27 @@ class CleanFlowcell
     rmLanesDirCmd = "rm -rf ./Data/Intensities/BaseCalls/L00*"
     output = `#{rmLanesDirCmd}`
     puts "BaseCalls directory cleaned"
+    cleanDemultiplexedDirs()
+  end
+
+  def cleanDemultiplexedDirs()
+    demuxDirPath = "./Data/Intensities/BaseCalls/Demultiplexed"
+    if File::directory?(demuxDirPath)
+      puts "Cleaning qseq files under Demultiplexed directories"
+    
+      dirEntries = Dir.entries(demuxDirPath)
+
+      dirEntries.each do |dirEntry|
+        puts dirEntry.to_s
+        if File::directory?(demuxDirPath + "/" + dirEntry) &&
+           (dirEntry.to_s.match(/\d\d\d/) || dirEntry.to_s.match(/unknown/))
+
+           rmQseqFilesCmd = "rm " + demuxDirPath + "/" + dirEntry.to_s + "/*_qseq.txt"
+           output = `#{rmQseqFilesCmd}`
+        end
+      end
+    end
+    puts "Cleaned qseq files under Demultiplexed directories"
   end
 end
 
@@ -67,7 +99,5 @@ flowcellList = IO.readlines(listFile)
 
 flowcellList.each do |fc|
   puts "Cleaning Flowcell : " + fc.to_s
-  obj = CleanFlowcell.new(fc)
+  obj = CleanFlowcell.new(fc.strip)
 end
-
-#obj = CleanFlowcell.new("/stornext/snfs5/next-gen/Illumina/Instruments/EAS376/")
