@@ -1,18 +1,24 @@
 import net.sf.samtools.*;
-import org.w3c.dom.*;
 
 /**
- * Interface to represent different metrics calculation
- */
-
-/**
+ * Generic class representing calculation of various metrics
  * @author Nirav Shah niravs@bcm.edu
- *
  */
-public interface MetricsCalculator
+abstract public class MetricsCalculator
 {
-  public void processRead(SAMRecord record); // Process next read
-  public void showResult();                  // Display results
-  public Element toXML(Document doc);        // XML element to write XML file
-  public String toString();                  // String to display or log to file
+  protected ResultMetric resultMetric;   // Result metric
+  
+  public MetricsCalculator()
+  { 
+    resultMetric = new ResultMetric();
+  }
+  
+  abstract void processRead(SAMRecord nextRead) throws Exception;
+  abstract void calculateResult();
+  abstract void buildResultMetrics();
+  
+  public ResultMetric getResultMetrics()
+  {
+    return resultMetric;
+  }
 }

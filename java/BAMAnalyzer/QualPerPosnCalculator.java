@@ -2,18 +2,11 @@ import net.sf.samtools.SAMRecord;
 import java.util.Arrays;
 import java.io.*;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 /**
- * Class to calculate average base quality per position in the reads
- */
-
-/**
+ * Class to calculate and plot the average base quality per base position
  * @author Nirav Shah niravs@bcm.edu
- *
  */
-public class QualPerPosCalculator implements MetricsCalculator
+public class QualPerPosnCalculator extends MetricsCalculator
 {
   private double meanQualRead1[] = null; // Mean base quality per read1
   private double meanQualRead2[] = null; // Mean base quality per read2
@@ -22,7 +15,7 @@ public class QualPerPosCalculator implements MetricsCalculator
   private int readLen              = 0;  // Read length
   private int maxLen               = 0;  // Max read length seen so far
   private final int QUAL_ADDEND    = 33; // Addition to phred base qualities
-  
+	  
   // Create an inner class to determine range of plot
   private class ScaleRange
   {
@@ -33,23 +26,24 @@ public class QualPerPosCalculator implements MetricsCalculator
   /**
    * Default class constructor
    */
-  public QualPerPosCalculator()
+  public QualPerPosnCalculator()
   {
+    super();
     meanQualRead1 = new double[maxLen];
     meanQualRead2 = new double[maxLen];
     numRead1      = new double[maxLen];
     numRead2      = new double[maxLen];
   }
-  
-  /**
-   * Process the next read
+
+  /* (non-Javadoc)
+   * @see MetricsCalculator#processRead(net.sf.samtools.SAMRecord)
    */
   @Override
-  public void processRead(SAMRecord record)
+  void processRead(SAMRecord nextRead) throws Exception
   {
-    String baseQualString = record.getBaseQualityString();
+    String baseQualString = nextRead.getBaseQualityString();
     readLen = baseQualString.length();
- 
+	 
     if(readLen > maxLen)
     {
       maxLen = readLen;
@@ -59,17 +53,72 @@ public class QualPerPosCalculator implements MetricsCalculator
       numRead2      = Arrays.copyOf(numRead2, readLen);
     }
    // Read 1 or fragment
-   if(!record.getReadPairedFlag() || 
-      (record.getReadPairedFlag() && record.getFirstOfPairFlag()))
+   if(!nextRead.getReadPairedFlag() || 
+     (nextRead.getReadPairedFlag() && nextRead.getFirstOfPairFlag()))
     {
-      calculateBaseQuality(1, baseQualString, record.getReadNegativeStrandFlag());
+      calculateBaseQuality(1, baseQualString, nextRead.getReadNegativeStrandFlag());
     }
     else
     {
-      if(record.getReadPairedFlag() && record.getSecondOfPairFlag())
+      if(nextRead.getReadPairedFlag() && nextRead.getSecondOfPairFlag())
       {
-        calculateBaseQuality(2, baseQualString, record.getReadNegativeStrandFlag());
+        calculateBaseQuality(2, baseQualString, nextRead.getReadNegativeStrandFlag());
       }
+    }		
+  }
+  
+  /* (non-Javadoc)
+   * @see MetricsCalculator#buildResultMetrics()
+   */
+  @Override
+  void buildResultMetrics()
+  {
+    resultMetric = null;
+  }
+
+  /* (non-Javadoc)
+   * @see MetricsCalculator#calculateResult()
+   */
+  @Override
+  void calculateResult()
+  {
+    Plot p = null;
+	    
+    double xPosn[] = new double[readLen];
+	    
+    for(int i = 0; i < readLen; i++)
+    {
+      xPosn[i] = i + 1;
+    }
+    try
+    {
+      ScaleRange yRange = findMinMaxRange();
+      logQualScoreDistribution();
+	      
+      if(meanQualRead1 != null && meanQualRead1.length > 0)
+      {
+         if(meanQualRead2 != null && meanQualRead2.length > 0)
+         {
+           p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position", 
+               "Base Position", "Avg. Base Quality - Phred Scale", "Read 1", "Read 2", xPosn, meanQualRead1, 
+               meanQualRead2);
+         }
+         else
+         {
+           p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position",
+	                    "Base Position", "Avg. Quality", "Read 1", xPosn, meanQualRead1);
+         }
+       }
+       if(p != null)
+       {
+         p.setYScale(yRange.minValue, yRange.maxValue + 10);
+         p.plotGraph();
+       }
+    }
+    catch(Exception e) 
+    {
+      System.err.println(e.getMessage());
+      e.printStackTrace();
     }
   }
 
@@ -87,7 +136,7 @@ public class QualPerPosCalculator implements MetricsCalculator
     double numReads[]  = null;
     int baseQualLength = baseQual.length();
     int pos;
-    
+	    
     if(readType == 1)
     {
       qualArray = meanQualRead1;
@@ -115,55 +164,45 @@ public class QualPerPosCalculator implements MetricsCalculator
       }
       qual = baseQual.charAt(i) - QUAL_ADDEND;
       qualArray[pos] = (qualArray[pos] * (numReads[pos]) + qual) / 
-                     (1.0 * (numReads[pos] + 1));
+                       (1.0 * (numReads[pos] + 1));
       numReads[pos] = numReads[pos] + 1;
     }
   }
-  
-  /* 
-   * Display results - plot the distribution of mean base quality per base position
+
+  /**
+   * Set proper scale for Y-axis
+   * @return ScaleRange object
    */
-  @Override
-  public void showResult()
+  private ScaleRange findMinMaxRange()
   {
-    Plot p = null;
-    
-    double xPosn[] = new double[readLen];
-    
-    for(int i = 0; i < readLen; i++)
+    double minYValue = 0;
+    double maxYValue = 0;
+	    
+    for(int i = 0; i < meanQualRead1.length; i++)
     {
-      xPosn[i] = i + 1;
+      if(minYValue > meanQualRead1[i])
+        minYValue = meanQualRead1[i];
+      if(maxYValue < meanQualRead1[i])
+        maxYValue = meanQualRead1[i];
     }
-    try
+    
+    if(meanQualRead2 != null && meanQualRead2.length > 0)
     {
-      ScaleRange yRange = findMinMaxRange();
-      logQualScoreDistribution();
-      
-      if(meanQualRead1 != null && meanQualRead1.length > 0)
+      for(int i = 0; i < meanQualRead1.length; i++)
       {
-        if(meanQualRead2 != null && meanQualRead2.length > 0)
-        {
-          p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position", 
-              "Base Position", "Avg. Base Quality - Phred Scale", "Read 1", "Read 2", xPosn, meanQualRead1, 
-              meanQualRead2);
-        }
-        else
-        {
-          p = new Plot("BaseQualPerPosition.png", "Avg. Base Quality Per Position",
-                       "Base Position", "Avg. Quality", "Read 1", xPosn, meanQualRead1);
-        }
-      }
-      if(p != null)
-      {
-        p.setYScale(yRange.minValue, yRange.maxValue + 10);
-        p.plotGraph();
+    	if(minYValue > meanQualRead1[i])
+    	  minYValue = meanQualRead1[i];
+    	if(maxYValue < meanQualRead1[i])
+    	  maxYValue = meanQualRead1[i];
       }
     }
-    catch(Exception e) 
-    {
-      System.err.println(e.getMessage());
-      e.printStackTrace();
-    }
+    
+    if(minYValue > 0)
+      minYValue = 0;
+    ScaleRange yRange = new ScaleRange();
+    yRange.minValue = minYValue;
+    yRange.maxValue = maxYValue;
+    return yRange;
   }
   
   /**
@@ -200,53 +239,5 @@ public class QualPerPosCalculator implements MetricsCalculator
       record = null;
     }
     writer.close();
-  }
- 
-  /**
-   * Set proper scale for Y-axis
-   * @return ScaleRange object
-   */
-  private ScaleRange findMinMaxRange()
-  {
-    double minYValue = 0;
-    double maxYValue = 0;
-	    
-    for(int i = 0; i < meanQualRead1.length; i++)
-    {
-      if(minYValue > meanQualRead1[i])
-        minYValue = meanQualRead1[i];
-      if(maxYValue < meanQualRead1[i])
-        maxYValue = meanQualRead1[i];
-    }
-    
-    if(meanQualRead2 != null && meanQualRead2.length > 0)
-    {
-      for(int i = 0; i < meanQualRead1.length; i++)
-      {
-    	if(minYValue > meanQualRead1[i])
-    	  minYValue = meanQualRead1[i];
-    	if(maxYValue < meanQualRead1[i])
-    	  maxYValue = meanQualRead1[i];
-      }
-    }
-    
-    if(minYValue > 0)
-      minYValue = 0;
-    ScaleRange yRange = new ScaleRange();
-    yRange.minValue = minYValue;
-    yRange.maxValue = maxYValue;
-    return yRange;
-  }
-
-  @Override
-  public Element toXML(Document doc)
-  {
-	return null;
-  }
-  
-  @Override
-  public String toString()
-  {
-    return "";
   }
 }

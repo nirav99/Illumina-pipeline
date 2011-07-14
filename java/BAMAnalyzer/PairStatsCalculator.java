@@ -9,7 +9,7 @@ import org.w3c.dom.*;
  * @author Nirav Shah niravs@bcm.edu
  *
  */
-public class PairStatsCalculator implements MetricsCalculator
+public class PairStatsCalculator extends MetricsCalculator
 {
   private long unmappedPairs     = 0; // Pairs where both reads are unmapped
   private long read1Mapped       = 0; // Pairs with only read 1 mapped
@@ -27,9 +27,9 @@ public class PairStatsCalculator implements MetricsCalculator
   /**
    * Class constructor
    */
-  public PairStatsCalculator()
+  public PairStatsCalculator() 
   {
-    // For now nothing
+	super();
   }
   
   /**
@@ -37,7 +37,7 @@ public class PairStatsCalculator implements MetricsCalculator
    * @param record
    */
   @Override
-  public void processRead(SAMRecord record)
+  public void processRead(SAMRecord record) throws Exception
   {
     if(record.getReadPairedFlag() && !record.getFirstOfPairFlag())
     {
@@ -80,24 +80,60 @@ public class PairStatsCalculator implements MetricsCalculator
     }
   }
   
+  
   /**
    * Public helper method to display the results
    */
   @Override
-  public void showResult()
+  public void calculateResult()
   {
-    if(totalPairs <= 0)
-      return;
-    
-    percentMappedPairs = 1.0 * mappedPairs / totalPairs * 100.0;
-    percentSameChrMappedPairs = 1.0 * mappedPairSameChr / totalPairs * 100.0;
-    percentUnmappedpairs =  1.0 * unmappedPairs / totalPairs * 100.0;
-    percentRead1Mapped = 1.0 * read1Mapped / totalPairs * 100.0;
-    percentRead2Mapped = 1.0 * read2Mapped / totalPairs * 100.0;
- 
-    System.out.println(toString());
+    if(totalPairs > 0)
+    {
+      percentMappedPairs = 1.0 * mappedPairs / totalPairs * 100.0;
+      percentSameChrMappedPairs = 1.0 * mappedPairSameChr / totalPairs * 100.0;
+      percentUnmappedpairs =  1.0 * unmappedPairs / totalPairs * 100.0;
+      percentRead1Mapped = 1.0 * read1Mapped / totalPairs * 100.0;
+      percentRead2Mapped = 1.0 * read2Mapped / totalPairs * 100.0;
+    }
   }
 
+  @Override
+  public void buildResultMetrics()
+  {
+    // Build the result metrics object for logging
+	resultMetric.setMetricName("PairMetrics");
+	
+	ResultMetric mappedPairMetrics = new ResultMetric();
+	mappedPairMetrics.setMetricName("MappedPairs");
+	mappedPairMetrics.addKeyValue("NumReads", Long.toString(mappedPairs));
+	mappedPairMetrics.addKeyValue("PercentReads", Double.toString(percentMappedPairs));
+	resultMetric.addResultMetric(mappedPairMetrics);
+	
+	ResultMetric sameChrMappedMetrics = new ResultMetric();
+	sameChrMappedMetrics.setMetricName("SameChrMappedPairs");
+	sameChrMappedMetrics.addKeyValue("NumReads", Long.toString(mappedPairSameChr));
+	sameChrMappedMetrics.addKeyValue("PercentReads", Double.toString(percentSameChrMappedPairs));
+	resultMetric.addResultMetric(sameChrMappedMetrics);
+	
+	ResultMetric unmappedPairMetrics = new ResultMetric();
+	unmappedPairMetrics.setMetricName("UnmappedPairs");
+	unmappedPairMetrics.addKeyValue("NumReads", Long.toString(unmappedPairs));
+	unmappedPairMetrics.addKeyValue("PercentReads", Double.toString(percentUnmappedpairs));
+	resultMetric.addResultMetric(unmappedPairMetrics);
+	
+	ResultMetric Read1MappedMetrics = new ResultMetric();
+	Read1MappedMetrics.setMetricName("Read1Mapped");
+	Read1MappedMetrics.addKeyValue("NumReads", Long.toString(read1Mapped));
+	Read1MappedMetrics.addKeyValue("PercentReads", Double.toString(percentRead1Mapped));
+	resultMetric.addResultMetric(Read1MappedMetrics);
+	
+	ResultMetric Read2MappedMetrics = new ResultMetric();
+	Read2MappedMetrics.setMetricName("Read2Mapped");
+	Read2MappedMetrics.addKeyValue("NumReads", Long.toString(read2Mapped));
+	Read2MappedMetrics.addKeyValue("PercentReads", Double.toString(percentRead2Mapped));
+	resultMetric.addResultMetric(Read2MappedMetrics);
+  }
+  
   @Override
   public String toString()
   {
@@ -124,7 +160,7 @@ public class PairStatsCalculator implements MetricsCalculator
     return resultString.toString();
   }
   
-  @Override
+  
   public Element toXML(Document doc)
   {
     Element pairInfo = doc.createElement("PairMetrics");

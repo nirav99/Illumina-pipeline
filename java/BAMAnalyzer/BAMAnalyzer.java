@@ -1,17 +1,9 @@
-/**
- * Class to calculate alignment and various metrics for a BAM.
- */
 import net.sf.samtools.*;
 import net.sf.samtools.SAMFileReader.ValidationStringency;
 import net.sf.picard.cmdline.*;
 import net.sf.picard.io.IoUtil;
 import java.io.File;
-import java.io.*;
-import org.w3c.dom.*;
-import javax.xml.parsers.*;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.*;
-import javax.xml.transform.stream.*;
+import java.util.*;
 
 /**
  * @author Nirav Shah niravs@bcm.edu
@@ -25,16 +17,16 @@ public class BAMAnalyzer extends CommandLineProgram
 
   @Option(shortName = StandardOptionDefinitions.INPUT_SHORT_NAME, doc = "Input SAM/BAM to process.")
   public File INPUT;
-    
+	    
   @Option(doc = "Stop after debugging N reads. Mainly for debugging. Default value: 0, which means process the whole file")
   public int STOP_AFTER = 0;
-    
-  @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output text file to write results in txt format", optional=true)
+	    
+  @Option(shortName = StandardOptionDefinitions.OUTPUT_SHORT_NAME, doc = "Output file to write results in txt format", optional=true)
   public File OUTPUT;
-    
-  /**
-   * @param args
-   */
+
+  @Option(shortName = "X", doc = "File with results in XML format", optional=true)
+  public File XMLOUTPUT;
+  
   public static void main(String[] args)
   {
     new BAMAnalyzer().instanceMainWithExit(args);
@@ -43,12 +35,8 @@ public class BAMAnalyzer extends CommandLineProgram
   @Override
   protected int doWork()
   {
-    SAMFileReader reader          = null;  // To read a BAM file
-    long totalReads               = 0;     // Total Reads in BAM file
-    InsertSizeCalculator insCalc  = null;  // Class to calculate insert size
-    PairStatsCalculator pairCalc  = null;  // Calculate information of read pairs
-    AlignmentCalculator alignCalc = null;  // Calculate alignment information
-    QualPerPosCalculator qualCalc = null;  // Calculate avg. base quality per base position
+    SAMFileReader reader  = null;  // To read a BAM file
+    long totalReads       = 0;     // Total Reads in BAM file
     
     try
     {
@@ -56,93 +44,64 @@ public class BAMAnalyzer extends CommandLineProgram
     
       SAMFileReader.setDefaultValidationStringency(ValidationStringency.SILENT);
       reader = new SAMFileReader(INPUT);
-
-      if(OUTPUT != null)
-        IoUtil.assertFileIsWritable(OUTPUT);
       
-      DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
-      DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
-      Document doc = docBuilder.newDocument();
-      Element root = doc.createElement("AnalysisMetrics");
+      ArrayList<MetricsCalculator> metrics = new ArrayList<MetricsCalculator>();
       
-      alignCalc = new AlignmentCalculator();
-      insCalc   = new InsertSizeCalculator();
-      pairCalc  = new PairStatsCalculator();
-      qualCalc  = new QualPerPosCalculator();
+      metrics.add(new AlignmentCalculator(ReadType.READ1));
+      metrics.add(new AlignmentCalculator(ReadType.READ2));
+      metrics.add(new AlignmentCalculator(ReadType.FRAGMENT));
+      metrics.add(new InsertSizeCalculator());  
+      metrics.add(new PairStatsCalculator());
+      metrics.add(new QualPerPosnCalculator());
       
-      long startTime = System.currentTimeMillis();
-    
       for(SAMRecord record : reader)
       {
         totalReads++;
       
         if(totalReads > 0 && totalReads % 1000000 == 0)
-        {
           System.err.print("\r" + totalReads);
-        }
-        
-        alignCalc.processRead(record);
-        insCalc.processRead(record);
-        pairCalc.processRead(record);
-        qualCalc.processRead(record);
+       
+        for(int i = 0; i < metrics.size(); i++)
+          metrics.get(i).processRead(record);
         
         if(STOP_AFTER > 0 && totalReads > STOP_AFTER)
-          break;
+            break;
       }
-    
-      long stopTime = System.currentTimeMillis();
-    
       reader.close();
-  
-      System.out.println();
-      System.out.println("Total Reads in File : " + totalReads);
-      alignCalc.showResult();
-      insCalc.showResult();
-      pairCalc.showResult();
-      System.out.format("%nComputation Time      : %.3f sec%n%n", (stopTime - startTime)/1000.0);
-      qualCalc.showResult();
-      
-      root.appendChild(alignCalc.toXML(doc));
 
-      Element xmlElement = insCalc.toXML(doc);
-      if(xmlElement != null)
-        root.appendChild(xmlElement);
-
-      xmlElement = pairCalc.toXML(doc);
-      if(xmlElement != null)
-        root.appendChild(xmlElement);
-
-      doc.appendChild(root);
+      ArrayList<ResultMetric> resultMetrics = new ArrayList<ResultMetric>();
       
-      TransformerFactory transfac = TransformerFactory.newInstance();
-      Transformer trans = transfac.newTransformer();
-      trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
-      trans.setOutputProperty(OutputKeys.INDENT, "yes");
-      StringWriter sw = new StringWriter();
-      StreamResult result = new StreamResult(sw);
-      DOMSource source = new DOMSource(doc);
-      trans.transform(source, result);
-      String xmlString = sw.toString();
-      
-      BufferedWriter writer = new BufferedWriter(new FileWriter(new File("BAMAnalysisInfo.xml")));
-      writer.write(xmlString);
-      writer.close();
-      
-      if(OUTPUT != null)
+      for(int i = 0; i < metrics.size(); i++)
       {
-        BufferedWriter logWriter = new BufferedWriter(new FileWriter(OUTPUT));
-        logWriter.write(alignCalc.toString());
-        logWriter.write(insCalc.toString());
-        logWriter.write(pairCalc.toString());
-        logWriter.close();
+        metrics.get(i).calculateResult();
+        metrics.get(i).buildResultMetrics();
+        if(metrics.get(i).getResultMetrics() != null)
+          resultMetrics.add(metrics.get(i).getResultMetrics());
       }
+
+      ArrayList<Logger> loggers = new ArrayList<Logger>();
+
+      if(OUTPUT != null)
+        loggers.add(new TextLogger(OUTPUT));
+      if(XMLOUTPUT != null)
+        loggers.add(new XmlLogger(XMLOUTPUT));
+      
+      for(int i = 0; i < resultMetrics.size(); i++)
+      {
+        for(int j = 0; j < loggers.size(); j++)
+          loggers.get(j).logResult(resultMetrics.get(i));
+      }
+ 
+      for(int i = 0; i < loggers.size(); i++)
+        loggers.get(i).closeFile();
+
       return 0;
+    }
+    catch(Exception e)
+    {
+      System.out.println(e.getMessage());
+      e.printStackTrace();
+      return -1;
+    }
   }
-  catch(Exception e)
-  {
-    System.out.println(e.getMessage());
-    e.printStackTrace();
-    return -1;
-  }
- }
 }
