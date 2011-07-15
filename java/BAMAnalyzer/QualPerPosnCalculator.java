@@ -82,8 +82,6 @@ public class QualPerPosnCalculator extends MetricsCalculator
   @Override
   void calculateResult()
   {
-    Plot p = null;
-	    
     double xPosn[] = new double[readLen];
 	    
     for(int i = 0; i < readLen; i++)

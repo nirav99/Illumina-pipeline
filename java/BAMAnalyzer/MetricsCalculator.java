@@ -7,10 +7,12 @@ import net.sf.samtools.*;
 abstract public class MetricsCalculator
 {
   protected ResultMetric resultMetric;   // Result metric
+  protected Plot p;                      // To generate plots
   
   public MetricsCalculator()
   { 
     resultMetric = new ResultMetric();
+    p = null;
   }
   
   abstract void processRead(SAMRecord nextRead) throws Exception;

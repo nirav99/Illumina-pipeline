@@ -59,22 +59,7 @@ public class ResultMetric
   {
     return metricName;
   }
-  
-  public ArrayList<ResultMetric> getChildMetrics()
-  {
-    return nextMetrics;
-  }
-  
-  public ArrayList<String> getKeys()
-  {
-    return keys;
-  }
-  
-  public ArrayList<String> getValues()
-  {
-    return vals;
-  }
-  
+
   /**
    * Override the default java.object.toString to get string representation
    * of the result metric.
