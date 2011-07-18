@@ -223,10 +223,9 @@ class BWA_BAM
       @isFragment = true
       @sequenceFiles = fileList
     elsif fileList.size == 2
-      @isFragment = false # paired end read
-
+      @isFragment    = false # paired end read
+      @sequenceFiles = Array.new
       if fileList[0].match(/s_\d_1_/)
-        @sequenceFiles = Array.new
         @sequenceFiles[0] = fileList[0]
         @sequenceFiles[1] = fileList[1]
       else
