@@ -231,9 +231,8 @@ class BWA_BAM
         @sequenceFiles[0] = fileList[1]
         @sequenceFiles[1] = fileList[0]
       end
-
       @isFragment = false # paired end read
-      @sequenceFiles = fileList
+
     else
       raise "More than two sequence files detected, perhaps from different reads in directory " + Dir.pwd
     end
