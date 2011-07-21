@@ -223,8 +223,7 @@ class BWA_BAM
       @isFragment = true
       @sequenceFiles = fileList
     elsif fileList.size == 2
-      @isFragment    = false # paired end read
-      @sequenceFiles = Array.new
+        @sequenceFiles = Array.new
       if fileList[0].match(/s_\d_1_/)
         @sequenceFiles[0] = fileList[0]
         @sequenceFiles[1] = fileList[1]
@@ -232,7 +231,9 @@ class BWA_BAM
         @sequenceFiles[0] = fileList[1]
         @sequenceFiles[1] = fileList[0]
       end
-#      @sequenceFiles = fileList
+
+      @isFragment = false # paired end read
+      @sequenceFiles = fileList
     else
       raise "More than two sequence files detected, perhaps from different reads in directory " + Dir.pwd
     end

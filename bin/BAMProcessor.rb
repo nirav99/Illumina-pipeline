@@ -2,7 +2,8 @@
 
 $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 
-#require 'PipelineHelper'
+require 'EmailHelper'
+require 'EnvironmentInfo.rb'
 
 # Class to apply various Picard/Custom tools to generate a BAM file and
 # calculate alignment stats.
@@ -40,17 +41,24 @@ class BAMProcessor
     @maxRecordsInRam = 3000000
     # Maximum Java heap size
     @heapSize        = "-Xmx22G"
+
+    @envInfo = EnvironmentInfo.new()
   end
 
   # Apply the series of command to generate a final BAM
   def process()
-    puts "Obtaining node characteristics"
-    displayNodeCharacteristics()
-    
-    # Command to sort a SAM file into a BAM
-    puts "Sorting BAM"
-    cmd = sortBamCommand()
-    runCommand(cmd, "sortBam")
+    puts "Displaying environment characteristics"
+    @envInfo.displayEnvironmentInformation(true)
+   
+    if @isFragment == false
+       puts "Fixing Mate information"
+       cmd = fixMateInfoCmd()
+       runCommand(cmd, "fixMateInformation") 
+    else
+       puts "Fragment run, sorting BAM"
+       cmd = sortBamCommand()
+       runCommand(cmd, "sortBam")
+    end
 
     puts "Marking Duplicates"
     cmd = markDupCommand()
@@ -62,12 +70,6 @@ class BAMProcessor
        runCommand(cmd, "filterPhix")
     end    
 
-   if @isFragment == false
-      puts "Fixing mate information"
-      cmd = fixMateInfoCmd()
-      runCommand(cmd, "fixMateInformation")
-   end
- 
    puts "Fixing CIGAR for unmapped reads"
    cmd = fixCIGARCmd(@markedBam) 
    runCommand(cmd, "fixCIGAR")
@@ -107,7 +109,7 @@ class BAMProcessor
   # Correct the flag describing the strand of the mate
   def fixMateInfoCmd()
     cmd = "java " + @heapSize + " -jar " + @picardPath + "/FixMateInformation.jar I=" +
-           @markedBam.to_s + " " + @picardTempDir + " MAX_RECORDS_IN_RAM=" + 
+           @samFileName.to_s + " O=" + @sortedBam + " SO=coordinate " + @picardTempDir + " MAX_RECORDS_IN_RAM=" + 
            @maxRecordsInRam.to_s + " " + @picardValStr + " 1>fixMateInfo.o 2>fixMateInfo.e"
     return cmd
   end
@@ -131,30 +133,19 @@ class BAMProcessor
   # Method to handle error. Current behavior, print the error stage and abort.
   def handleError(commandName)
     errorMessage = "Error while processing command : " + commandName.to_s
-    errorDetails = getNodeCharacteristics()
+    # For now keep like this
+    emailText    = errorMessage.to_s
+
+    obj          = EmailHelper.new()
+    emailFrom    = "sol-pipe@bcm.edu"
+    emailTo      = obj.getErrorRecepientEmailList()
+    emailSubject = "Error during mapping on host " + @envInfo.getHostName() 
+
+    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
+
     puts errorMessage.to_s
     puts errorDetails.to_s
     exit -1
-  end
-
-  # Method to print the free disk space on the temporary drive /space1/tmp on
-  # each node, node name etc.
-  def getNodeCharacteristics()
-    result = "Current working directory : " + Dir.pwd
-    # Get execution hostname
-    cmd = "hostname"
-    output = `#{cmd}`
-    result = result + "\r\nExecution hostname : " + output.to_s
-    cmd = "df -h /space1/tmp"
-    output = `#{cmd}`
-    result = result + "\r\nFree space on /space1/tmp = " + output.to_s
-    return result
-  end
-
-  # Dump the characteristics of the execution host on the console output
-  def displayNodeCharacteristics()
-    result = getNodeCharacteristics()
-    puts result.to_s
   end
 
   # Method to run the specified command
