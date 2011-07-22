@@ -144,7 +144,6 @@ class BAMProcessor
     obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
 
     puts errorMessage.to_s
-    puts errorDetails.to_s
     exit -1
   end
 
