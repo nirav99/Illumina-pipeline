@@ -155,7 +155,7 @@ public class InsertSizeCalculator extends MetricsCalculator
     metric.addKeyValue("PairOrientation", stats.getPairOrientation().toString());
     metric.addKeyValue("TotalPairs", Integer.toString(stats.getTotalPairs()));
     double percentPairs = 1.0 * stats.getTotalPairs() / totalMappedPairs * 100.0;
-    metric.addKeyValue("PercentPairs", Double.toString(percentPairs));
+    metric.addKeyValue("PercentPairs", getFormattedNumber(percentPairs));
     metric.addKeyValue("MedianInsertSize", Integer.toString(stats.getMedianInsertSize()));
     metric.addKeyValue("ModeInsertSize", Integer.toString(stats.getModeInsertSize()));
     return metric;

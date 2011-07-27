@@ -109,10 +109,10 @@ public class AlignmentCalculator extends MetricsCalculator
     readInfo.addKeyValue("MappedReads", Long.toString(mappedReads));
     
     readInfo.addKeyValue("UnmappedReads", Long.toString(unmappedReads));
-    readInfo.addKeyValue("PercentMapped", Double.toString(percentMapped));
-    readInfo.addKeyValue("PercentMismatch", Double.toString(percentMismatch));
-    readInfo.addKeyValue("PercentExactMatch", Double.toString(percentExactMatch));
-    readInfo.addKeyValue("PercentDuplicate", Double.toString(percentDup));
+    readInfo.addKeyValue("PercentMapped", getFormattedNumber(percentMapped));
+    readInfo.addKeyValue("PercentMismatch", getFormattedNumber(percentMismatch));
+    readInfo.addKeyValue("PercentExactMatch", getFormattedNumber(percentExactMatch));
+    readInfo.addKeyValue("PercentDuplicate", getFormattedNumber(percentDup));
     
     ResultMetric yieldInfo = new ResultMetric();
     yieldInfo.setMetricName("TotalYield");

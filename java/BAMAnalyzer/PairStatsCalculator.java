@@ -106,31 +106,31 @@ public class PairStatsCalculator extends MetricsCalculator
 	ResultMetric mappedPairMetrics = new ResultMetric();
 	mappedPairMetrics.setMetricName("MappedPairs");
 	mappedPairMetrics.addKeyValue("NumReads", Long.toString(mappedPairs));
-	mappedPairMetrics.addKeyValue("PercentReads", Double.toString(percentMappedPairs));
+	mappedPairMetrics.addKeyValue("PercentReads", getFormattedNumber(percentMappedPairs));
 	resultMetric.addResultMetric(mappedPairMetrics);
 	
 	ResultMetric sameChrMappedMetrics = new ResultMetric();
 	sameChrMappedMetrics.setMetricName("SameChrMappedPairs");
 	sameChrMappedMetrics.addKeyValue("NumReads", Long.toString(mappedPairSameChr));
-	sameChrMappedMetrics.addKeyValue("PercentReads", Double.toString(percentSameChrMappedPairs));
+	sameChrMappedMetrics.addKeyValue("PercentReads", getFormattedNumber(percentSameChrMappedPairs));
 	resultMetric.addResultMetric(sameChrMappedMetrics);
 	
 	ResultMetric unmappedPairMetrics = new ResultMetric();
 	unmappedPairMetrics.setMetricName("UnmappedPairs");
 	unmappedPairMetrics.addKeyValue("NumReads", Long.toString(unmappedPairs));
-	unmappedPairMetrics.addKeyValue("PercentReads", Double.toString(percentUnmappedpairs));
+	unmappedPairMetrics.addKeyValue("PercentReads", getFormattedNumber(percentUnmappedpairs));
 	resultMetric.addResultMetric(unmappedPairMetrics);
 	
 	ResultMetric Read1MappedMetrics = new ResultMetric();
 	Read1MappedMetrics.setMetricName("Read1Mapped");
 	Read1MappedMetrics.addKeyValue("NumReads", Long.toString(read1Mapped));
-	Read1MappedMetrics.addKeyValue("PercentReads", Double.toString(percentRead1Mapped));
+	Read1MappedMetrics.addKeyValue("PercentReads", getFormattedNumber(percentRead1Mapped));
 	resultMetric.addResultMetric(Read1MappedMetrics);
 	
 	ResultMetric Read2MappedMetrics = new ResultMetric();
 	Read2MappedMetrics.setMetricName("Read2Mapped");
 	Read2MappedMetrics.addKeyValue("NumReads", Long.toString(read2Mapped));
-	Read2MappedMetrics.addKeyValue("PercentReads", Double.toString(percentRead2Mapped));
+	Read2MappedMetrics.addKeyValue("PercentReads", getFormattedNumber(percentRead2Mapped));
 	resultMetric.addResultMetric(Read2MappedMetrics);
   }
   
