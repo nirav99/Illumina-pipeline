@@ -57,44 +57,50 @@ class RunFinishedDateRetriever
   # name was incorrect, then return INVALID_FLOWCELL to let the caller know that
   # the flowcell information was bad.
   def findRunFinishedDate(seqName, fcName)
-    foundFCDir = false
+    foundFCDir           = false
+    foundRunFinishedDate = false
 
     @instrumentDir.each do |instDir|
       searchPath = instDir + seqName
 
       if File::directory?(searchPath)
-        fcPath     = getFlowcellDirectoryName(searchPath, fcName)
+        fcPaths     = getFlowcellDirectoryNames(searchPath, fcName)
 
-        if File::directory?(fcPath)
-           runFinishedMarkerFile = fcPath + "/RTAComplete.txt"
-           foundFCDir = true
-           if File::exist?(runFinishedMarkerFile)
-             creationTime = File::ctime(runFinishedMarkerFile).strftime("%Y-%m-%d")
-             return creationTime.to_s
-           else
-             return "none"
-           end
+        fcPaths.each do |fcPath|
+          if File::directory?(fcPath)
+             runFinishedMarkerFile = fcPath + "/RTAComplete.txt"
+             foundFCDir = true
+             if File::exist?(runFinishedMarkerFile)
+               creationTime = File::ctime(runFinishedMarkerFile).strftime("%Y-%m-%d")
+               foundRunFinishedDate = true
+               return creationTime.to_s
+             end
+          end
         end
       end
     end
     
     if foundFCDir == false
       return "INVALID_FLOWCELL"
+    elsif foundRunFinishedDate == false
+      return "NONE"
     end
   end
 
-  # Given a directory search path and a flowcell name, get complete flowcell
-  # directory path. This method can handle complete flowcell directory names as
-  # well as the flowcell names used in LIMS.
-  def getFlowcellDirectoryName(searchPath, fcName)
+  # Given a directory search path and a flowcell name, get all directory paths
+  # matching the flowcell name (especially when incomplete name is used).
+  # This method can handle complete flowcell directory names as well as the
+  #  flowcell names used in LIMS.
+  def getFlowcellDirectoryNames(searchPath, fcName)
+    result     = Array.new
     dirEntries = Dir.entries(searchPath)
 
     dirEntries.each do |dirEntry|
       if dirEntry.match(fcName)
-        return searchPath + "/" + dirEntry
+        result << searchPath + "/" + dirEntry
       end
     end
-    return ""
+    return result
   end
 end
 
