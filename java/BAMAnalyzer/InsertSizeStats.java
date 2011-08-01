@@ -146,8 +146,11 @@ public class InsertSizeStats
     System.err.println("chart time");
     String outputFile = orientation.toString() + "_InsertSizeDist.png";
 
-    trimInsertSizeDistribution();
-   
+    long startTime = System.currentTimeMillis();
+    trimInsertSizeDistribution2();
+    long endTime = System.currentTimeMillis();
+    System.out.println("Time in trimming : " + (endTime - startTime));
+     
     System.err.println("CHART TRIMMED.. PLOT TIME");
  
     int length = insertSizeList.keySet().size();
@@ -205,5 +208,36 @@ public class InsertSizeStats
       insertSizeList.remove(binsToRemove.get(i));
     }
     System.err.println("List size after trimming : " + insertSizeList.size());
+  }
+
+  private void trimInsertSizeDistribution2()
+  {
+    int numModeElements = insertSizeList.get(modeInsertSize).intValue();
+    int minValue = (int)(threshold * numModeElements);
+    int val;
+    int lastKey;
+   
+    System.out.println("Mode = " + modeInsertSize);
+    System.err.println("List size before trimming : " + insertSizeList.size());
+ 
+    while(insertSizeList.size() > 0)
+    {
+      lastKey = insertSizeList.lastKey().intValue();
+      val = insertSizeList.get(lastKey).intValue();
+      System.out.println("Last key = " + lastKey + " Value = " + val + " min value = " + minValue);
+
+      if(lastKey > modeInsertSize && (val < minValue))
+      {
+        System.out.println("Removing : " + lastKey);
+        insertSizeList.remove(lastKey);
+      }
+      //if(lastKey <= modeInsertSize)
+      else
+        break;
+			  
+      insertSizeList.remove(lastKey);
+    }
+    System.err.println("List size after trimming : " + insertSizeList.size());
+    System.out.println("Mode = " + modeInsertSize);
   }
 }
