@@ -224,11 +224,11 @@ public class InsertSizeStats
     {
       lastKey = insertSizeList.lastKey().intValue();
       val = insertSizeList.get(lastKey).intValue();
-      System.out.println("Last key = " + lastKey + " Value = " + val + " min value = " + minValue);
+    //  System.out.println("Last key = " + lastKey + " Value = " + val + " min value = " + minValue);
 
       if(lastKey > modeInsertSize && (val < minValue))
       {
-        System.out.println("Removing : " + lastKey);
+     //   System.out.println("Removing : " + lastKey);
         insertSizeList.remove(lastKey);
       }
       //if(lastKey <= modeInsertSize)
