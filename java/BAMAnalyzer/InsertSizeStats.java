@@ -98,6 +98,11 @@ public class InsertSizeStats
     int numElements     = 0;
     boolean foundMedian = false;
 	    
+    if(insertSizeList.size() == 0)
+    {
+      System.err.println("Size of insert size list is zero for orientation : " + orientation + ". returning.");
+      return;
+    }
     Integer modeInsert = insertSizeList.firstKey();
     Integer modeValue  = insertSizeList.get(modeInsert);
 	    
