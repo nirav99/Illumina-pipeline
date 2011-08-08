@@ -108,7 +108,7 @@ class LaneInfo
     value = 0
     temp = output.slice(/NUMBER_OF_CYCLES_READ[12]=\d+/)
     if temp != nil && !temp.eql?("")
-      value = Integer(temp.split("=")[1]) - 1
+      value = Integer(temp.split("=")[1])
     end
 
     if value > @numCycles

@@ -36,7 +36,7 @@ class FlowcellDefinitionBuilder
   # Helper method to write the flowcell information to an XML
   def writeXMLOutput(outputXMLFile)
     @xmlDoc = Document.new() 
-    rootElem =  @xmlDoc.add_element("FCInfo", "ID" => @fcName, "ReadLength" => @numCycles.to_s, 
+    rootElem =  @xmlDoc.add_element("FCInfo", "ID" => @fcName, "NumCycles" => @numCycles.to_s, 
                         "Type" => @fcType.to_s)
 
     laneBarcodeListElem = rootElem.add_element("LaneBarcodeList") 
