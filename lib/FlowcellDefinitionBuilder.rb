@@ -67,19 +67,8 @@ class FlowcellDefinitionBuilder
     # LIMS did not report any errors, proceed to parse the barcodes
     lines = output.split("\n")
     lines.each do |line|
-     if(line.match(/-[1-8]$/))
-        laneBC = line.slice(/[1-8]$/)
-        @laneBarcodes << laneBC.to_s
-      elsif line.match(/-[1-8]-ID[01][0-9]$/)
-        laneBC = line.slice(/[1-8]-ID[01][0-9]$/)
-        @laneBarcodes << laneBC.to_s
-      elsif line.match(/-[1-8]-IDMB\d$/)
-        laneBC = line.slice(/[1-8]-IDMB\d$/)
-        @laneBarcodes << laneBC.to_s
-      elsif line.match(/-[1-8]-IDMB\d\d$/)
-        laneBC = line.slice(/[1-8]-IDMB\d\d$/)
-        @laneBarcodes << laneBC.to_s
-      end
+      line.gsub!(/^[A-Za-z0-9_]+-/, "")
+      @laneBarcodes << line.to_s
     end
   end
 
