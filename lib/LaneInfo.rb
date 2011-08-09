@@ -9,7 +9,7 @@ class LaneInfo
     @library        = nil       # Library name
     @chipDesign     = nil       # Chip design
     @fcType         = "paired"  # Whether fragment or paired
-    @numCycles      = 0         # Num. cycles for read 1 or read 2
+    @numCycles      = ""        # Num. cycles for read 1 or read 2
     parseLIMSOutput(limsOutput)
   end
 
@@ -103,6 +103,16 @@ class LaneInfo
     end
   end
 
+  # Get the number of cycles for the flowcell. If the flowcell has barcodes,
+  # the number of cycles would be something like 101+7, leave it the way it is.
+  # The parser program should convert it to an integer value.
+  def parseNumCycles(output)
+     temp = output.slice(/NUMBER_OF_CYCLES_READ[12]=[^;]+/)
+     temp.gsub!(/NUMBER_OF_CYCLES_READ[12]=/, "")
+     @numCycles = temp
+  end
+
+=begin 
   # Get number of cycles for the flowcell
   def parseNumCycles(output)
     value = 0
@@ -115,6 +125,7 @@ class LaneInfo
       @numCycles = value
     end 
   end
+=end
 
   # Get the sample name from the output
   def parseSampleName(output)

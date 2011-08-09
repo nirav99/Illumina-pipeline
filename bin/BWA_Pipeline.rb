@@ -326,18 +326,6 @@ end
     baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
     parentJob = nil
 
-   # Nirav Shah on April 15, 2011:
-   # I have commented out this part because this script will be automatically
-   # invoked from QseqSplitter.rb, which guarantees that qseq generation and
-   # qseq demultiplexing (whenever applicable) has completed. This eliminates
-   # the need to create the dependency on the qseq generation job.
-=begin
-    if File::exist?(baseCallsDir + "/bclToQseqJobName")
-      lines = IO.readlines(baseCallsDir + "/bclToQseqJobName")
-      parentJob = lines[0].strip
-    end
-=end
-
     # Each host on cluster has 8 cores.
     numCores    = 2
 

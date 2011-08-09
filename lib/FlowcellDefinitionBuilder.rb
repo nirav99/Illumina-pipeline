@@ -22,7 +22,7 @@ class FlowcellDefinitionBuilder
 
     @laneBarcodes    = Array.new  # Lane barcodes for the given flowcell
     @laneBarcodeInfo = Hash.new # Hash table of information per lane barcode
-    @numCycles    = 0
+    @numCycles    = ""
     @fcType       = nil
 
     getLaneBarcodeDefn()
@@ -36,7 +36,7 @@ class FlowcellDefinitionBuilder
   # Helper method to write the flowcell information to an XML
   def writeXMLOutput(outputXMLFile)
     @xmlDoc = Document.new() 
-    rootElem =  @xmlDoc.add_element("FCInfo", "ID" => @fcName, "NumCycles" => @numCycles.to_s, 
+    rootElem =  @xmlDoc.add_element("FCInfo", "Name" => @fcName, "NumCycles" => @numCycles.to_s, 
                         "Type" => @fcType.to_s)
 
     laneBarcodeListElem = rootElem.add_element("LaneBarcodeList") 
@@ -97,8 +97,10 @@ class FlowcellDefinitionBuilder
       sample     = laneInfo.getSampleName()
       library    = laneInfo.getLibraryName()
 
-      if @numCycles == 0 && numCycles.to_i > 0
-        @numCycles = numCycles.to_i
+      if numCycles == nil || numCycles.empty?()
+        @numCycles = ""
+      else
+        @numCycles = numCycles.to_s
       end
 
       if @fcType == nil && fcType != nil
@@ -164,4 +166,5 @@ end
 
 flowcellName  = ARGV[0]
 destDirectory = ARGV[1]
-obj = FlowcellDefinitionBuilder.new(ARGV[0], ARGV[1])
+
+obj = FlowcellDefinitionBuilder.new(flowcellName, destDirectory)
