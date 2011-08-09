@@ -1,4 +1,7 @@
 #!/usr/bin/ruby
+
+$:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
+
 require 'PipelineHelper'
 require 'rexml/document'
 require 'rexml/formatters/pretty'
@@ -29,6 +32,7 @@ class FlowcellDefinitionBuilder
     getLaneBarcodeInfo()
     outputName  = outputDirectory + "/FCAnalysisDefinition.xml" 
     writeXMLOutput(outputName)
+    handleError("MyError")
   end
 
   private
@@ -158,7 +162,7 @@ class FlowcellDefinitionBuilder
     emailFrom = "sol-pipe@bcm.edu"
     emailTo   = obj.getErrorRecepientEmailList()
     emailSubject = "LIMS error while getting info for flowcell : " + @fcName.to_s
-    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
+    obj.sendEmail(emailFrom, emailTo, emailSubject, errorMessage)
     puts errorMessage.to_s
     exit -1
   end
