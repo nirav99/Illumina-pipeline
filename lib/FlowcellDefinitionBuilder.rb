@@ -32,7 +32,6 @@ class FlowcellDefinitionBuilder
     getLaneBarcodeInfo()
     outputName  = outputDirectory + "/FCAnalysisDefinition.xml" 
     writeXMLOutput(outputName)
-    handleError("MyError")
   end
 
   private
