@@ -152,7 +152,7 @@ public class BarcodeEditDist
     System.err.println("Tool to check if a given set of barcodes has at least k-edit distance between each pair");
     System.err.println();
     System.err.println("Usage : ");
-    System.err.println("java BarcodeEditDist InputFile EditDist");
+    System.err.println("Input parameters : InputFile EditDist");
     System.err.println("  InputFile - File containing barcode name and sequence separated by comma");
     System.err.println("  EditDist  - Min. required edit distance");
     System.err.println("              Optional, default = 2");
