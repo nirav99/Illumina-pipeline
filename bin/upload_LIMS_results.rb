@@ -33,8 +33,8 @@ class LaneResult
     currentTime = Time.new 
     puts "Current Time = " + currentTime.strftime("%Y-%m-%d")
 
-    result = " LANE_YIELD_KBASES " + @totalBases.to_s + " PERCENT_ERROR_RATE_PF " +
-             @errorPercent.to_s +  " CLUSTERS_RAW " + @rawClusters.to_s +
+    result = " LANE_YIELD_KBASES " + @totalBases.to_s + 
+             " CLUSTERS_RAW " + @rawClusters.to_s +
              " CLUSTERS_PF " + @pfClusters.to_s + " FIRST_CYCLE_INT_PF " +
              @avCycle1Int.to_s + " PERCENT_INTENSITY_AFTER_20_CYCLES_PF " +
              @perInt20Cycles.to_s + " PERCENT_PF_CLUSTERS " +
@@ -43,6 +43,7 @@ class LaneResult
 
     if @showAnalysisResults == true
       result = result + " PERCENT_ALIGN_PF " + @perAlignPF.to_s +
+                        " PERCENT_ERROR_RATE_PF " + @errorPercent.to_s +
                         " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + 
                         " REFERENCE_PATH " + getReferencePath() +
                         " RESULTS_PATH " + FileUtils.pwd 
