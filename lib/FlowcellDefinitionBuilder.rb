@@ -155,8 +155,3 @@ class FlowcellDefinitionBuilder
     exit -1
   end
 end
-
-flowcellName  = ARGV[0]
-destDirectory = ARGV[1]
-
-obj = FlowcellDefinitionBuilder.new(flowcellName, destDirectory)
