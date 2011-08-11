@@ -6,24 +6,26 @@ require 'PipelineHelper'
 
 # This script is run after BWA alignment completes.
 
+binDirPath = File.dirname(__FILE__)
+
 # Upload results to LIMS
-uploadLIMSResultsCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_results.rb " +
+uploadLIMSResultsCmd = "ruby " + binDirPath + "/upload_LIMS_results.rb " +
                        " ANALYSIS_FINISHED 1>limsResultUpload.o 2>limsResultUpload.e"
 output = `#{uploadLIMSResultsCmd}`
 puts "Output from LIMS : " + output
 
 # Send analysis result email
-emailAnalysisResultCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/ResultMailer.rb"
+emailAnalysisResultCmd = "ruby " + binDirPath + "/ResultMailer.rb"
 output = `#{emailAnalysisResultCmd}`
 
 # Upload the mapping results file to LIMS (if it exists)
-uploadBAMAnalyzerFileCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/uploadBAMAnalyzerFile.rb"
+uploadBAMAnalyzerFileCmd = "ruby " + binDirPath + "/uploadBAMAnalyzerFile.rb"
 output = `#{uploadBAMAnalyzerFileCmd}`
 
 # Appropriate code can be added here to clean up the GERALD directory of
 # unwanted files such as .sam, intermediate .bam files, .sai files etc.
 puts "Deleting Temp Files"
-deleteTempFilesCmd = "rm *.sam *.sai *_sanger_sequence.txt"
+deleteTempFilesCmd = "rm *.sam *.sai"
 `#{deleteTempFilesCmd}`
 
 # Be careful here, delete only _sorted.bam
