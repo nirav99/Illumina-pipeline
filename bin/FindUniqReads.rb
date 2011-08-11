@@ -145,7 +145,7 @@ class FindUniqueReads
   def uploadResultsToLIMS(resultFile)
     limsUploadCmd = "perl /stornext/snfs5/next-gen/Illumina/ipipe/" +
                     "third_party/setIlluminaLaneStatus.pl " + @limsBarcode +
-                    " ANALYSIS_FINISHED UNIQUE_PERCENT "
+                    " UNIQUE_PERCENT_FINISHED UNIQUE_PERCENT "
 
     foundUniquenessResult = false
 

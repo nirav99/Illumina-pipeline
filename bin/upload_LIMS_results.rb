@@ -14,17 +14,21 @@ require 'BWAParams'
 class LaneResult
 
   # Class constructor
-  def initialize(doc, laneNum)
+  def initialize(doc, laneNum, showAnalysisResults)
     @xmlDoc = doc
     @laneNum = laneNum
+    @showAnalysisResults = showAnalysisResults
   end
 
   # Generate a string with analysis results for LIMS upload
   def buildLIMSResultString(readNum)
     getPhasingPrePhasingResults(readNum)
     getLaneResultSummary(readNum)
-    #getUniquenessResult()
-    getAlignmentResult(readNum)
+
+    if @showAnalysisResults == true
+      getUniquenessResult()
+      getAlignmentResult(readNum)
+    end
 
     currentTime = Time.new 
     puts "Current Time = " + currentTime.strftime("%Y-%m-%d")
@@ -34,25 +38,25 @@ class LaneResult
              " CLUSTERS_PF " + @pfClusters.to_s + " FIRST_CYCLE_INT_PF " +
              @avCycle1Int.to_s + " PERCENT_INTENSITY_AFTER_20_CYCLES_PF " +
              @perInt20Cycles.to_s + " PERCENT_PF_CLUSTERS " +
-             @perPFClusters.to_s + " PERCENT_ALIGN_PF " + @perAlignPF.to_s +
-             " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + " PERCENT_PHASING " +
-             @phasePercent.to_s + " PERCENT_PREPHASING " + @prePhasePercent.to_s +
-             " RESULTS_PATH " + FileUtils.pwd +
-             " REFERENCE_PATH " + getReferencePath()
-    # Uncomment the following two lines if we need to send this variable in the
-    # upload string
-             # + " ANALYSIS_END_DATE " +
-             #  currentTime.strftime("%Y-%m-%d").to_s 
-    if @foundUniquenessResult == true  #&& readNum == 1
-      result = result + " UNIQUE_PERCENT " + @percentUnique.to_s
+             @perPFClusters.to_s + " PERCENT_PHASING " + @phasePercent.to_s +
+             " PERCENT_PREPHASING " + @prePhasePercent.to_s 
+
+    if @showAnalysisResults == true
+      result = result + " PERCENT_ALIGN_PF " + @perAlignPF.to_s +
+                        " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + 
+                        " REFERENCE_PATH " + getReferencePath() +
+                        " RESULTS_PATH " + FileUtils.pwd 
+    # Uncomment the following line if we need to send this variable in the upload string
+    #                   + " ANALYSIS_END_DATE " +  currentTime.strftime("%Y-%m-%d").to_s 
+      if @foundUniquenessResult == true  && readNum == 1
+        result = result + " UNIQUE_PERCENT " + @percentUnique.to_s
+      end
     end
     return result
   end
 
   private
   # Helper method to get uniqueness percentage result
-  # TODO: Possible improvement - if many uniqueness files are present
-  # select the right one based on lane number
   def getUniquenessResult()
     @foundUniquenessResult = false
     @percentUnique = 0
@@ -109,13 +113,13 @@ class LaneResult
     errPercent   = Array.new
 
     IO.foreach(fileName[0]) do |line|
-      if line.match(/\% Mapped Reads/)
-        temp = line.gsub(/\% Mapped Reads\s+:\s+/, "")
+      if line.match(/\PercentMapped/)
+        temp = line.gsub(/\PercentMapped\s+:\s+/, "")
         temp.strip!
         temp.gsub!(/\%$/, "")
         mapPercent << temp
-      elsif line.match(/\% Mismatch/)
-        temp = line.gsub(/\% Mismatch\s+:\s+/, "")
+      elsif line.match(/\PercentMismatch/)
+        temp = line.gsub(/\PercentMismatch\s+:\s+/, "")
         temp.strip!
         temp.gsub!(/\%$/, "")
         errPercent << temp
@@ -226,12 +230,12 @@ end
 
 # Class to upload summary results for all lanes specified in config.txt
 class UploadSummaryResults
-  def initialize()
-    @lanes  = ""
-    @fcName = ""
+  def initialize(newLIMSState)
+    @lanes      = ""
+    @fcName     = ""
     @limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
                   "setIlluminaLaneStatus.pl"
-    @pairedEnd = false                  
+    @pairedEnd  = false                  
     @helper = PipelineHelper.new()
     @doc    = Hpricot::XML(open('Summary.xml'))
     @fcName = @helper.findFCName()
@@ -239,6 +243,7 @@ class UploadSummaryResults
     obj     = FCBarcodeFinder.new
     @limsBarcode = obj.getBarcodeForLIMS()
 
+    @newLIMSState = newLIMSState
     isFCPairedEnd()
   end
 
@@ -247,8 +252,14 @@ class UploadSummaryResults
   def uploadResults()
      puts "Generating LIMS upload string for lane : " + @lanes
      baseCmd = "perl " + @limsScript + " " + @limsBarcode +
-               " ANALYSIS_FINISHED READ" 
-     laneRes = LaneResult.new(@doc, @lanes)
+               " " + @newLIMSState + " READ"
+
+     showAnalysisResults  = false
+     if @newLIMSState.eql?("ANALYSIS_FINISHED")
+       showAnalysisResults = true
+     end
+
+     laneRes = LaneResult.new(@doc, @lanes, showAnalysisResults)
      cmd = baseCmd + " 1 " + laneRes.buildLIMSResultString(1)
      puts cmd
      executeLIMSUploadCmd(cmd)
@@ -326,7 +337,14 @@ class UploadSummaryResults
   end
 end
 
- 
-obj = UploadSummaryResults.new()
+
+newLIMSState = ARGV[0] 
+
+if newLIMSState.upcase.eql?("SEQUENCE_FINISHED")
+  obj = UploadSummaryResults.new("SEQUENCE_FINISHED")
+else
+  obj = UploadSummaryResults.new("ANALYSIS_FINISHED")
+end
 obj.uploadResults()
+
 exit 0
