@@ -70,8 +70,8 @@ class CaptureStats
     puts "Exit status of Capture Stats Command : " + exitStatus.to_s
 
     parseResults()
-    emailResults()
     uploadToLIMS()
+    emailResults()
     puts "Completed Everything"
   end
 
@@ -98,7 +98,12 @@ class CaptureStats
     emailText    = @captureResults.formatForSTDOUT()
     emailTo      = obj.getCaptureResultRecepientEmailList()
 
-    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
+    begin
+      obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
+    rescue Exception => e
+      puts e.message  
+      puts e.backtrace.inspect
+    end
   end
 
   # Method to upload capture stats to LIMS
