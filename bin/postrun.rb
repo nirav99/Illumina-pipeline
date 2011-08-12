@@ -31,21 +31,28 @@ lanes  = helper.findAnalysisLaneNumbers()
 puts "Analysis Lane Number : " + lanes.to_s
 fcBarCode = fcName + "-" + lanes.to_s
 
+dirPath = File.dirname(__FILE__)
+
 #Upload HTML summary to LIMS
-uploadLIMSHTMLCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/upload_LIMS_summary.rb"
+uploadLIMSHTMLCmd = "ruby " + dirPath + "/upload_LIMS_summary.rb"
 output = `#{uploadLIMSHTMLCmd}`
+puts output
+
+#Upload results of sequence generation to LIMS (Kbases, %PF clusters etc)
+uploadLIMSResultCmd = "ruby " + dirPath + "/upload_LIMS_results.rb SEQUENCE_FINISHED"
+output = `#{uploadLIMSResultCmd}`
 puts output
 
 # Email the Summary.htm file
 #emailSummaryHTML(fcBarCode)
 
 # Map sequence files using BWA
-bwaCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/bwa_bam.rb"
+bwaCmd = "ruby " + dirPath + "/bwa_bam.rb"
 output = `#{bwaCmd}`
 puts output
 
 # Run uniqueness analysis
-uniqCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/FindUniqReads.rb"
+uniqCmd = "ruby " + dirPath + "/FindUniqReads.rb"
 sch1 = Scheduler.new(fcBarCode + "_Uniqueness", uniqCmd)
 sch1.setMemory(8000)
 sch1.setNodeCores(1)
