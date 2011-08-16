@@ -1,0 +1,8 @@
+picard:
+  path: "/stornext/snfs5/next-gen/software/picard-tools/current"
+  stringency: "VALIDATION_STRINGENCY=LENIENT"
+  tempDir: "TMP_DIR=/space1/tmp"
+  maxRecordsInRAM: "MAX_RECORDS_IN_RAM=3000000"
+  maxHeapSize: "-Xmx22G"
+bwa:
+  path: "/stornext/snfs5/next-gen/niravs_scratch/code/bwa_test/bwa_0_5_9/bwa-0.5.9/bwa"

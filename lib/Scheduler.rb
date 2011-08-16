@@ -36,6 +36,25 @@ class Scheduler
 #    end
   end
 
+  # Method to lock down a complete node. 
+  # Nodes in hptest have 16 cores. Hence, use value of 16 if the queue is
+  # hptest, or use 8 cores otherwise. 
+  # Do not use methods setNodeCores, setPriority and setMemory if this method is
+  # used.
+  def lockWholeNode(queueName)
+    if queueName == nil || queueName.empty?()
+      raise "Scheduler queue cannot be null or empty"
+    end
+    @priority = queueName.downcase
+    if @priority.eql?("hptest")
+      @numCores = 16
+      @memory   = 28000
+    else
+      @numCores = 8
+      @memory   = 28000
+    end
+  end
+
   # Get the name of the job to run
   def getJobName()
     return @jobName

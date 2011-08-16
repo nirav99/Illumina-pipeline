@@ -4,6 +4,7 @@ $:.unshift File.dirname(__FILE__)
 require 'fileutils'
 require 'PipelineHelper'
 require 'Scheduler'
+require 'FlowcellDefinitionBuilder'
 
 # Class to generate qseq files in the base calls directory
 class QseqGenerator
@@ -29,10 +30,11 @@ class QseqGenerator
     cmd = @scriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
           " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats" 
 
-    
    # Add -P .clocs only to the sequencers running RTA 1.12
-   if !flowcellName.match(/SN166/)
+   if !flowcellName.match(/EAS376/) && !flowcellName.match(/EAS034/)
       cmd = cmd + " -P .clocs"
+   else
+     cmd = cmd + " -p ../L00*"
    end
 
     puts "Executing command : "
@@ -66,29 +68,13 @@ class QseqGenerator
     @qseqGenerationJobName = s.getJobName()
     puts "Qseq Generation Job Name = " + @qseqGenerationJobName.to_s
 
-    # PLEASE NOTE: The function below helps to create MOAB dependency between
-    # GERALD jobs and qseq generator jobs. To disable this functionality, please
-    # comment out the line below.
-    writeJobNameToBaseCallsDir()
     uploadAnalysisStartDate()
+    puts "Creating flowcell definition XML"
+    createFlowcellDefinitionXML()
+    puts "Finished writing flowcell definition XML"
 
     # Added functionality to split qseq files
     splitQseqFiles()
-  end
-
-  # Helper method to write job name to base calls dir
-  # Intention is that subsequent jobs can read this ID and put
-  # a dependency in their scheduling
-  def writeJobNameToBaseCallsDir()
-    fileName = @baseCallsDir + "/bclToQseqJobName"
-    file = File.new(fileName, "w")
-    
-    if file
-       file.syswrite(@qseqGenerationJobName.to_s)
-       file.close
-    else
-       puts "Unable to open file : " + fileName
-    end
   end
 
   # Helper method to upload analysis start date to LIMS for tracking purposes
@@ -105,6 +91,12 @@ class QseqGenerator
     else
       puts "Successfully uploaded Analysis Start Date to LIMS"
     end
+  end
+
+  # Contact LIMS and write an XML file having necessary information to start the
+  # analysis. This is a temporary functionality until LIMS can provide this XML.
+  def createFlowcellDefinitionXML()
+    obj = FlowcellDefinitionBuilder.new(@fcName, @baseCallsDir)
   end
 
   # For a multiplexed flowcell, the qseq files have to be split based on the
