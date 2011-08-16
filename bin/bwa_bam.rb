@@ -6,6 +6,7 @@ require 'Scheduler'
 require 'PipelineHelper'
 require 'BWAParams'
 require 'FCBarcodeFinder'
+require 'yaml'
 
 # Class to perform alignment on Illumina sequence files and generate a BAM using
 # BWA.
@@ -62,22 +63,15 @@ class BWA_BAM
     @minCpuCores    = 8      # Min CPU cores to use
     @maxMemory      = 28000  # Maximum memory available per node
     @lessMemory     = 28000  # Command requiring less than maximum memory
-  
-    # List of required paths
-    # Path to BWA executable
-    @bwaPath         = "/stornext/snfs5/next-gen/niravs_scratch/code/bwa_test/bwa_0_5_9/bwa-0.5.9/bwa"
-    # Directory hosting various custom-built jars
-    @javaDir         = "/stornext/snfs5/next-gen/Illumina/ipipe/java"
 
-    # Parameters for picard commands
-    @picardPath       = "/stornext/snfs5/next-gen/software/picard-tools/current"
-    @picardValStr     = "VALIDATION_STRINGENCY=LENIENT"
-    # Name of temp directory used by picard
-    @picardTempDir   = "TMP_DIR=/space1/tmp"
-    # Number of records to hold in RAM
-    @maxRecordsInRam = 3000000
-    # Maximum Java heap size
-    @heapSize        = "-Xmx22G"
+    yamlConfigFile = File.dirname(File.dirname(__FILE__)) + "/config/config_params.yml" 
+    @configReader = YAML.load_file(yamlConfigFile)
+    @bwaPath = @configReader["bwa"]["path"]
+   
+    puts "BWA PATH = " + @bwaPath.to_s
+
+    # Directory hosting various custom-built jars
+    @javaDir         = File.dirname(File.dirname(__FILE__)) + "/java"
 
     @sequenceFiles  = nil   # Sequence files 
     @seqFilesZipped = false # Whether sequence files are zipped
@@ -132,9 +126,7 @@ class BWA_BAM
 
     alnCmd1 = buildAlignCommand(@sequenceFiles[0], outputFile1) 
     obj1 = Scheduler.new(@fcBarcode + "_aln_Read1", alnCmd1)
-    obj1.setMemory(@maxMemory)
-    obj1.setNodeCores(@cpuCores)
-    obj1.setPriority(@priority)
+    obj1.lockWholeNode(@priority)
 
     if !unzipJobID1.empty?()
       obj1.setDependency(unzipJobID1)
@@ -147,11 +139,8 @@ class BWA_BAM
       outputFile2 = @sequenceFiles[1] + ".sai"
       alnCmd2 = buildAlignCommand(@sequenceFiles[1], outputFile2)
       obj2 = Scheduler.new(@fcBarcode + "_aln_Read2", alnCmd2)
-      obj2.setMemory(@maxMemory)
-      obj2.setNodeCores(@cpuCores)
-      obj2.setPriority(@priority)
+      obj2.lockWholeNode(@priority)
 
-      puts "ALN FOR READ2"
       if !unzipJobID1.empty?()
         obj2.setDependency(unzipJobID1)
       end
@@ -162,9 +151,7 @@ class BWA_BAM
       sampeCmd = buildSampeCommand(outputFile1, outputFile2, @sequenceFiles[0],
                                    @sequenceFiles[1])
       obj3 = Scheduler.new(@fcBarcode + "_sampe", sampeCmd)
-      obj3.setMemory(@lessMemory)
-      obj3.setNodeCores(@minCpuCores)
-      obj3.setPriority(@priority)
+      obj3.lockWholeNode(@priority)
       obj3.setDependency(alnJobID1)
       obj3.setDependency(alnJobID2)
       obj3.runCommand()
@@ -173,9 +160,7 @@ class BWA_BAM
       # Flowcell is fragment
       samseCmd = buildSamseCommand(outputFile1, @sequenceFiles[0])
       obj3 = Scheduler.new(@fcBarcode + "_samse", samseCmd)
-      obj3.setMemory(@lessMemory)
-      obj3.setNodeCores(@minCpuCores)
-      obj3.setPriority(@priority)
+      obj3.lockWholeNode(@priority)
       obj3.setDependency(alnJobID1)
       obj3.runCommand()
       makeSamJobName = obj3.getJobName()
@@ -184,9 +169,7 @@ class BWA_BAM
     # Generate a BAM, sort it, mark dups on it and calculate mapping stats
     bamProcessCmd = buildBAMProcessingCmd()
     obj4 = Scheduler.new(@fcBarcode + "_processBam", bamProcessCmd)
-    obj4.setMemory(@lessMemory)
-    obj4.setNodeCores(@minCpuCores)
-    obj4.setPriority(@priority)
+    obj4.lockWholeNode(@priority)
     obj4.setDependency(makeSamJobName)
     obj4.runCommand()
     previousJobName = obj4.getJobName() 
@@ -194,9 +177,7 @@ class BWA_BAM
     if @chipDesign != nil && !@chipDesign.empty?()
       captureStatsCmd = buildCaptureStatsCmd()
       capStatsObj = Scheduler.new(@fcBarcode + "_CaptureStats", captureStatsCmd)
-      capStatsObj.setMemory(@lessMemory)
-      capStatsObj.setNodeCores(@minCpuCores)
-      capStatsObj.setPriority(@priority)
+      capStatsObj.lockWholeNode(@priority)
       capStatsObj.setDependency(previousJobName)
       capStatsObj.runCommand()
       capStatsJobName = capStatsObj.getJobName()
@@ -339,8 +320,8 @@ class BWA_BAM
   # Run the script to sort a bam, mark dups, fix mate info, fix CIGAR and
   # calculate mapping stats etc
   def buildBAMProcessingCmd()
-    cmd = "ruby " + File.dirname(__FILE__) + "/BAMProcessor.rb " +
-          @isFragment.to_s + " " + @filterPhix.to_s + " " + @samFileName + 
+    cmd = "ruby " + File.dirname(__FILE__) + "/BAMProcessor.rb " + @fcBarcode.to_s + 
+          " " + @isFragment.to_s + " " + @filterPhix.to_s + " " + @samFileName + 
           " " + @sortedBam + " " + @markedBam
     return cmd
   end
@@ -373,7 +354,6 @@ class BWA_BAM
   @sortedBam     = nil   # Name of sorted BAM
   @markedBam     = nil   # Name of BAM with duplicates marked
   @bwaPath       = nil   # Path to BWA
-  @picardPath    = nil   # Picard path
   @cpuCores      = 8     # Processor cores
   @priority      = "normal" # Execution priority
   @helper        = nil   # PipelineHelper instance

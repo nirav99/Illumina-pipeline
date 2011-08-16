@@ -4,6 +4,7 @@ $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 
 require 'EmailHelper'
 require 'EnvironmentInfo.rb'
+require 'yaml'
 
 # Class to apply various Picard/Custom tools to generate a BAM file and
 # calculate alignment stats.
@@ -11,14 +12,15 @@ require 'EnvironmentInfo.rb'
 
 class BAMProcessor
   # Constructor 
+  # fcBarcode     - LIMS barcode for the flowcell
   # isPairedEnd   - true if flowcell is paired end, false otherwise
   # phixFilter    - true if phix reads should be filtered, false otherwise
   # samFileName   - Name of the sam file
   # sortedBAMName - Name of the bam that is coordinate sorted
   # finalBAMName  - Name of the final BAM file
-  def initialize(isPairedEnd, phixFilter, samFileName, sortedBAMName,
+  def initialize(fcBarcode, isPairedEnd, phixFilter, samFileName, sortedBAMName,
                  finalBAMName)
-
+    @fcBarcode   = fcBarcode
     @samFileName = samFileName
     @sortedBam   = sortedBAMName
     @markedBam   = finalBAMName
@@ -30,17 +32,23 @@ class BAMProcessor
     @filterPhix = phixFilter
 
     # Directory hosting various custom-built jars
-    @javaDir         = "/stornext/snfs5/next-gen/Illumina/ipipe/java"
+    @javaDir         = File.dirname(File.dirname(__FILE__)) + "/java"
+
+    # Read picard parameters from yaml config file
+    yamlConfigFile = File.dirname(File.dirname(__FILE__)) + "/config/config_params.yml"
+    @configReader =  YAML.load_file(yamlConfigFile)
 
     # Parameters for picard commands
-    @picardPath       = "/stornext/snfs5/next-gen/software/picard-tools/current"
-    @picardValStr     = "VALIDATION_STRINGENCY=LENIENT"
-    # Name of temp directory used by picard
-    @picardTempDir   = "TMP_DIR=/space1/tmp"
-    # Number of records to hold in RAM
-    @maxRecordsInRam = 3000000
-    # Maximum Java heap size
-    @heapSize        = "-Xmx22G"
+    @picardPath       = @configReader["picard"]["path"]
+    puts "Picard path = " + @picardPath
+    @picardValStr     = @configReader["picard"]["stringency"]
+    puts "Picard validation stringency = " + @picardValStr
+    @picardTempDir    = @configReader["picard"]["tempDir"]
+    puts "Picard temp dir = " + @picardTempDir
+    @maxRecordsInRam  = @configReader["picard"]["maxRecordsInRAM"]
+    puts "Max records in ram = " + @maxRecordsInRam.to_s
+    @heapSize         = @configReader["picard"]["maxHeapSize"]
+    puts "Heap Size = " + @heapSize.to_s
 
     @envInfo = EnvironmentInfo.new()
   end
@@ -84,8 +92,7 @@ class BAMProcessor
   def sortBamCommand()
     cmd = "java " + @heapSize + " -jar " + @picardPath + "/SortSam.jar I=" + @samFileName +
           " O=" + @sortedBam + " SO=coordinate " + @picardTempDir + " " +
-          " MAX_RECORDS_IN_RAM=" + @maxRecordsInRam.to_s + " " + @picardValStr +
-          " 1>sortbam.o 2>sortbam.e"
+          @maxRecordsInRam.to_s + " " + @picardValStr + " 1>sortbam.o 2>sortbam.e"
     return cmd
   end
 
@@ -93,7 +100,7 @@ class BAMProcessor
   def markDupCommand()
     cmd = "java " + @heapSize + " -jar " + @picardPath + "/MarkDuplicates.jar I=" +
           @sortedBam + " O=" + @markedBam + " " + @picardTempDir + " " +
-          "MAX_RECORDS_IN_RAM=" + @maxRecordsInRam.to_s + " AS=true M=metrics.foo " +
+          @maxRecordsInRam.to_s + " AS=true M=metrics.foo " +
           @picardValStr  + " 1>markDups.o 2>markDups.e"
     return cmd
   end
@@ -109,7 +116,7 @@ class BAMProcessor
   # Correct the flag describing the strand of the mate
   def fixMateInfoCmd()
     cmd = "java " + @heapSize + " -jar " + @picardPath + "/FixMateInformation.jar I=" +
-           @samFileName.to_s + " O=" + @sortedBam + " SO=coordinate " + @picardTempDir + " MAX_RECORDS_IN_RAM=" + 
+           @samFileName.to_s + " O=" + @sortedBam + " SO=coordinate " + @picardTempDir + " " + 
            @maxRecordsInRam.to_s + " " + @picardValStr + " 1>fixMateInfo.o 2>fixMateInfo.e"
     return cmd
   end
@@ -126,22 +133,24 @@ class BAMProcessor
   def mappingStatsCmd()
     jarName = @javaDir + "/BAMAnalyzer.jar"
     cmd = "java " + @heapSize + " -jar " + jarName + " I=" + @markedBam +
-          " O=BWA_Map_Stats.txt 1>mappingStats.o 2>mappingStats.e" 
+          " O=BWA_Map_Stats.txt X=BAMAnalysisInfo.xml 1>mappingStats.o 2>mappingStats.e" 
     return cmd
   end
 
   # Method to handle error. Current behavior, print the error stage and abort.
   def handleError(commandName)
-    errorMessage = "Error while processing command : " + commandName.to_s
+    errorMessage = "Error while processing command : " + commandName.to_s +
+                   " for flowcell : " + @fcBarcode.to_s + " Working Dir : " +
+                   Dir.pwd.to_s = " Hostname : " +  @envInfo.getHostName() 
     # For now keep like this
-    emailText    = errorMessage.to_s
+    emailSubject = "Error while mapping : " + @fcBarcode.to_s
 
     obj          = EmailHelper.new()
     emailFrom    = "sol-pipe@bcm.edu"
     emailTo      = obj.getErrorRecepientEmailList()
     emailSubject = "Error during mapping on host " + @envInfo.getHostName() 
 
-    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
+    obj.sendEmail(emailFrom, emailTo, emailSubject, errorMessage)
 
     puts errorMessage.to_s
     exit -1
@@ -173,12 +182,13 @@ class BAMProcessor
   @picardPath    = nil   # Picard path
 end 
 
-fcPairedEnd     = ARGV[0]
-filterPhixReads = ARGV[1]
-samFileName     = ARGV[2]
-sortedBAMName   = ARGV[3]
-finalBAMName    = ARGV[4]
+fcBarcode       = ARGV[0]
+fcPairedEnd     = ARGV[1]
+filterPhixReads = ARGV[2]
+samFileName     = ARGV[3]
+sortedBAMName   = ARGV[4]
+finalBAMName    = ARGV[5]
 
-obj = BAMProcessor.new(fcPairedEnd, filterPhixReads, samFileName, sortedBAMName,
-                       finalBAMName)
+obj = BAMProcessor.new(fcBarcode, fcPairedEnd, filterPhixReads, samFileName, 
+                       sortedBAMName, finalBAMName)
 obj.process()
