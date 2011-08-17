@@ -149,7 +149,7 @@ class FlowcellDefinitionBuilder
   def initialize(fcName, outputDirectory)
     @pHelper    = PipelineHelper.new()  # Instantiate PipelineHelper
     @fcName     = extractFCNameForLIMS(fcName)
-    @outFile    = "FCDefinition.xml"
+    outFile    = "FCDefinition.xml"
 
     @laneBarcodes    = Array.new  # Lane barcodes for the given flowcell
     @laneBarcodeInfo = Hash.new # Hash table of information per lane barcode
@@ -158,7 +158,8 @@ class FlowcellDefinitionBuilder
 
     getLaneBarcodeDefn()
     getLaneBarcodeInfo()
-    outputName  = outputDirectory + "/FCAnalysisDefinition.xml" 
+    outputName  = outputDirectory + "/" +  outFile
+    puts "Writing Flowcell Definition file at : " + outputName.to_s
     writeXMLOutput(outputName)
   end
 
@@ -180,7 +181,7 @@ class FlowcellDefinitionBuilder
     @laneBarcodeInfo.each do |barcode, attrs|
       laneBarcodeInfoElem.add_element("LaneBarcode", attrs)
     end
-    writeXML()
+    writeXML(outputXMLFile)
   end
 
   # Get name of each lane / lane barcode used in the flowcell 
@@ -262,10 +263,10 @@ class FlowcellDefinitionBuilder
   end
 
   # Write the XML file corresponding to the given flowcell
-  def writeXML()
+  def writeXML(outputXMLFile)
     formatter = Formatters::Pretty.new(2)
     formatter.compact = true
-    outputXML = File.new(@outFile, "w")
+    outputXML = File.new(outputXMLFile, "w")
     outputXML.puts formatter.write(@xmlDoc.root,"")
     outputXML.close()
   end
