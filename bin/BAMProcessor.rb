@@ -141,7 +141,7 @@ class BAMProcessor
   def handleError(commandName)
     errorMessage = "Error while processing command : " + commandName.to_s +
                    " for flowcell : " + @fcBarcode.to_s + " Working Dir : " +
-                   Dir.pwd.to_s = " Hostname : " +  @envInfo.getHostName() 
+                   Dir.pwd.to_s + " Hostname : " +  @envInfo.getHostName() 
     # For now keep like this
     emailSubject = "Error while mapping : " + @fcBarcode.to_s
 
