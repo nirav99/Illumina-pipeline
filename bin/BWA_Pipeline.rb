@@ -217,7 +217,7 @@ private
                  " Illumina make self test failed"
       handleErrorAndAbort(errMsg)
     else
-      FileUtils.ln_s(geraldDir, "gerald_dir")
+  #    FileUtils.ln_s(geraldDir, "gerald_dir")
       puts "Finished creating GERALD directory at "
       puts geraldDir.to_s
       writeBWAParamsToGeraldDir(geraldDir.to_s)
