@@ -8,6 +8,7 @@ class RunFinishedDateRetriever
     # Array of parent directories where to search for a flowcell
     @instrumentDir = Array.new
     @instrumentDir << "/stornext/snfs0/next-gen/Illumina/Instruments/"
+    @instrumentDir << "/stornext/snfs5/next-gen/Illumina/Instruments/"
 
     @seqNames     = Array.new    # Names of sequencers
     @fcNames      = Array.new    # Names of flowcells
