@@ -103,12 +103,12 @@ class BuildGERALDConfig
 
       # Select the appropriate post run based on whether mapping is to be
       # done using Eland or BWA
+
+      postRunDir = File.dirname(File.dirname(__FILE__)) + "/bin"
       if @mappingAlgo.eql?("eland")
-         @postRunCommand = "/stornext/snfs5/next-gen/Illumina/ipipe/" +
-                           "bin/postrun_eland.sh" 
+         @postRunCommand = postRunDir  + "/postrun_eland.sh" 
       else
-         @postRunCommand = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/" +
-                           "bin/postrun.rb" 
+         @postRunCommand = postRunDir + "/postrun.rb" 
       end
     end
 
