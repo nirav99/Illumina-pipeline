@@ -126,7 +126,7 @@ private
       return true
     end
    
-    if fcName.match(/SN601/) || fcName.match(/SN166/) 
+    if fcName.match(/SN601/) 
        puts "Flowcell " + fcName + " is not configured for automatic analysis"
        return false
     end
