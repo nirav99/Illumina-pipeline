@@ -234,8 +234,10 @@ class UploadSummaryResults
   def initialize(newLIMSState)
     @lanes      = ""
     @fcName     = ""
-    @limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
-                  "setIlluminaLaneStatus.pl"
+
+    @limsScript = File.dirname(File.dirname(__FILE__)) + 
+                  "/third_party/setIlluminaLaneStatus.pl"
+
     @pairedEnd  = false                  
     @helper = PipelineHelper.new()
     @doc    = Hpricot::XML(open('Summary.xml'))

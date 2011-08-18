@@ -16,8 +16,9 @@ class UploadMapStatsFile
     @currentDir   = Dir.pwd
     @lanes        = ""
     @fcName       = ""
-    @limsScript   = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" + 
-                    "uploadBAMAnalyzerFile.pl"
+    @limsScript   = File.dirname(File.dirname(__FILE__)) +
+                    "/third_party/uploadBAMAnalyzerFile.pl"
+
     @errorFound   = false
     @helper       = PipelineHelper.new()
     @fileToUpload = "BWA_Map_Stats.txt"

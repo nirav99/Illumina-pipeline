@@ -75,8 +75,8 @@ class QseqSplitter
 
     # Obtain the lane barcode for the flowcell from LIMS
     def getLaneBarcodes()
-      limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
-                   "getFlowCellInfo.pl"
+      limsScript = File.dirname(File.dirname(__FILE__)) + 
+                   "/third_party/getFlowCellInfo.pl"
 
       limsQueryCmd = "perl " + limsScript + " " + extractFCNameForLIMS(@fcName)
       puts "Querying LIMS to obtain lane barcodes. Command : " + limsQueryCmd

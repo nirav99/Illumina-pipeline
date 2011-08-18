@@ -16,8 +16,10 @@ class UploadHTMLSummary
     @currentDir = Dir.pwd
     @lanes      = ""
     @fcName     = ""
-    @limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" + 
-                  "uploadHtmlSummary.pl"
+
+    @limsScript = File.dirname(File.dirname(__FILE__)) +
+                  "/third_party/uploadHtmlSummary.pl"
+
     @errorFound = false
     @helper     = PipelineHelper.new()
 

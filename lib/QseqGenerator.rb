@@ -81,8 +81,9 @@ class QseqGenerator
   def uploadAnalysisStartDate()
     fcNameForLIMS = @pHelper.formatFlowcellNameForLIMS(@fcName)
 
-    limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
-                 "setFlowCellAnalysisStartDate.pl"
+    limsScript = File.dirname(File.dirname(__FILE__)) + 
+                 "/third_party/setFlowCellAnalysisStartDate.pl"
+
     uploadCmd = "perl " + limsScript + " " + fcNameForLIMS
     output = `#{uploadCmd}`
    
