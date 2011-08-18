@@ -2,7 +2,6 @@
 require 'rubygems'
 require 'hpricot'
 require 'fileutils'
-#require 'net/smtp'
 
 # This class encapsulates common routines required by other 
 # pipeline scripts
@@ -145,12 +144,17 @@ class PipelineHelper
       return ""
     end
 
+=begin
     if File.dirname(__FILE__).eql?(".")
       barcodeLabelFile = "../config/barcode_label.txt"
     else
       barcodeLabelFile = File.dirname(File.dirname(__FILE__)) +
                          "/config/barcode_label.txt"
     end
+=end
+
+    barcodeLabelFile = File.dirname(File.dirname(__FILE__)) +
+                       "/config/barcode_label.txt"
 
     lines = IO.readlines(barcodeLabelFile)
 
@@ -176,8 +180,14 @@ class PipelineHelper
       return ""
     end
 
+=begin
     puts "Value of dirname = " + File.dirname(__FILE__).to_s
     barcodeLabelFile = "/stornext/snfs5/next-gen/Illumina/ipipe/config//barcode_label.txt"
+=end
+
+    barcodeLabelFile = File.dirname(File.dirname(__FILE__)) + "/config/" +
+                       "barcode_label.txt"
+
     puts "Looking for barcode labels in : " + barcodeLabelFile
 
     lines = IO.readlines(barcodeLabelFile)

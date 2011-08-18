@@ -96,8 +96,8 @@ class QseqSplitter
         if(line.match(/-[1-8]$/))
           laneBC = line.slice(/[1-8]$/)
           @laneBarcodes << laneBC.to_s
-        elsif line.match(/-[1-8]-ID[01][0-9]$/)
-          laneBC = line.slice(/[1-8]-ID[01][0-9]$/)
+        elsif line.match(/-[1-8]-ID\d\d$/)
+          laneBC = line.slice(/[1-8]-ID\d\d$/)
           @laneBarcodes << laneBC.to_s
         elsif line.match(/-[1-8]-IDMB\d$/)
           laneBC = line.slice(/[1-8]-IDMB\d$/)
@@ -117,7 +117,7 @@ class QseqSplitter
     def flowcellMultiplexed?()
 
       @laneBarcodes.each do |laneBC|
-        if laneBC.to_s.match(/[1-8]-ID[01]\d/)
+        if laneBC.to_s.match(/[1-8]-ID\d\d/)
           return true
         elsif laneBC.to_s.match(/[1-8]-IDMB/)
           return true
@@ -241,9 +241,6 @@ class QseqSplitter
     outFile = File.open(outputFileName, "w")
 
     outFile.puts "#!/bin/bash"
-
-    cmdPrefix = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/BWA_Pipeline.rb " +
-                @fcName.to_s
 
     @laneBarcodes.each do |laneBarcode|
       cmd = cmdPrefix + " " + laneBarcode.to_s

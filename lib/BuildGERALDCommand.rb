@@ -55,25 +55,9 @@ class BuildGERALDCommand
     fileHandle.close()
     FileUtils.chmod(0755, @outputFile)
 
-#    filterPhixReads()
   end
 
   private
-
-=begin
-  def filterPhixReads()
-    if @pipelineHelperInstance.isFCHiSeq(@fcName) == true
-      # Add a file "filterphix" in base calls directory
-      # Script filtering out phix reads should check for this file before
-      # proceeding
-
-      currDir = FileUtils.pwd()
-      FileUtils.cd(@baseCallsDir)
-      `touch filterphix`
-      FileUtils.cd(currDir)
-    end
-  end
-=end
 
     @pipelinePath = "" # Path to GERALD installation 
     @configPath   = "" # Path to GERALD config file
@@ -83,6 +67,3 @@ class BuildGERALDCommand
     @baseCallsDir = "" # Basecalls directory in the flowcell (usually Bustard results)
     @outputFile   = "" # File containing GERALD command
 end
-
-#obj = BuildGERALDCommand.new("100719_USI-EAS376_0003_PE1_FC6263EAAXX")
-#obj = BuildGERALDCommand.new("100120_USI-EAS376_0018_PE1_FC618U7AAXX")

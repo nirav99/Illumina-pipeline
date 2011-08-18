@@ -13,7 +13,7 @@ require 'EmailHelper'
 #It works on per-lane basis only.
 class FindUniqueReads
   def initialize()
-    jarName = "/stornext/snfs5/next-gen/Illumina/ipipe/java/SlxUniqueness.jar"
+    jarName = File.dirname(File.dirname(__FILE__)) + "/java/SlxUniqueness.jar"
     @lanes   = ""  # Lanes to consider for running uniqueness
     @fcName  = ""
     @limsBarcode = ""

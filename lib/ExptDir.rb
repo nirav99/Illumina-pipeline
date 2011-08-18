@@ -60,7 +60,7 @@ class ExptDir
     # If the flowcell is multiplexed, the lane barcode can have one of the
     # following formats, just lane number (non-multiplexed lane), X-IDYY 
     # or X-IDMBY or X-IDMBYY
-    elsif laneBarcode.match(/^[1-8]$/) || laneBarcode.match(/^[1-8]-ID[01]\d$/) ||
+    elsif laneBarcode.match(/^[1-8]$/) || laneBarcode.match(/^[1-8]-ID\d\d$/) ||
           laneBarcode.match(/^[1-8]-IDMB\d$/) || laneBarcode.match(/^[1-8]-IDMB\d\d$/)
        return true
     else
