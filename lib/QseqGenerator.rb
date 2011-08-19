@@ -62,7 +62,7 @@ class QseqGenerator
     puts "Running make command to generate qseq files"
     s = Scheduler.new(@fcName + "_Generate_Qseq", "make -j8")
     s.setMemory(28000)
-    s.setNodeCores(6)
+    s.setNodeCores(7)
     s.setPriority(@priority)
     s.runCommand()
     @qseqGenerationJobName = s.getJobName()

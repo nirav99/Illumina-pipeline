@@ -75,13 +75,15 @@ class QseqSplitter
 
     # Obtain the lane barcode for the flowcell from LIMS
     def getLaneBarcodes()
-      limsScript = File.dirname(File.dirname(__FILE__)) + 
+      limsScript = File.expand_path(File.dirname(File.expand_path(File.dirname(__FILE__)))) + 
                    "/third_party/getFlowCellInfo.pl"
 
       limsQueryCmd = "perl " + limsScript + " " + extractFCNameForLIMS(@fcName)
       puts "Querying LIMS to obtain lane barcodes. Command : " + limsQueryCmd
 
       output = `#{limsQueryCmd}`
+
+      puts output
 
       if output.match(/[Ee]rror/)
         puts "ERROR in obtaining lane barcode information. Message : " + output 
@@ -230,6 +232,9 @@ class QseqSplitter
 
     # Start analysis for a multiplexed flowcell
   def startLaneAnalysisBarcodeFC()
+
+    cmdPrefix = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/bin/BWA_Pipeline.rb " +
+                @fcName.to_s 
 
     if @makeJobName == nil || @makeJobName.empty?()
       puts "ERROR : name of make job is null or empty"
