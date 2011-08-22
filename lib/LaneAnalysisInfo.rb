@@ -43,6 +43,23 @@ class LaneAnalysisInfo
   def getLibraryName()
     return @libraryName
   end
+
+  # A static method to get the list of lane barcodes used for the given
+  # flowcell.
+  def self.getBarcodeList(fcDefnXML)
+    xmlDoc = Hpricot::XML(open(fcDefnXML))
+    laneBarcodes = Array.new
+
+    xmlDoc.search("FCInfo/LaneBarcodeList/LaneBarcode").each do |laneBC|
+      barcodeName = laneBC['Name']
+
+      if barcodeName != nil && !barcodeName.empty?()
+        laneBarcodes << barcodeName.to_s
+      end
+    end
+    return laneBarcodes
+  end
+
   private 
   # Helper method to parse the flowcell definition file and extract values for
   # various fields needed for analysis.
