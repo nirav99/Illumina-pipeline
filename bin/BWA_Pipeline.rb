@@ -2,19 +2,24 @@
 $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 
 require 'fileutils'
-require 'FCInfo.rb'
 require 'BuildGERALDConfig.rb'
 require 'BuildGERALDCommand.rb'
 require 'Scheduler'
 require 'PipelineHelper'
 require 'BWAParams'
 require 'EmailHelper'
+require 'LaneAnalysisInfo'
+#require 'FCInfo'
 
+# Class to invoke Illumina's CASAVA to produce fastq sequences and start
+# alignment using BWA. 
+# Author Nirav Shah niravs@bcm.edu
 class BWA_Pipeline
   def initialize(args)
     initializeDefaultParams()
     processCommandLineParameters(args)
-    obtainInformationFromLIMS()
+#    obtainInformationFromLIMS()
+    obtainLaneInformation()
     createWorkingDirectory()
     createGERALDConfig()
     createGERALDCommand()
@@ -80,6 +85,7 @@ private
     puts ""
   end
 
+=begin
    # Obtain the information for specified flowcell-barcode from LIMS
   def obtainInformationFromLIMS()
     puts "Contacting LIMS to get information for " + @fcName.to_s + "-" + @laneBarcode.to_s
@@ -110,6 +116,47 @@ private
     rescue Exception => e
       puts e.message
       puts e.backtrace.inspect
+    end
+  end
+=end
+
+  # Method to obtain additional information about the lane barcode to start the
+  # analysis. It reads a file called FCDefinition.xml in flowcell's BaseCalls
+  # directory to fill in the values for parameters required to start the
+  # analysis.
+  def obtainLaneInformation()
+    baseCallsDir = @pHelper.findBaseCallsDir(@fcName)   
+    fcDefnFile   = baseCallsDir + "/FCDefinition.xml"
+
+    if !File::exist?(fcDefnFile)
+      raise "Unable to find FCDefinition.xml in " + baseCallsDir.to_s
+    end
+
+    analysisInfo = LaneAnalysisInfo.new(fcDefnFile, @laneBarcode.to_s)
+
+    @chipName    = analysisInfo.getChipDesign()
+    @sampleName  = analysisInfo.getSampleName()
+    @libraryName = analysisInfo.getLibraryName()
+
+    # For the following parameters, get their values from the definition file
+    # only if the caller did not provide them
+
+    if @readLength == 0
+       @readLength = analysisInfo.getReadLength()
+       puts "READ LENGTH = " + @readLength.to_s
+    end
+
+    if @fcPaired == nil
+       fcType = analysisInfo.getFlowcellType()
+       if fcType.downcase.match(/paired/)
+          @fcPaired = true
+       else
+          @fcPaired = false
+       end
+    end
+
+    if @refPath == nil
+       @refPath = analysisInfo.getReferencePath()
     end
   end
 
