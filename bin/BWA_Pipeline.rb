@@ -9,7 +9,6 @@ require 'PipelineHelper'
 require 'BWAParams'
 require 'EmailHelper'
 require 'LaneAnalysisInfo'
-#require 'FCInfo'
 
 # Class to invoke Illumina's CASAVA to produce fastq sequences and start
 # alignment using BWA. 
@@ -18,7 +17,6 @@ class BWA_Pipeline
   def initialize(args)
     initializeDefaultParams()
     processCommandLineParameters(args)
-#    obtainInformationFromLIMS()
     obtainLaneInformation()
     createWorkingDirectory()
     createGERALDConfig()
@@ -84,41 +82,6 @@ private
     puts "    FCType    - Specify paired if FC is paired, otherwise fragment"
     puts ""
   end
-
-=begin
-   # Obtain the information for specified flowcell-barcode from LIMS
-  def obtainInformationFromLIMS()
-    puts "Contacting LIMS to get information for " + @fcName.to_s + "-" + @laneBarcode.to_s
-    begin
-    fcInfo = FCInfo.new(@fcName.to_s, @laneBarcode.to_s)
-
-    # For the next three parameters, get their values from LIMS only if the
-    # user did not specify them at the command line.   
-    if @readLength == 0
-       @readLength = fcInfo.getNumCycles()
-    end 
-
-    if @fcPaired == nil
-       @fcPaired = fcInfo.paired?()
-    end
-
-    if @refPath == nil
-       @refPath = fcInfo.getRefPath()
-
-       if @refPath == nil || @refPath.empty?()
-          @refPath = "sequence"
-       end
-    end
-
-    @chipName    = fcInfo.getChipDesignName() 
-    @sampleName  = fcInfo.getSampleName()
-    @libraryName = fcInfo.getLibraryName()
-    rescue Exception => e
-      puts e.message
-      puts e.backtrace.inspect
-    end
-  end
-=end
 
   # Method to obtain additional information about the lane barcode to start the
   # analysis. It reads a file called FCDefinition.xml in flowcell's BaseCalls
