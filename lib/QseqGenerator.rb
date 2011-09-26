@@ -34,7 +34,7 @@ class QseqGenerator
    if !flowcellName.match(/EAS376/) && !flowcellName.match(/EAS034/)
       cmd = cmd + " -P .clocs"
    else
-     cmd = cmd + " -p ../L00*"
+     cmd = cmd + " -p " + File.dirname(File.expand_path((@baseCallsDir)) + "../L00*"
    end
 
     puts "Executing command : "
