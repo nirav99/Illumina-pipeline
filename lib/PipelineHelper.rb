@@ -205,4 +205,38 @@ class PipelineHelper
       return barcode
     end
   end
+
+  # Method to return the RTA version given the flowcell name. Current behavior
+  # is to look in the file runParameters.xml in flowcell's main directory and
+  # return the value of the node "RTAVersion". If this file does not exist,
+  # check in Basecalling_Netcopy_complete.txt file. 
+  # Otherwise, return nil
+  def findRTAVersion(fcName)
+    rtaVersion = nil
+    fcPath = findFCPath(fcName) 
+    fcConfigFile = fcPath + "/runParameters.xml"
+   
+    if File.exist?(fcConfigFile)
+      xmlDoc     = Hpricot::XML(open(fcConfigFile))
+      xmlElement = xmlDoc.at("RunParameters/Setup/RTAVersion")
+  
+      if xmlElement != nil
+        return xmlElement.inner_html
+      end
+    else
+      # If this flowcell was on a GAIIx, use the following file instead.
+      fcConfigFile = fcPath + "/Basecalling_Netcopy_complete.txt"
+      
+      if File.exist?(fcConfigFile)
+        lines = IO.readlines(fcConfigFile)
+
+        lines.each do |line|
+          if line.match(/Illumina\s+RTA/)
+            return line.gsub(/Illumina\s+RTA\s+/, "")
+          end
+        end
+      end
+    end
+    return nil
+  end
 end
