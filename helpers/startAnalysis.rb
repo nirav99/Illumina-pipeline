@@ -4,6 +4,7 @@ $:.unshift File.join(File.dirname(__FILE__), ".", "..", "lib")
 
 require 'asshaul.rb'
 require 'fileutils'
+require 'PipelineHelper'
 
 # Class to automatically start the flowcells. It runs as part of a crontab job.
 # On detecting that a flowcell has copied, it starts qseq generation
@@ -115,12 +116,7 @@ private
     end      
   end
 
-  # Accurate as of 13th June 2011
-  # Every flowcell that is copied directly to ardmore, will have marker file
-  # RTAComplete.txt written at the end. When we find this file, we add the old
-  # marker file .rsync_finished and then let it pick up the next time the
-  # cronjob runs. This is to allow flowcells being written directly and from the
-  # dumps. To be changed immediately when all flowcells are written directly.
+=begin
   def fcReady?(fcName)
     if File::exist?(@instrDir + "/" + fcName + "/.rsync_finished")
       return true
@@ -136,6 +132,61 @@ private
     if File::exist?(@instrDir + "/" + fcName + "/RTAComplete.txt")
       cmd = "touch " + @instrDir + "/" + fcName + "/.rsync_finished"
       `#{cmd}`
+    end
+    return false
+  end
+=end
+
+  # Accurate as of 26th Sept 2011:
+  # Every HiSeq flowcell running RTA version 1.12 that is copied directly to the
+  # cluster will have a marker file RTAComplete.txt written at the end of copy
+  # operation. On finding this file, we add another marker file .rsync_finished.
+  # In this case, this flowcell will be picked up for analysis in the next
+  # iteration of cron job.
+
+  # For GAIIx flowcells running RTA version 1.9, RTAComplete.txt is not written.
+  # However, we can assume that all GAIIx flowcells are paired-end, and look for
+  # the following files 
+  # Basecalling_Netcopy_complete.txt,
+  # Basecalling_Netcopy_complete_READ1.txt
+  # Basecalling_Netcopy_complete_READ2.txt
+  # If these files are copied more than an hour ago, add .rsync_finished, which
+  # will allow this flowcell to be picked up in the next iteration of cron job
+  def fcReady?(fcName)
+    pHelper = PipelineHelper.new()
+
+    fcDir = @instrDir + "/" + fcName
+    if File::exist?(fcDir + "/.rsync_finished")
+      return true
+    end
+   
+    if fcName.match(/SN601/) 
+       puts "Flowcell " + fcName + " is not configured for automatic analysis"
+       return false
+    end
+
+    # If the marker file RTAComplete.txt was written more than 1 hour ago, then
+    # add the new marked file and return.
+    if File::exist?(fcDir + "/RTAComplete.txt")
+      cmd = "touch " + @instrDir + "/" + fcName + "/.rsync_finished"
+      `#{cmd}`
+    elsif pHelper.findRTAVersion(fcName).match(/1\.9/)
+       puts "Flowcell with RTA version 1.9 found : " + fcName
+
+       if File::exist?(fcDir + "/Basecalling_Netcopy_complete.txt") &&
+          File::exist?(fcDir + "/Basecalling_Netcopy_complete_READ1.txt") &&
+          File::exist?(fcDir + "/Basecalling_Netcopy_complete_READ2.txt") 
+ 
+          modificationTime = Time.now - File::mtime(fcDir + "/Basecalling_Netcopy_complete.txt")
+          puts "Mod time : " + modificationTime.to_s
+          if modificationTime >= 3600
+            return true
+          else
+            return false
+          end
+       else
+          return false
+       end
     end
     return false
   end
