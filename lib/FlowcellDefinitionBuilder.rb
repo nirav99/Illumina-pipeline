@@ -186,8 +186,8 @@ class FlowcellDefinitionBuilder
 
   # Get name of each lane / lane barcode used in the flowcell 
   def getLaneBarcodeDefn()
-    limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
-                 "getFlowCellInfo.pl"
+    limsScript = File.dirname(File.dirname(File.expand_path(__FILE__))) +
+                 "/third_party/getFlowCellInfo.pl"
 
     limsQueryCmd = "perl " + limsScript + " " + @fcName.to_s
 
@@ -204,8 +204,8 @@ class FlowcellDefinitionBuilder
   # Obtain the data for each lane / lane barcode such as sample name, library,
   # reference path, chip design etc
   def getLaneBarcodeInfo()
-    limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/" +
-                 "getAnalysisPreData.pl"
+    limsScript = File.dirname(File.dirname(File.expand_path(__FILE__))) +
+                 "/third_party/getAnalysisPreData.pl"
 
     @laneBarcodes.each do |laneBC|
       limsQueryCmd = "perl " + limsScript + " " + @fcName.to_s + "-" + laneBC.to_s
