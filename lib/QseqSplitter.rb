@@ -7,16 +7,25 @@ require 'fileutils'
 require 'PipelineHelper'
 require 'Scheduler'
 require 'BarcodeDefinitionBuilder'
+require 'LaneAnalysisInfo'
+require 'EmailHelper'
 
 # Class to create SampleSheet.csv in the basecalls directory
 # and split the reads into directory bins based on the barcodes
 class QseqSplitter
   def initialize(flowcellName)
     initializeDefaultValues()
-    @fcName = flowcellName
-    @priority = "high" # Scheduling priority - normal or high
+    @fcName       = flowcellName
+    @priority     = "high" # Scheduling priority - normal or high
+    @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
+
+    if @baseCallsDir == nil || @baseCallsDir.empty?()
+      puts "ERROR : Did not find basecalls directory for FC : " + @fcName
+      exit -1
+    end
 
     getLaneBarcodes()
+
     puts "Found the following lane barcodes : "
     puts "Total barcodes = " + @laneBarcodes.length.to_s
 
@@ -29,13 +38,6 @@ class QseqSplitter
     # and create the output directory bins under bascalls/Demultiplexed using
     # Illumina CASAVA's demultiplexer
     if flowcellMultiplexed?()
-      @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
-
-      if @baseCallsDir == nil || @baseCallsDir.empty?()
-        puts "ERROR : Did not find basecalls directory for FC : " + @fcName
-        exit -1
-      end
-
       @outputDir = @baseCallsDir + "/Demultiplexed"
 
       writeBarcodeDefinition() 
@@ -73,42 +75,15 @@ class QseqSplitter
       end 
     end
 
-    # Obtain the lane barcode for the flowcell from LIMS
+    # Obtain the list of lane barcodes used for this flowcell
     def getLaneBarcodes()
-      limsScript = File.expand_path(File.dirname(File.expand_path(File.dirname(__FILE__)))) + 
-                   "/third_party/getFlowCellInfo.pl"
+      fcDefinitionXML = @baseCallsDir + "/FCDefinition.xml"
 
-      limsQueryCmd = "perl " + limsScript + " " + extractFCNameForLIMS(@fcName)
-      puts "Querying LIMS to obtain lane barcodes. Command : " + limsQueryCmd
-
-      output = `#{limsQueryCmd}`
-
-      puts output
-
-      if output.match(/[Ee]rror/)
-        puts "ERROR in obtaining lane barcode information. Message : " + output 
-        exit -1
+      if !File::exist?(fcDefinitionXML)
+        handleError("Error did not find file : " + fcDefinitionXML)
       end
 
-      # LIMS did not report any errors, proceed to parse the barcodes
-      lines = output.split("\n")
-
-      lines.each do |line|
-
-        if(line.match(/-[1-8]$/))
-          laneBC = line.slice(/[1-8]$/)
-          @laneBarcodes << laneBC.to_s
-        elsif line.match(/-[1-8]-ID\d\d$/)
-          laneBC = line.slice(/[1-8]-ID\d\d$/)
-          @laneBarcodes << laneBC.to_s
-        elsif line.match(/-[1-8]-IDMB\d$/)
-          laneBC = line.slice(/[1-8]-IDMB\d$/)
-          @laneBarcodes << laneBC.to_s
-        elsif line.match(/-[1-8]-IDMB\d\d$/)
-          laneBC = line.slice(/[1-8]-IDMB\d\d$/)
-          @laneBarcodes << laneBC.to_s
-        end
-      end
+      @laneBarcodes = LaneAnalysisInfo.getBarcodeList(fcDefinitionXML)
     end
 
     # Method to determine if the flowcell has multiplexed lanes
@@ -264,6 +239,24 @@ class QseqSplitter
     jobName = obj.getJobName()
     puts "Job for command : " + cmd + " : " + jobName.to_s
  end
+
+ def handleError(errorMsg)
+   puts "Error encountered. Message : \r\n" + errorMsg
+   emailErrorMessage(errorMsg)
+   puts "Aborting execution\r\n"
+   exit -4
+ end
+
+ # Send email describing the error message to interested watchers
+  def emailErrorMessage(msg)
+    obj          = EmailHelper.new()
+    emailFrom    = "sol-pipe@bcm.edu"
+    emailTo      = obj.getErrorRecepientEmailList()
+    emailSubject = "Error in demultiplexing flowcell " + @fcName.to_s
+    emailText    = msg
+
+    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
+  end
 end
 
 flowcell = ARGV[0]

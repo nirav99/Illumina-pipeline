@@ -81,12 +81,10 @@ class QseqGenerator
   def uploadAnalysisStartDate()
     fcNameForLIMS = @pHelper.formatFlowcellNameForLIMS(@fcName)
 
-   # NOTE: There's some problem in correctly expanding the relative path when
-   # this script is run through the cron job. Hence, hard-coding the absolute
-   # filepath for now till the problem is resolved - Nirav Shah 21st Sept 2011. 
- # limsScript = File.dirname(File.expand_path(File.dirname(__FILE__))) + 
-   limsScript = "/stornext/snfs5/next-gen/Illumina/ipipe/third_party/"
-                  "setFlowCellAnalysisStartDate.pl"
+   puts "FC name for lims : " + fcNameForLIMS.to_s
+
+   limsScript = File.dirname(File.dirname(File.expand_path(__FILE__))) +
+               "/third_party/setFlowCellAnalysisStartDate.pl" 
 
     uploadCmd = "perl " + limsScript + " " + fcNameForLIMS
     puts "Analysis start date upload command : " + uploadCmd.to_s
