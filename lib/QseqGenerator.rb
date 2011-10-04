@@ -5,38 +5,78 @@ require 'fileutils'
 require 'PipelineHelper'
 require 'Scheduler'
 require 'FlowcellDefinitionBuilder'
+require 'EmailHelper'
 
 # Class to generate qseq files in the base calls directory
+# Author: Nirav Shah niravs@bcm.edu
+
 class QseqGenerator
 
   # Class constructor - to prepare base calls directory to generate qseq
   def initialize(flowcellName)
-    @scriptName = "/stornext/snfs5/next-gen/Illumina/OLB1.9/OLB1.9/" +
-                  "OLB-1.9.0/bin/setupBclToQseq.py"
+    begin
+      initializeDefaultParams(flowcellName)
+      exitStatus = runBclToQseqCommand() 
 
-    @fcName = flowcellName
-    @priority = "high" # Allowed values are normal / high for the scheduling
-                       # queue
+      if exitStatus != 0
+        raise "Bcl to qseq command failed"
+      end
+
+      # Bcl to qseq generator passed. Switch to basecalls directory of the
+      # flowcell and run make from there.
+
+      currDir = FileUtils.pwd()
+      FileUtils.cd(@baseCallsDir)
+      runMake()
+      FileUtils.cd(currDir)
+
+      puts "Creating flowcell definition XML"
+      createFlowcellDefinitionXML()
+      puts "Finished writing flowcell definition XML"
+      puts "Uploading analysis start date"
+      uploadAnalysisStartDate()
+      
+      puts "Invoking command to split qseq files"
+      # Added functionality to split qseq files
+      splitQseqFiles()
+    rescue Exception => e
+      $stderr.puts e.message
+      $stderr.puts e.backtrace.inspect
+      handleError(e.message)
+    end
+  end
+
+  private
+
+  # Initialize the class members required for other methods
+  def initializeDefaultParams(flowcellName)
+    @fcName       = flowcellName
+    @pHelper      = PipelineHelper.new
+    @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
+    @intensityDir = @baseCallsDir.gsub(/\/[a-zA-Z0-9_]+$/, "")
+    @priority     = "high"
 
     if @fcName == nil || @fcName.eql?("")
       raise "Flowcell name is null or empty"
     end
+  end
 
-    @pHelper = PipelineHelper.new
-    @baseCallsDir = @pHelper.findBaseCallsDir(@fcName)
-    @intensityDir = @baseCallsDir.gsub(/\/[a-zA-Z0-9_]+$/, "")
+  # Method to prepare environment for Illumina's bcl to qseq generator to
+  # execute
+  def runBclToQseqCommand()
+    scriptName = "/stornext/snfs5/next-gen/Illumina/OLB1.9/OLB1.9/" +
+                  "OLB-1.9.0/bin/setupBclToQseq.py"
 
     # Build the command to generate qseq files 
-    cmd = @scriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
+    cmd = scriptName + " -b " + @baseCallsDir + " -o " + @baseCallsDir +
           " --overwrite  --in-place --ignore-missing-bcl --ignore-missing-stats" 
 
-   # Add -P .clocs only to the sequencers running RTA 1.12
-   if !flowcellName.match(/EAS376/) && !flowcellName.match(/EAS034/)
+    # Add -P .clocs only to the sequencers running RTA 1.12
+    if !@fcName.match(/EAS376/) && !@fcName.match(/EAS034/)
       cmd = cmd + " -P .clocs"
-   else
-     cmd = cmd + " -p " + File.dirname(File.expand_path(@baseCallsDir)) + "../L00*"
-   end
-
+    else
+      cmd = cmd + " -p " + File.dirname(File.expand_path(@baseCallsDir)) + "/L00*"
+    end
     puts "Executing command : "
     puts cmd.to_s
     
@@ -44,18 +84,9 @@ class QseqGenerator
     exitStatus = $?
     puts "Exit Status : " + exitStatus.to_s
     puts output
-
-    if exitStatus != 0
-      raise "Error in generating qseq files : " + output
-    else
-      currDir = FileUtils.pwd()
-      FileUtils.cd(@baseCallsDir)
-      runMake()
-      FileUtils.cd(currDir)
-    end
+    return exitStatus
   end
 
-  private
   # Method to run "make" command on the cluster
   # This generates qseq files.
   def runMake()
@@ -67,14 +98,6 @@ class QseqGenerator
     s.runCommand()
     @qseqGenerationJobName = s.getJobName()
     puts "Qseq Generation Job Name = " + @qseqGenerationJobName.to_s
-
-    uploadAnalysisStartDate()
-    puts "Creating flowcell definition XML"
-    createFlowcellDefinitionXML()
-    puts "Finished writing flowcell definition XML"
-
-    # Added functionality to split qseq files
-    splitQseqFiles()
   end
 
   # Helper method to upload analysis start date to LIMS for tracking purposes
@@ -112,9 +135,8 @@ class QseqGenerator
   # If this flowcell is not multiplexed, the supporting script will simply
   # return without attempting to split any qseq files.
   def splitQseqFiles()
-#    splitCmd = "ruby " + File.dirname(__FILE__) + "/QseqSplitter.rb " + @fcName.to_s
-    splitCmd = "ruby /stornext/snfs5/next-gen/Illumina/ipipe/lib/QseqSplitter.rb " +
-               @fcName.to_s
+    splitCmd = "ruby " + File.dirname(File.expand_path(__FILE__)) + 
+               "/QseqSplitter.rb " + @fcName.to_s
     puts "Command to split qseq files : " + splitCmd
 
     s = Scheduler.new(@fcName + "_Split_Qseq", splitCmd)
@@ -125,6 +147,25 @@ class QseqGenerator
     s.runCommand()
     @splitQseqJobName = s.getJobName()
     puts "Splitting Qseq Job Name  = " + @splitQseqJobName.to_s
+  end
+
+  # Method to handle error
+  def handleError(errorMsg)
+   puts "Error encountered. Message : \r\n" + errorMsg
+   emailErrorMessage(errorMsg)
+   puts "Aborting execution\r\n"
+   exit -4
+ end
+
+  # Send email describing the error message to interested watchers
+  def emailErrorMessage(msg)
+    obj          = EmailHelper.new()
+    emailFrom    = "sol-pipe@bcm.edu"
+    emailTo      = obj.getErrorRecepientEmailList()
+    emailSubject = "Error in demultiplexing flowcell " + @fcName.to_s
+    emailText    = msg
+
+    obj.sendEmail(emailFrom, emailTo, emailSubject, emailText)
   end
 end
 
