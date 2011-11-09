@@ -44,9 +44,15 @@ class LaneResult
     if @showAnalysisResults == true
       result = result + " PERCENT_ALIGN_PF " + @perAlignPF.to_s +
                         " PERCENT_ERROR_RATE_PF " + @errorPercent.to_s +
-                        " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s + 
-                        " REFERENCE_PATH " + getReferencePath() +
-                        " RESULTS_PATH " + FileUtils.pwd 
+                        " ALIGNMENT_SCORE_PF " + @avgAlignScore.to_s 
+        #                " REFERENCE_PATH " + getReferencePath() +
+        #                " RESULTS_PATH " + FileUtils.pwd 
+
+      if readNum.to_s.eql?("1")
+         result = result + " RESULTS_PATH " + FileUtils.pwd +
+                           " REFERENCE_PATH " + getReferencePath() +
+                           " BAM_PATH " + getBAMPath()
+      end
     # Uncomment the following line if we need to send this variable in the upload string
     #                   + " ANALYSIS_END_DATE " +  currentTime.strftime("%Y-%m-%d").to_s 
       if @foundUniquenessResult == true  && readNum == 1
@@ -91,6 +97,17 @@ class LaneResult
       return reference.to_s
     else
       return "none"
+    end
+  end
+
+  # Get complete path name of the BAM file
+  def getBAMPath()
+    bamFile = Dir["*_marked.bam"]
+
+    if bamFile == nil || bamFile.length != 1
+      return "none"
+    else
+      return Dir.pwd + "/" + bamFile[0].to_s
     end
   end
 
